@@ -27,16 +27,32 @@
  *
 **/
 
-#define SAVESTATE 1
-#define LOADSTATE 2
-
-extern int savestates_job;
 extern bool st_skip_dma;
 
-void savestates_save();
-void savestates_load(bool silenceNotFoundError);
+/**
+ * \brief Saves a savestate to the specified slot
+ * \param slot The slot to save to
+ * \param immediate Whether the operation should be performed immediately
+ */
+void savestates_save(size_t slot, bool immediate);
 
-void savestates_select_slot(unsigned int s);
-void savestates_select_filename(const char* fn);
+/**
+ * \brief Loads a savestate from the specified slot
+ * \param slot The slot to load from
+ * \param immediate Whether the operation should be performed immediately
+ */
+void savestates_load(size_t slot, bool immediate);
 
-unsigned const char* savestates_get_selected_filename();
+/**
+ * \brief Saves a savestate to the specified path
+ * \param path The path to save to
+ * \param immediate Whether the operation should be performed immediately
+ */
+void savestates_save(std::filesystem::path path, bool immediate);
+
+/**
+ * \brief Loads a savestate from the specified path
+ * \param path The path to load from
+ * \param immediate Whether the operation should be performed immediately
+ */
+void savestates_load(std::filesystem::path path, bool immediate);

@@ -690,6 +690,7 @@ void VCR_setLengthSamples(unsigned long val)
 	m_header.length_samples = val;
 }
 
+// TODO: remove the vcr freezing mechanism, as it introduces so much complexity and the reasons for it existing are long gone
 void
 VCR_movieFreeze(char** buf, unsigned long* size)
 {
@@ -2312,9 +2313,6 @@ void
 VCR_toggleLoopMovie()
 {
 	Config.is_movie_loop_enabled ^= 1;
-	//extern bool lockNoStWarn;
-	//lockNoStWarn = Config.loopMovie; // not needed now I think
-
 	extern HWND mainHWND;
 	CheckMenuItem(GetMenu(mainHWND), ID_LOOP_MOVIE,
 	              MF_BYCOMMAND | (Config.is_movie_loop_enabled
