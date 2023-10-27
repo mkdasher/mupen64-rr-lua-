@@ -124,6 +124,40 @@ std::wstring get_extension(const std::wstring& path)
 	return path;
 }
 
+bool write_file_buffer(const std::filesystem::path& path, const std::vector<uint8_t>& buffer)
+{
+	FILE* f = fopen(path.string().c_str(), "wb");
+
+	if (!f)
+	{
+		return false;
+	}
+
+	fwrite(buffer.data(), buffer.size(), sizeof(uint8_t), f);
+	fclose(f);
+	return true;
+}
+
+std::vector<uint8_t> read_file_buffer(const std::filesystem::path& path)
+{
+	FILE* f = fopen(path.string().c_str(), "rb");
+
+	if (!f)
+	{
+		return {};
+	}
+
+	fseek(f, 0, SEEK_END);
+	long len = ftell(f);
+	fseek(f, 0, SEEK_SET);
+
+	std::vector<uint8_t> buf;
+	buf.resize(len);
+	fread(buf.data(), sizeof(uint8_t), len, f);
+	fclose(f);
+	return buf;
+}
+
 void copy_to_clipboard(HWND owner, const std::string& str)
 {
 	OpenClipboard(owner);
@@ -152,19 +186,14 @@ std::wstring get_desktop_path()
 
 void bwrite(t_buffer_io* buffer, void* val, size_t len)
 {
-	for (size_t i = 0; i < len; ++i)
-	{
-		buffer->data.push_back(static_cast<uint8_t*>(val)[buffer->offset + i]);
-	}
+	buffer->data.resize(buffer->data.size() + len);
+	memcpy(buffer->data.data() + buffer->offset, val, len);
 	buffer->offset += len;
 }
 
 void bread(t_buffer_io* buffer, void* val, size_t len)
 {
-	for (size_t i = 0; i < len; ++i)
-	{
-		static_cast<uint8_t*>(val)[i] = buffer->data[buffer->offset + i];
-	}
+	memcpy(val, buffer->data.data() + buffer->offset, len);
 	buffer->offset += len;
 }
 

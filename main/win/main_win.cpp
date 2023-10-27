@@ -97,7 +97,7 @@ static BOOL FullScreenMode = 0;
 HANDLE EmuThreadHandle;
 HWND hwnd_plug;
 UINT update_screen_timer;
-static int currentSaveState = 1;
+static int current_save_slot = 1;
 
 static DWORD WINAPI ThreadFunc(LPVOID lpParam);
 DWORD WINAPI close_rom(LPVOID lpParam);
@@ -187,27 +187,30 @@ static void gui_ChangeWindow()
 	statusbar_set_visibility(!FullScreenMode);
 }
 
-static int LastState = ID_CURRENTSAVE_1;
 
 void SelectState(HWND hWnd, int StateID)
 {
 	HMENU hMenu = GetMenu(hWnd);
-	CheckMenuItem(hMenu, LastState, MF_BYCOMMAND | MFS_UNCHECKED);
+	for (int i = ID_CURRENTSAVE_1; i < ID_CURRENTSAVE_10; ++i)
+	{
+		CheckMenuItem(hMenu, i, MF_BYCOMMAND | MFS_UNCHECKED);
+	}
 	CheckMenuItem(hMenu, StateID, MF_BYCOMMAND | MFS_CHECKED);
-	currentSaveState = StateID - (ID_CURRENTSAVE_1 - 1);
-	LastState = StateID;
-	savestates_select_slot(currentSaveState);
+	current_save_slot = StateID - (ID_CURRENTSAVE_1 - 1);
 }
 
 void SaveTheState(HWND hWnd, int StateID)
 {
 	SelectState(hWnd, (StateID - ID_SAVE_1) + ID_CURRENTSAVE_1);
 
-	//	SendMessage(hWnd, WM_COMMAND, STATE_SAVE, 0);
 	if (!emu_paused || MenuPaused)
-		savestates_job = SAVESTATE;
+	{
+		savestates_save(current_save_slot, false);
+	}
 	else if (emu_launched)
-		savestates_save();
+	{
+		savestates_save(current_save_slot, true);
+	}
 }
 
 void LoadTheState(HWND hWnd, int StateID)
@@ -215,7 +218,7 @@ void LoadTheState(HWND hWnd, int StateID)
 	SelectState(hWnd, (StateID - ID_LOAD_1) + ID_CURRENTSAVE_1);
 	if (emu_launched)
 	{
-		savestates_job = LOADSTATE;
+		savestates_load(current_save_slot, false);
 	}
 }
 
@@ -964,8 +967,6 @@ LRESULT CALLBACK RecordMovieProc(HWND hwnd, UINT Message, WPARAM wParam,
 						break;
 					}
 
-					savestates_select_filename(path.c_str());
-
 					std::string movie_path = strip_extension(path) + ".m64";
 
 					strcpy(tempbuf, movie_path.c_str());
@@ -1552,8 +1553,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			}else if (extension == ".st" || extension == ".savestate")
 			{
 				if (!emu_launched) break;
-				savestates_select_filename(fname);
-				savestates_job = LOADSTATE;
+				savestates_save(fname, false);
 			} else if(extension == ".lua")
 			{
 				lua_create_and_run(path.string().c_str(), false);
@@ -2065,10 +2065,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			case STATE_SAVE:
 				if (!emu_paused || MenuPaused)
 				{
-					savestates_job = SAVESTATE;
+					savestates_save(current_save_slot, false);
 				} else if (emu_launched)
 				{
-					savestates_save();
+					savestates_save(current_save_slot, true);
 				}
 				break;
 			case STATE_SAVEAS:
@@ -2096,8 +2096,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					else
 						strcat(correctedPath, ".st");
 
-					savestates_select_filename(correctedPath);
-					savestates_job = SAVESTATE;
+					savestates_save(correctedPath, false);
 
 					if (wasMenuPaused)
 					{
@@ -2108,9 +2107,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			case STATE_RESTORE:
 				if (emu_launched)
 				{
-					savestates_job = LOADSTATE;
-					// dont call savestatesload from ui thread right after setting flag for emu thread
-					//savestates_load();
+					savestates_load(current_save_slot, false);
 				}
 				break;
 			case STATE_LOAD:
@@ -2124,8 +2121,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 						break;
 					}
 
-					savestates_select_filename(wstring_to_string(path).c_str());
-					savestates_job = LOADSTATE;
+					savestates_load(path, false);
 
 					if (wasMenuPaused)
 					{
@@ -2447,8 +2443,7 @@ void StartSavestate()
 	{
 		char file[MAX_PATH];
 		GetCmdLineParameter(CMDLINE_SAVESTATE, file);
-		savestates_select_filename(file);
-		savestates_job = LOADSTATE;
+		savestates_load(file, false);
 	}
 }
 

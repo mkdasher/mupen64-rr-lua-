@@ -46,7 +46,9 @@
 #include "win/main_win.h"
 #include "win/features/Statusbar.hpp"
 
-int savestates_job = 0;
+e_st_job st_job = e_st_job::none;
+std::filesystem::path st_job_path;
+
 int savestates_job_success = 1;
 size_t current_slot = 1;
 
@@ -277,7 +279,8 @@ void savestates_load_buffer(const std::vector<uint8_t>& buf)
     }
 
     // new version does one bigass gzread for first part of .st (static size)
-	const auto first_block = static_cast<char*>(malloc(firstBlockSize));
+	// ReSharper disable once CppLocalVariableMayBeConst
+	auto first_block = static_cast<char*>(malloc(firstBlockSize));
     bread(&b, first_block, firstBlockSize);
     // now read interrupt queue into buf
     for (len = 0; len < BUFLEN; len += 8)
@@ -327,7 +330,7 @@ void savestates_load_buffer(const std::vector<uint8_t>& buf)
         // hash matches, load and verify rest of the data
         unsigned long movie_input_data_size = 0;
         bread(&b, &movie_input_data_size, sizeof(movie_input_data_size));
-        const auto local_movie_data = static_cast<char*>(malloc(movie_input_data_size * sizeof(char)));
+        auto local_movie_data = (char*)malloc(movie_input_data_size);
         bread(&b, local_movie_data, movie_input_data_size);
         const int result = VCR_movieUnfreeze(local_movie_data, movie_input_data_size);
         free(local_movie_data);
@@ -395,3 +398,48 @@ failedLoad:
 
 
 #undef BUFLEN
+
+std::string slot_to_path(size_t slot)
+{
+	return std::string(get_savespath()) + std::string(reinterpret_cast<const char*>(ROM_HEADER->nom)) + ".st";
+}
+
+void savestates_save(size_t slot, bool immediate)
+{
+	savestates_save(slot_to_path(slot), immediate);
+}
+
+void savestates_load(size_t slot, bool immediate)
+{
+	savestates_load(slot_to_path(slot), immediate);
+}
+
+void savestates_save(std::filesystem::path path, bool immediate)
+{
+	if (!immediate)
+	{
+		st_job = e_st_job::save;
+		st_job_path = path;
+		return;
+	}
+
+	if (Config.use_summercart) save_summercart(path.string().c_str());
+	auto buf = savestates_save_buffer();
+	write_file_buffer(path, buf);
+
+	main_dispatcher_invoke(AtSaveStateLuaCallback);
+}
+
+void savestates_load(std::filesystem::path path, bool immediate)
+{
+	if (!immediate)
+	{
+		st_job = e_st_job::load;
+		st_job_path = path;
+		return;
+	}
+
+	if (Config.use_summercart) load_summercart(path.string().c_str());
+	savestates_load_buffer(read_file_buffer(path));
+	main_dispatcher_invoke(AtLoadStateLuaCallback);
+}

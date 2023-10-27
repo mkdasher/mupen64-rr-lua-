@@ -896,17 +896,16 @@ VCR_getKeys(int Control, BUTTONS* Keys)
 	if (m_task == StartRecordingFromSnapshot)
 	{
 		// wait until state is saved, then record
-		if ((savestates_job & SAVESTATE) == 0)
+		if (st_job != e_st_job::save)
 		{
 			printf("[VCR]: Starting recording from Snapshot...\n");
 			m_task = Recording;
 			memset(Keys, 0, sizeof(BUTTONS));
 		}
-		///		return;
 	}
 
 	if (m_task == StartRecordingFromExistingSnapshot)
-		if ((savestates_job & LOADSTATE) == 0)
+		if (st_job != e_st_job::load)
 		{
 			printf("[VCR]: Starting recording from Existing Snapshot...\n");
 			m_task = Recording;
@@ -935,7 +934,7 @@ VCR_getKeys(int Control, BUTTONS* Keys)
 	if (m_task == StartPlaybackFromSnapshot)
 	{
 		// wait until state is loaded, then playback
-		if ((savestates_job & LOADSTATE) == 0)
+		if (st_job != e_st_job::load)
 		{
 			extern BOOL savestates_job_success;
 			if (!savestates_job_success)
@@ -1166,8 +1165,7 @@ VCR_startRecord(const char* filename, unsigned short flags,
 		else
 			strncat(buf, ".savestate", 12);
 
-		savestates_select_filename(buf);
-		savestates_job |= SAVESTATE;
+		savestates_save(buf, false);
 		m_task = StartRecordingFromSnapshot;
 	} else if (flags & MOVIE_START_FROM_EXISTING_SNAPSHOT)
 	{
@@ -1180,8 +1178,7 @@ VCR_startRecord(const char* filename, unsigned short flags,
 		else
 			strncat(buf, ".savestate", 12);
 
-		savestates_select_filename(buf);
-		savestates_job |= LOADSTATE;
+		savestates_load(buf, false);
 
 		// set this to the normal snapshot flag to maintain compatibility
 		m_header.startFlags = MOVIE_START_FROM_SNAPSHOT;
@@ -1704,8 +1701,7 @@ startPlayback(const char* filename, const char* authorUTF8,
 				return VCR_PLAYBACK_SAVESTATE_MISSING;
 			}
 
-			savestates_select_filename(buf);
-			savestates_job |= LOADSTATE;
+			savestates_load(buf, false);
 			m_task = StartPlaybackFromSnapshot;
 		} else
 		{

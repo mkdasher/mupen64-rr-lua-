@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <Windows.h>
 #include <string>
 #include <vector>
@@ -19,6 +20,9 @@ std::vector<std::string> get_files_in_subdirectories(
 std::string strip_extension(const std::string& path);
 std::wstring strip_extension(const std::wstring &path);
 std::wstring get_extension(const std::wstring &path);
+
+bool write_file_buffer(const std::filesystem::path& path, const std::vector<uint8_t>& buffer);
+std::vector<uint8_t> read_file_buffer(const std::filesystem::path& path);
 
 void copy_to_clipboard(HWND owner, const std::string &str);
 

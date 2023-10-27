@@ -474,7 +474,7 @@ void update_pif_read(bool stcheck)
     //doesn't have pausing. But this also means linux version is unusable for tasing.
     //If you really want it for some reason, define emu_paused.
     bool once = emu_paused | frame_advancing; //used to pause only once during controller routine
-    bool stAllowed = true; //used to disallow .st being loaded after any controller has already been read
+    bool st_allowed = true; //used to disallow .st being loaded after any controller has already been read
 #ifdef DEBUG_PIF
 	printf("---------- before read ----------\n");
 	print_pif();
@@ -521,27 +521,26 @@ void update_pif_read(bool stcheck)
                                 AtIntervalLuaCallback();
                             });
                             //should this be before or after? idk
-                            if (savestates_job & LOADSTATE && stAllowed)
+                            if (st_allowed && st_job == e_st_job::load)
                             {
-                                savestates_load(false);
-                                savestates_job &= ~LOADSTATE;
+                                savestates_load(st_job_path, true);
+                                st_job = e_st_job::none;
                             }
                         }
                     }
                     if (stcheck)
                     {
-                        if (savestates_job & SAVESTATE && stAllowed)
+                        if (st_allowed && st_job == e_st_job::save)
                         {
-                            savestates_save();
-                            savestates_job &= ~SAVESTATE;
+                            savestates_save(st_job_path, true);
+                            st_job = e_st_job::none;
                         }
                     }
-                    if (savestates_job & LOADSTATE && stAllowed)
+                    if (st_allowed && st_job == e_st_job::load)
                     {
-                        savestates_load(false);
-                        savestates_job &= ~LOADSTATE;
+                        savestates_load(st_job_path, true);
+                        st_job = e_st_job::none;
                     }
-                    extern bool old_st;
                     if (old_st)
                     {
                         //if old savestate, don't fetch controller (matches old behaviour), makes delay fix not work for that st but syncs all m64s
@@ -549,7 +548,7 @@ void update_pif_read(bool stcheck)
                         old_st = false;
                         return;
                     }
-                    stAllowed = false;
+                    st_allowed = false;
                     controllerRead = channel;
                     if (Controls[channel].Present &&
                         Controls[channel].RawData

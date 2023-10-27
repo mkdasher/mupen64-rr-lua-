@@ -27,7 +27,20 @@
  *
 **/
 
+#pragma once
+#include <filesystem>
+
+enum class e_st_job
+{
+	none,
+	save,
+	load
+};
+
 extern bool st_skip_dma;
+extern e_st_job st_job;
+extern std::filesystem::path st_job_path;
+extern bool old_st;
 
 /**
  * \brief Saves a savestate to the specified slot
