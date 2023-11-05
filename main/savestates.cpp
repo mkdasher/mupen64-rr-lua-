@@ -181,21 +181,9 @@ std::vector<uint8_t> generate_savestate()
     vecwrite(b, &movieActive, sizeof(movieActive));
     if (movieActive)
     {
-        char* movie_freeze_buf = NULL;
-        unsigned long movie_freeze_size = 0;
-
-        VCR_movieFreeze(&movie_freeze_buf, &movie_freeze_size);
-        if (movie_freeze_buf)
-        {
-            vecwrite(b, &movie_freeze_size, sizeof(movie_freeze_size));
-            vecwrite(b, movie_freeze_buf, movie_freeze_size);
-            free(movie_freeze_buf);
-        }
-        else
-        {
-            printf("Failed to save movie snapshot.\n");
-            savestates_job_success = FALSE;
-        }
+    	unsigned long movie_inputs_size = movie_inputs.size();
+    	vecwrite(b, &movie_inputs_size, sizeof(movie_inputs_size));
+    	vecwrite(b, movie_inputs.data(), movie_inputs.size());
     }
 	return b;
 }
@@ -424,54 +412,11 @@ void savestates_load_immediate()
 	    unsigned long movie_input_data_size = 0;
 	    memread(&ptr, &movie_input_data_size, sizeof(movie_input_data_size));
 
-	    auto local_movie_data = (char*)malloc(movie_input_data_size);
-	    memread(&ptr, local_movie_data, movie_input_data_size);
+	    auto movie_input_data = (char*)malloc(movie_input_data_size);
+	    memread(&ptr, movie_input_data, movie_input_data_size);
 
-	    int code = VCR_movieUnfreeze(local_movie_data, movie_input_data_size);
-	    free(local_movie_data);
-
-	    if (code != SUCCESS && !VCR_isIdle())
-	    {
-	    	statusbar_post_text("Loading non-movie savestate. Recording can break");
-
-		    if (!Config.is_state_independent_state_loading_allowed)
-		    {
-		    	bool critical_stop = false;
-		    	std::string err_str = "Failed to restore movie, ";
-		    	switch (code)
-		    	{
-		    	case NOT_FROM_THIS_MOVIE:
-		    		err_str += "snapshot not from this movie";
-		    		break;
-		    	case NOT_FROM_A_MOVIE:
-		    		err_str += "snapshot not from a movie";
-		    		break;
-		    	case INVALID_FRAME:
-		    		err_str += "invalid frame number";
-		    		break;
-		    	case WRONG_FORMAT:
-		    		err_str += "wrong format";
-		    		stop = true;
-		    		break;
-		    	default:
-		    		break;
-		    	}
-		    	MessageBox(mainHWND, err_str.c_str(), nullptr, MB_ICONERROR);
-			    if (critical_stop)
-			    {
-				    if (VCR_isRecording())
-				    {
-				    	VCR_stopRecord(1);
-				    }
-			    	if (VCR_isPlaying())
-			    	{
-			    		VCR_stopPlayback();
-			    	}
-			    }
-			    savestates_job_success = FALSE;
-			    goto failedLoad;
-		    }
-	    }
+	    movie_inputs.resize(movie_input_data_size);
+    	memcpy(movie_inputs.data(), movie_input_data, movie_input_data_size);
     }
     else
     {

@@ -29,6 +29,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <vector>
 #ifdef _MSC_VER
 #define snprintf	_snprintf
 #define strcasecmp	_stricmp
@@ -85,20 +86,17 @@ static const char* m_errCodeName[] =
 
 e_task m_task = e_task::idle;
 
-static char m_filename[PATH_MAX];
 static char AVIFileName[PATH_MAX];
-static FILE* m_file = 0;
+std::filesystem::path movie_path;
+std::vector<BUTTONS> movie_inputs;
 
-static t_movie_header m_header;
+t_movie_header m_header = {0};
 static BOOL m_readOnly = FALSE;
 
 long m_currentSample = -1;
 // should = length_samples when recording, and be < length_samples when playing
 int m_currentVI = -1;
 static int m_visPerSecond = -1;
-static char* m_inputBuffer = NULL;
-static unsigned long m_inputBufferSize = 0;
-static char* m_inputBufferPtr = NULL;
 
 static int m_capture = 0; // capture movie
 static int m_audioFreq = 33000; //0x30018;
@@ -121,24 +119,7 @@ bool captureWithFFmpeg = true;
 std::unique_ptr<FFmpegManager> captureManager;
 uint64_t screen_updates = 0;
 
-void SetActiveMovie(char* buf);
-static int startPlayback(const char* filename, const char* authorUTF8,
-                         const char* descriptionUTF8, const bool restarting);
 static int restartPlayback();
-static int stopPlayback(const bool bypassLoopSetting);
-
-static void write_movie_header(FILE* file, int numBytes)
-{
-	//	assert(ftell(file) == 0); // we assume file points to beginning of movie file
-	fseek(file, 0L, SEEK_SET);
-
-	m_header.version = MUP_VERSION; // make sure to update the version!
-	///	m_header.length_vis = m_header.length_samples / m_header.num_controllers; // wrong
-
-	fwrite(&m_header, 1, MUP_HEADER_SIZE, file);
-
-	fseek(file, 0L, SEEK_END);
-}
 
 char* strtrimext(char* myStr)
 {
@@ -210,107 +191,44 @@ static int visByCountrycode()
 	return m_visPerSecond;
 }
 
-static void setROMInfo(t_movie_header* header)
+void apply_rom_info(t_movie_header* header)
 {
-	// FIXME
-	switch (ROM_HEADER.Country_code & 0xFF)
-	{
-	case 0x37:
-	case 0x41:
-	case 0x45:
-	case 0x4a:
-	default:
-		header->vis_per_second = 60; // NTSC
-		break;
-	case 0x44:
-	case 0x46:
-	case 0x49:
-	case 0x50:
-	case 0x53:
-	case 0x55:
-	case 0x58:
-	case 0x59:
-		header->vis_per_second = 50; // PAL
-		break;
-	}
-
+	header->vis_per_second = static_cast<uint8_t>(get_vis_per_second(ROM_HEADER.Country_code));
 	header->controller_flags = 0;
 	header->num_controllers = 0;
-	if (Controls[0].Present)
-		header->controller_flags |= CONTROLLER_1_PRESENT, header->num_controllers
-			++;
-	if (Controls[1].Present)
-		header->controller_flags |= CONTROLLER_2_PRESENT, header->num_controllers
-			++;
-	if (Controls[2].Present)
-		header->controller_flags |= CONTROLLER_3_PRESENT, header->num_controllers
-			++;
-	if (Controls[3].Present)
-		header->controller_flags |= CONTROLLER_4_PRESENT, header->num_controllers
-			++;
-	if (Controls[0].Plugin == controller_extension::mempak)
-		header->controller_flags |= CONTROLLER_1_MEMPAK;
-	if (Controls[1].Plugin == controller_extension::mempak)
-		header->controller_flags |= CONTROLLER_2_MEMPAK;
-	if (Controls[2].Plugin == controller_extension::mempak)
-		header->controller_flags |= CONTROLLER_3_MEMPAK;
-	if (Controls[3].Plugin == controller_extension::mempak)
-		header->controller_flags |= CONTROLLER_4_MEMPAK;
-	if (Controls[0].Plugin == controller_extension::rumblepak)
-		header->controller_flags |= CONTROLLER_1_RUMBLE;
-	if (Controls[1].Plugin == controller_extension::rumblepak)
-		header->controller_flags |= CONTROLLER_2_RUMBLE;
-	if (Controls[2].Plugin == controller_extension::rumblepak)
-		header->controller_flags |= CONTROLLER_3_RUMBLE;
-	if (Controls[3].Plugin == controller_extension::rumblepak)
-		header->controller_flags |= CONTROLLER_4_RUMBLE;
+
+	for (int i = 0; i < 4; ++i)
+	{
+		if (Controls[i].Plugin == controller_extension::mempak)
+		{
+			header->controller_flags |= CONTROLLER_X_MEMPAK(i);
+		}
+		if (Controls[i].Plugin == controller_extension::rumblepak)
+		{
+			header->controller_flags |= CONTROLLER_X_RUMBLE(i);
+		}
+
+		if (!Controls[i].Present)
+		{
+			continue;
+		}
+		header->controller_flags |= CONTROLLER_X_PRESENT(i);
+		header->num_controllers++;
+	}
 
 	strncpy(header->rom_name, (const char*)ROM_HEADER.nom, 32);
 	header->rom_crc1 = ROM_HEADER.CRC1;
 	header->rom_country = ROM_HEADER.Country_code;
-
-	header->input_plugin_name[0] = '\0';
-	header->video_plugin_name[0] = '\0';
-	header->audio_plugin_name[0] = '\0';
-	header->rsp_plugin_name[0] = '\0';
-
-	strncpy(header->video_plugin_name, video_plugin->name.c_str(),
-	        64);
-	strncpy(header->input_plugin_name, input_plugin->name.c_str(),
-	        64);
-	strncpy(header->audio_plugin_name, audio_plugin->name.c_str(),
-	        64);
+	memset(header->video_plugin_name, 0, std::size(header->video_plugin_name));
+	memset(header->audio_plugin_name, 0, std::size(header->audio_plugin_name));
+	memset(header->input_plugin_name, 0, std::size(header->input_plugin_name));
+	memset(header->rsp_plugin_name, 0, std::size(header->rsp_plugin_name));
+	strncpy(header->video_plugin_name, video_plugin->name.c_str(), 64);
+	strncpy(header->input_plugin_name, input_plugin->name.c_str(), 64);
+	strncpy(header->audio_plugin_name, audio_plugin->name.c_str(), 64);
 	strncpy(header->rsp_plugin_name, rsp_plugin->name.c_str(), 64);
 }
 
-static void reserve_buffer_space(unsigned long space_needed)
-{
-	if (space_needed > m_inputBufferSize)
-	{
-		unsigned long ptr_offset = m_inputBufferPtr - m_inputBuffer;
-		unsigned long alloc_chunks = space_needed / BUFFER_GROWTH_SIZE;
-		m_inputBufferSize = BUFFER_GROWTH_SIZE * (alloc_chunks + 1);
-		m_inputBuffer = (char*)realloc(m_inputBuffer, m_inputBufferSize);
-		m_inputBufferPtr = m_inputBuffer + ptr_offset;
-	}
-}
-
-static void truncateMovie()
-{
-	// truncate movie controller data to header.length_samples length
-
-	long truncLen = MUP_HEADER_SIZE + sizeof(BUTTONS) * (m_header.
-		length_samples);
-
-	HANDLE fileHandle = CreateFile(m_filename, GENERIC_WRITE, 0, NULL,
-	                               OPEN_EXISTING, 0, 0);
-	if (fileHandle != NULL)
-	{
-		SetFilePointer(fileHandle, truncLen, 0, FILE_BEGIN);
-		SetEndOfFile(fileHandle);
-		CloseHandle(fileHandle);
-	}
-}
 
 static int read_movie_header(FILE* file, t_movie_header* header)
 {
@@ -400,24 +318,6 @@ static int read_movie_header(FILE* file, t_movie_header* header)
 	return SUCCESS;
 }
 
-void flush_movie()
-{
-	if (m_file && (m_task == e_task::recording || m_task == e_task::start_recording || m_task ==
-		e_task::start_recording_from_snapshot || m_task ==
-		e_task::start_recording_from_existing_snapshot))
-	{
-		// (over-)write the header
-		write_movie_header(m_file, MUP_HEADER_SIZE);
-
-		// (over-)write the controller data
-		fseek(m_file, MUP_HEADER_SIZE, SEEK_SET);
-		fwrite(m_inputBuffer, 1, sizeof(BUTTONS) * (m_header.length_samples),
-		       m_file);
-
-		fflush(m_file);
-	}
-}
-
 t_movie_header VCR_getHeaderInfo(const char* filename)
 {
 	char buf[PATH_MAX];
@@ -426,8 +326,6 @@ t_movie_header VCR_getHeaderInfo(const char* filename)
 	memset(&tempHeader, 0, sizeof(t_movie_header));
 	tempHeader.rom_country = -1;
 	strcpy(tempHeader.rom_name, "(no ROM)");
-
-	flush_movie();
 
 	strncpy(temp_filename, filename, PATH_MAX);
 	char* p = strrchr(temp_filename, '.');
@@ -557,12 +455,6 @@ VCR_getReadOnly()
 	return m_readOnly;
 }
 
-// Returns the filename of the last-played movie
-const char* VCR_getMovieFilename()
-{
-	return m_filename;
-}
-
 void
 VCR_setReadOnly(BOOL val)
 {
@@ -610,149 +502,6 @@ void VCR_setLengthVIs(unsigned long val)
 void VCR_setLengthSamples(unsigned long val)
 {
 	m_header.length_samples = val;
-}
-
-void
-VCR_movieFreeze(char** buf, unsigned long* size)
-{
-	// sanity check
-	if (!VCR_isActive())
-	{
-		return;
-	}
-
-	*buf = NULL;
-	*size = 0;
-
-	// compute size needed for the buffer
-	unsigned long size_needed = sizeof(m_header.uid) + sizeof(m_currentSample) +
-		sizeof(m_currentVI) + sizeof(m_header.length_samples);
-	// room for header.uid, currentFrame, and header.length_samples
-	size_needed += (unsigned long)(sizeof(BUTTONS) * (m_header.length_samples +
-		1));
-	*buf = (char*)malloc(size_needed);
-	*size = size_needed;
-
-	char* ptr = *buf;
-	if (!ptr)
-	{
-		return;
-	}
-
-	*reinterpret_cast<unsigned long*>(ptr) = m_header.uid;
-	ptr += sizeof(m_header.uid);
-	*reinterpret_cast<unsigned long*>(ptr) = m_currentSample;
-	ptr += sizeof(m_currentSample);
-	*reinterpret_cast<unsigned long*>(ptr) = m_currentVI;
-	ptr += sizeof(m_currentVI);
-	*reinterpret_cast<unsigned long*>(ptr) = m_header.length_samples;
-	ptr += sizeof(m_header.length_samples);
-
-	memcpy(ptr, m_inputBuffer, sizeof(BUTTONS) * (m_header.length_samples + 1));
-}
-
-int VCR_movieUnfreeze(const char* buf, unsigned long size)
-{
-	// sanity check
-	if (VCR_isIdle())
-	{
-		return -1; // doesn't make sense to do that
-	}
-
-	const char* ptr = buf;
-	if (size < sizeof(m_header.uid) + sizeof(m_currentSample) + sizeof(
-		m_currentVI) + sizeof(m_header.length_samples))
-	{
-		return WRONG_FORMAT;
-	}
-
-	const unsigned long movie_id = *reinterpret_cast<const unsigned long*>(ptr);
-	ptr += sizeof(unsigned long);
-	const unsigned long current_sample = *reinterpret_cast<const unsigned long*>
-		(ptr);
-	ptr += sizeof(unsigned long);
-	const unsigned long current_vi = *reinterpret_cast<const unsigned long*>(
-		ptr);
-	ptr += sizeof(unsigned long);
-	const unsigned long max_sample = *reinterpret_cast<const unsigned long*>(
-		ptr);
-	ptr += sizeof(unsigned long);
-
-	const unsigned long space_needed = (sizeof(BUTTONS) * (max_sample + 1));
-
-	if (movie_id != m_header.uid)
-		return NOT_FROM_THIS_MOVIE;
-
-	if (current_sample > max_sample)
-		return INVALID_FRAME;
-
-	if (space_needed > size)
-		return WRONG_FORMAT;
-
-	e_task lastTask = m_task;
-	if (!m_readOnly)
-	{
-		// here, we are going to take the input data from the savestate
-		// and make it the input data for the current movie, then continue
-		// writing new input data at the currentFrame pointer
-		//		change_state(MOVIE_STATE_RECORD);
-		m_task = e_task::recording;
-		flush_movie();
-		///		systemScreenMessage("Movie re-record");
-
-		extern void EnableEmulationMenuItems(BOOL flag);
-		if (lastTask == e_task::playback)
-			EnableEmulationMenuItems(TRUE);
-		// update header with new ROM info
-		if (lastTask == e_task::playback)
-			setROMInfo(&m_header);
-
-		m_currentSample = (long)current_sample;
-		m_header.length_samples = current_sample;
-		m_currentVI = (int)current_vi;
-
-		m_header.rerecord_count++;
-
-		reserve_buffer_space(space_needed);
-		memcpy(m_inputBuffer, ptr, space_needed);
-		flush_movie();
-		fseek(m_file,
-		      MUP_HEADER_SIZE_CUR + (sizeof(BUTTONS) * (m_currentSample + 1)),
-		      SEEK_SET);
-	} else
-	{
-		// here, we are going to keep the input data from the movie file
-		// and simply rewind to the currentFrame pointer
-		// this will cause a desync if the savestate is not in sync
-		// with the on-disk recording data, but it's easily solved
-		// by loading another savestate or playing the movie from the beginning
-
-		// and older savestate might have a currentFrame pointer past
-		// the end of the input data, so check for that here
-		if (current_sample > m_header.length_samples)
-			return INVALID_FRAME;
-
-		m_task = e_task::playback;
-		flush_movie();
-		//		change_state(MOVIE_STATE_PLAY);
-		///		systemScreenMessage("Movie rewind");
-
-		extern void EnableEmulationMenuItems(BOOL flag);
-		if (lastTask == e_task::recording)
-			EnableEmulationMenuItems(TRUE);
-
-		m_currentSample = (long)current_sample;
-		m_currentVI = (int)current_vi;
-	}
-
-	m_inputBufferPtr = m_inputBuffer + (sizeof(BUTTONS) * m_currentSample);
-
-	///	for(int controller = 0 ; controller < MOVIE_NUM_OF_POSSIBLE_CONTROLLERS ; controller++)
-	///		if((m_header.controllerFlags & MOVIE_CONTROLLER(controller)) != 0)
-	///			read_frame_controller_data(controller);
-	///	read_frame_controller_data(0); // correct if we can assume the first controller is active, which we can on all GBx/xGB systems
-
-	return SUCCESS;
 }
 
 
@@ -872,10 +621,6 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 	if (m_task == e_task::recording)
 	{
 		// TODO: as old comments already state, remove vcr flush mechanism (reasons for it are long gone, at this point it's just huge complexity for no reason)
-		reserve_buffer_space(
-			(unsigned long)(m_inputBufferPtr + sizeof(BUTTONS) -
-				m_inputBuffer));
-
 		extern bool scheduled_restart;
 		if (scheduled_restart)
 		{
@@ -886,17 +631,9 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 			};
 		}
 
-		*reinterpret_cast<BUTTONS*>(m_inputBufferPtr) = *input;
-
-		m_inputBufferPtr += sizeof(BUTTONS);
+		movie_inputs.push_back(*input);
 		m_header.length_samples++;
 		m_currentSample++;
-
-		// flush data every 5 seconds or so
-		if ((m_header.length_samples % (m_header.num_controllers * 150)) == 0)
-		{
-			flush_movie();
-		}
 
 		if (scheduled_restart)
 		{
@@ -914,7 +651,7 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 		// TODO: only rely on samples for movie termination
 		if (m_currentSample >= (long)m_header.length_samples)
 		{
-			stopPlayback(false);
+			vcr_stop_playback(false);
 			commandline_on_movie_playback_stop();
 			setKeys(index, {0});
 			getKeys(index, input);
@@ -923,9 +660,7 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 
 		if (m_header.controller_flags & CONTROLLER_X_PRESENT(index))
 		{
-			*input = *reinterpret_cast<BUTTONS*>(m_inputBufferPtr);
-			m_inputBufferPtr += sizeof(BUTTONS);
-			setKeys(index, *input);
+			setKeys(index, movie_inputs[m_currentSample]);
 
 			//no readable code because 120 star tas can't get this right >:(
 			if (input->Value == 0xC000)
@@ -957,233 +692,60 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 }
 
 
-int
-VCR_startRecord(const char* filename, unsigned short flags,
-                const char* authorUTF8, const char* descriptionUTF8, int defExt)
+int vcr_start_record(std::filesystem::path path, uint16_t start_flag)
 {
 	VCR_coreStopped();
-
-	char buf[PATH_MAX];
-
-	vcr_recent_movies_add(std::string(filename));
-
-	// m_filename will be overwritten later in the function if
-	// MOVIE_START_FROM_EXISTING_SNAPSHOT is true, but it doesn't
-	// matter enough to make this a conditional thing
-	strncpy(m_filename, filename, PATH_MAX);
-
-	// open record file
-	strcpy(buf, m_filename);
-	{
-		char* dot = strrchr(buf, '.');
-		char* s1 = strrchr(buf, '\\');
-		char* s2 = strrchr(buf, '/');
-		if (!dot || ((s1 && s1 > dot) || (s2 && s2 > dot)))
-		{
-			strncat(buf, ".m64", PATH_MAX);
-		}
-	}
-	m_file = fopen(buf, "wb");
-	if (m_file == 0)
-	{
-		fprintf(
-			stderr,
-			"[VCR]: Cannot start recording, could not open file '%s': %s\n",
-			filename, strerror(errno));
-		return -1;
-	}
-
-	for (int i = 0; i < 4; i++)
-	{
-		if (Controls[i].Present && Controls[i].RawData)
-		{
-			if (MessageBox(
-				NULL,
-				"Warning: One of the active controllers of your input plugin is set to accept \"Raw Data\".\nThis can cause issues when recording and playing movies. Proceed?",
-				"VCR", MB_YESNO | MB_TOPMOST | MB_ICONWARNING) == IDNO) return -
-				1;
-			break; //
-		}
-	}
-
 	VCR_setReadOnly(FALSE);
+	vcr_recent_movies_add(path.string());
+	movie_path = path;
 
-	memset(&m_header, 0, MUP_HEADER_SIZE);
-
+	m_header = {0};
 	m_header.magic = MUP_MAGIC;
 	m_header.version = MUP_VERSION;
 	m_header.uid = (unsigned long)time(NULL);
-	m_header.length_vis = 0;
-	m_header.length_samples = 0;
-
-	m_header.rerecord_count = 0;
-	m_header.startFlags = flags;
-
-	reserve_buffer_space(4096);
-
-	if (flags & MOVIE_START_FROM_SNAPSHOT)
-	{
-		// save state
-		printf("[VCR]: Saving state...\n");
-		strcpy(buf, m_filename);
-
-		// remove extension
-		for (;;)
-		{
-			char* dot = strrchr(buf, '.');
-			if (dot && (dot > strrchr(buf, '\\') && dot > strrchr(buf, '/')))
-				*dot = '\0';
-			else
-				break;
-		}
-
-		if (defExt)
-			strncat(buf, ".st", 4);
-		else
-			strncat(buf, ".savestate", 12);
-
-		savestates_do(buf, e_st_job::save);
-		m_task = e_task::start_recording_from_snapshot;
-	} else if (flags & MOVIE_START_FROM_EXISTING_SNAPSHOT)
-	{
-		printf("[VCR]: Loading state...\n");
-		strncpy(m_filename, filename, MAX_PATH);
-		strncpy(buf, m_filename, MAX_PATH);
-		strip_extension(buf);
-		if (defExt)
-			strncat(buf, ".st", 4);
-		else
-			strncat(buf, ".savestate", 12);
-
-		savestates_do(buf, e_st_job::load);
-
-		// set this to the normal snapshot flag to maintain compatibility
-		m_header.startFlags = MOVIE_START_FROM_SNAPSHOT;
-
-		m_task = e_task::start_recording_from_existing_snapshot;
-	} else
-	{
-		m_task = e_task::start_recording;
-	}
-	SetActiveMovie(buf);
-	setROMInfo(&m_header);
-
-	// utf8 strings are also null-terminated so this method still works
-	if (authorUTF8)
-		strncpy(m_header.author, authorUTF8, MOVIE_AUTHOR_DATA_SIZE);
-	m_header.author[MOVIE_AUTHOR_DATA_SIZE - 1] = '\0';
-	if (descriptionUTF8)
-		strncpy(m_header.description, descriptionUTF8,
-		        MOVIE_DESCRIPTION_DATA_SIZE);
-	m_header.description[MOVIE_DESCRIPTION_DATA_SIZE - 1] = '\0';
-
-	write_movie_header(m_file, MUP_HEADER_SIZE);
+	m_header.startFlags = start_flag;
 
 	m_currentSample = 0;
 	m_currentVI = 0;
 
+	if (start_flag & MOVIE_START_FROM_SNAPSHOT)
+	{
+		m_task = e_task::start_recording_from_snapshot;
+		savestates_do(strip_extension(path.string()) + ".st", e_st_job::save);
+	} else if (start_flag & MOVIE_START_FROM_EXISTING_SNAPSHOT)
+	{
+		m_task = e_task::start_recording_from_existing_snapshot;
+		savestates_do(strip_extension(path.string()) + ".st", e_st_job::load);
+
+		// set this to the normal snapshot flag to maintain compatibility
+		m_header.startFlags = MOVIE_START_FROM_SNAPSHOT;
+	} else
+	{
+		m_task = e_task::start_recording;
+	}
+
+	apply_rom_info(&m_header);
 	return 0;
 }
 
 
-int
-VCR_stopRecord(int defExt)
+int vcr_stop_record()
 {
-	int retVal = -1;
+	if (m_task != e_task::recording) return -1;
 
-	if (m_task == e_task::start_recording)
-	{
-		char buf[PATH_MAX];
+	FILE* f = fopen(movie_path.string().c_str(), "wb");
+	fwrite(&m_header, sizeof(t_movie_header), 1, f);
+	fwrite(movie_inputs.data(), sizeof(BUTTONS), movie_inputs.size(), f);
+	fclose(f);
 
-		m_task = e_task::idle;
-		if (m_file)
-		{
-			fclose(m_file);
-			m_file = 0;
-		}
-		printf("[VCR]: Removing files (nothing recorded)\n");
+	m_task = e_task::idle;
+	printf("[VCR]: Record stopped. Recorded %ld input samples\n", m_header.length_samples);
+	EnableEmulationMenuItems(TRUE);
+	statusbar_post_text("", 1);
+	statusbar_post_text("Stopped recording");
 
-		strcpy(buf, m_filename);
-
-		if (defExt)
-			strncat(m_filename, ".st", PATH_MAX);
-		else
-			strncat(m_filename, ".savestate", PATH_MAX);
-
-		if (_unlink(buf) < 0)
-			fprintf(stderr, "[VCR]: Couldn't remove save state: %s\n",
-			        strerror(errno));
-
-		strcpy(buf, m_filename);
-		strncat(m_filename, ".m64", PATH_MAX);
-		if (_unlink(buf) < 0)
-			fprintf(stderr, "[VCR]: Couldn't remove recorded file: %s\n",
-			        strerror(errno));
-
-		retVal = 0;
-	}
-
-	if (m_task == e_task::recording)
-	{
-		//		long end = -1;
-
-		setROMInfo(&m_header);
-
-		flush_movie();
-
-		m_task = e_task::idle;
-
-		//		fwrite( &end, 1, sizeof (long), m_file );
-		//		fwrite( &m_header.length_samples, 1, sizeof (long), m_file );
-		fclose(m_file);
-
-		m_file = NULL;
-
-		truncateMovie();
-
-		printf("[VCR]: Record stopped. Recorded %ld input samples\n",
-		       m_header.length_samples);
-
-		extern void EnableEmulationMenuItems(BOOL flag);
-		EnableEmulationMenuItems(TRUE);
-		//RESET_TITLEBAR;
-		SetActiveMovie(0); // ?
-
-
-		statusbar_post_text("", 1);
-		statusbar_post_text("Stopped recording");
-
-		retVal = 0;
-	}
-
-	if (m_inputBuffer)
-	{
-		free(m_inputBuffer);
-		m_inputBuffer = NULL;
-		m_inputBufferPtr = NULL;
-		m_inputBufferSize = 0;
-	}
-
-	return retVal;
-}
-
-//on titlebar, modifies passed buffer!!
-//if buffer == NULL, remove current active
-void SetActiveMovie(char* buf)
-{
-	char title[MAX_PATH];
-
-	if (!buf)
-	{
-		sprintf(title, MUPEN_VERSION " - %s", (char*)ROM_HEADER.nom);
-	} else if (buf)
-	{
-		_splitpath(buf, 0, 0, buf, 0);
-		sprintf(title, MUPEN_VERSION " - %s | %s.m64", (char*)ROM_HEADER.nom,
-		        buf);
-	}
-	printf("title %s\n", title);
-	SetWindowText(mainHWND, title);
+	movie_inputs = {};
+	return 0;
 }
 
 bool getSavestatePath(const char* filename, char* outBuffer)
@@ -1218,313 +780,50 @@ bool getSavestatePath(const char* filename, char* outBuffer)
 	return found;
 }
 
-int
-VCR_startPlayback(const std::string &filename, const char* authorUTF8,
-                  const char* descriptionUTF8)
-{
-	vcr_recent_movies_add(filename);
-	return startPlayback(filename.c_str(), authorUTF8, descriptionUTF8, false);
-}
 
-static int
-startPlayback(const char* filename, const char* authorUTF8,
-              const char* descriptionUTF8, const bool restarting)
+int vcr_start_playback(std::filesystem::path path, const bool restarting)
 {
+	vcr_recent_movies_add(path.string());
 	VCR_coreStopped();
 	is_restarting_flag = false;
-	//	m_intro = TRUE;
 
-	extern HWND mainHWND;
-	char buf[PATH_MAX];
+	auto buf = read_file_buffer(path);
 
-	strncpy(m_filename, filename, PATH_MAX);
-	printf("m_filename = %s\n", m_filename);
-	char* p = strrchr(m_filename, '.');
-	// gets a string slice from the final "." to the end
+	m_header = {0};
+	memcpy(&m_header, buf.data(), sizeof(t_movie_header));
+	m_currentSample = 0;
+	m_currentVI = 0;
+	strcpy(VCR_Lastpath, path.string().c_str());
 
-	if (p)
+	if (m_header.startFlags & MOVIE_START_FROM_SNAPSHOT)
 	{
-		if (!strcasecmp(p, ".m64") || !strcasecmp(p, ".st"))
-			*p = '\0';
-	}
-	// open record file
-	strcpy(buf, m_filename);
-	m_file = fopen(buf, "rb+");
-	if (m_file == 0 && (m_file = fopen(buf, "rb")) == 0)
+		// load state
+		printf("[VCR]: Loading state...\n");
+		savestates_do(strip_extension(movie_path.string()) + ".st", e_st_job::load);
+		m_task = e_task::start_playback_from_snapshot;
+	} else
 	{
-		strncat(buf, ".m64", PATH_MAX);
-		m_file = fopen(buf, "rb+");
-		if (m_file == 0 && (m_file = fopen(buf, "rb")) == 0)
-		{
-			fprintf(
-				stderr,
-				"[VCR]: Cannot start playback, could not open .m64 file '%s': %s\n",
-				filename, strerror(errno));
-			reset_titlebar();
-			if (m_file != NULL)
-				fclose(m_file);
-			return VCR_PLAYBACK_FILE_BUSY;
-		}
+		m_task = e_task::start_playback;
 	}
-	SetActiveMovie(buf);
-	// can crash when looping + fast forward, no need to change this
-	// this creates a bug, so i changed it -auru
-	{
-		int code = read_movie_header(m_file, &m_header);
 
-		switch (code)
-		{
-		case SUCCESS:
-			{
-				char warningStr[8092];
-				warningStr[0] = '\0';
-
-				dontPlay = FALSE;
-
-				for (int i = 0; i < 4; i++)
-				{
-					if (Controls[i].Present && Controls[i].RawData)
-					{
-						if (MessageBox(
-								NULL,
-								"Warning: One of the active controllers of your input plugin is set to accept \"Raw Data\".\nThis can cause issues when recording and playing movies. Proceed?",
-								"VCR", MB_YESNO | MB_TOPMOST | MB_ICONWARNING)
-							==
-							IDNO) dontPlay = TRUE;
-						break; //
-					}
-				}
-				for (int i = 0; i < 4; ++i)
-				{
-					if (!Controls[i].Present && (m_header.controller_flags &
-						CONTROLLER_X_PRESENT(i))) {
-						sprintf(warningStr,
-							   "Error: You have controller %d disabled, but it is enabled in the movie file.\nIt cannot play back correctly unless you fix this first (in your input settings).\n", (i+1));
-						dontPlay = TRUE;
-					}
-					if (Controls[i].Present && !(m_header.controller_flags &
-						CONTROLLER_X_PRESENT(i)))
-						sprintf(warningStr,
-							   "Warning: You have controller %d enabled, but it is disabled in the movie file.\nIt might not play back correctly unless you change this first (in your input settings).\n", (i+1));
-					else {
-						if (Controls[i].Present && (Controls[i].Plugin !=
-							controller_extension::mempak) && (m_header.
-								controller_flags & CONTROLLER_X_MEMPAK(i)))
-							sprintf(warningStr,
-								   "Warning: Controller %d has a rumble pack in the movie.\nYou may need to change your input plugin settings accordingly for this movie to play back correctly.\n", (i+1));
-						if (Controls[i].Present && (Controls[i].Plugin !=
-							controller_extension::rumblepak) && (m_header.
-								controller_flags & CONTROLLER_X_RUMBLE(i)))
-							sprintf(warningStr,
-								   "Warning: Controller %d has a memory pack in the movie.\nYou may need to change your input plugin settings accordingly for this movie to play back correctly.\n", (i+1));
-						if (Controls[i].Present && (Controls[i].Plugin !=
-							controller_extension::none) && !(m_header.
-								controller_flags & (CONTROLLER_X_MEMPAK(i) |
-									CONTROLLER_X_RUMBLE(i))))
-							sprintf(warningStr,
-								   "Warning: Controller %d does not have a mempak or rumble pack in the movie.\nYou may need to change your input plugin settings accordingly for this movie to play back correctly.\n", (i+1));
-					}
-				}
-				char str[512], name[512];
-
-				if (_stricmp(m_header.rom_name,
-				                           (const char*)ROM_HEADER.nom) != 0)
-				{
-					sprintf(
-						str,
-						"The movie was recorded with the ROM \"%s\",\nbut you are using the ROM \"%s\",\nso the movie probably won't play properly.\n",
-						m_header.rom_name, (char*)ROM_HEADER.nom);
-					strcat(warningStr, str);
-					dontPlay = Config.is_rom_movie_compatibility_check_enabled
-						           ? dontPlay
-						           : TRUE;
-				} else
-				{
-					if (m_header.rom_country != ROM_HEADER.
-						Country_code)
-					{
-						sprintf(
-							str,
-							"The movie was recorded with a ROM with country code \"%d\",\nbut you are using a ROM with country code \"%d\",\nso the movie may not play properly.\n",
-							m_header.rom_country, ROM_HEADER.Country_code);
-						strcat(warningStr, str);
-						dontPlay =
-							Config.is_rom_movie_compatibility_check_enabled
-								? dontPlay
-								: TRUE;
-					} else if (m_header.rom_crc1 != ROM_HEADER.
-						CRC1)
-					{
-						sprintf(
-							str,
-							"The movie was recorded with a ROM that has CRC \"0x%X\",\nbut you are using a ROM with CRC \"0x%X\",\nso the movie may not play properly.\n",
-							(unsigned int)m_header.rom_crc1,
-							(unsigned int)ROM_HEADER.CRC1);
-						strcat(warningStr, str);
-						dontPlay =
-							Config.is_rom_movie_compatibility_check_enabled
-								? dontPlay
-								: TRUE;
-					}
-				}
-
-				if (warningStr[0] != '\0')
-				{
-					if (dontPlay)
-						printError(warningStr);
-					else
-						printWarning(warningStr);
-				}
-
-				strncpy(name, input_plugin->name.c_str(), 64);
-				if (name[0] && m_header.input_plugin_name[0] && _stricmp(
-					m_header.input_plugin_name, name) != 0)
-				{
-					printf(
-						"Warning: The movie was recorded with the input plugin \"%s\",\nbut you are using the input plugin \"%s\",\nso the movie may not play properly.\n",
-						m_header.input_plugin_name, name);
-				}
-				strncpy(name, video_plugin->name.c_str(), 64);
-				if (name[0] && m_header.video_plugin_name[0] && _stricmp(
-					m_header.video_plugin_name, name) != 0)
-				{
-					printf(
-						"Warning: The movie was recorded with the graphics plugin \"%s\",\nbut you are using the graphics plugin \"%s\",\nso the movie might not play properly.\n",
-						m_header.video_plugin_name, name);
-				}
-				strncpy(name, audio_plugin->name.c_str(), 64);
-				if (name[0] && m_header.audio_plugin_name[0] && _stricmp(
-					m_header.audio_plugin_name, name) != 0)
-				{
-					printf(
-						"Warning: The movie was recorded with the sound plugin \"%s\",\nbut you are using the sound plugin \"%s\",\nso the movie might not play properly.\n",
-						m_header.audio_plugin_name, name);
-				}
-				strncpy(name, rsp_plugin->name.c_str(), 64);
-				if (name[0] && m_header.rsp_plugin_name[0] && _stricmp(
-					m_header.rsp_plugin_name, name) != 0)
-				{
-					printf(
-						"Warning: The movie was recorded with the RSP plugin \"%s\",\nbut you are using the RSP plugin \"%s\",\nso the movie probably won't play properly.\n",
-						m_header.rsp_plugin_name, name);
-				}
-
-
-				if (dontPlay)
-				{
-					reset_titlebar();
-					if (m_file != NULL)
-						fclose(m_file);
-					return VCR_PLAYBACK_INCOMPATIBLE;
-				}
-
-				// recalculate length of movie from the file size
-				//				fseek(m_file, 0, SEEK_END);
-				//				int fileSize = ftell(m_file);
-				//				m_header.length_samples = (fileSize - MUP_HEADER_SIZE) / sizeof(BUTTONS) - 1;
-				if (m_file == NULL) return 0;
-				fseek(m_file, MUP_HEADER_SIZE_CUR, SEEK_SET);
-
-				// read controller data
-				m_inputBufferPtr = m_inputBuffer;
-				unsigned long to_read = sizeof(BUTTONS) * (m_header.
-					length_samples + 1);
-				reserve_buffer_space(to_read);
-				fread(m_inputBufferPtr, 1, to_read, m_file);
-
-				fseek(m_file, 0, SEEK_END);
-				char buf[50];
-				sprintf(buf, "%lu rr", m_header.rerecord_count);
-
-				statusbar_post_text(std::string(buf), 1);
-			}
-			break;
-		default:
-			char buf[100];
-			sprintf(buf, "[VCR]: Error playing movie: %s.\n",
-			        m_errCodeName[code]);
-			printError(buf);
-			dontPlay = code != 0; // should be stable enough
-			break;
-		}
-
-		m_currentSample = 0;
-		m_currentVI = 0;
-		strcpy(VCR_Lastpath, filename);
-
-		if (m_header.startFlags & MOVIE_START_FROM_SNAPSHOT)
-		{
-			// load state
-			printf("[VCR]: Loading state...\n");
-			strcpy(buf, m_filename);
-
-			char* untruncatedName = (char*)malloc(strlen(buf)+1);
-			strcpy(untruncatedName, buf);
-			// remove everything after the first `.` (dot)
-			for (;;)
-			{
-				char* dot = strrchr(buf, '.');
-				if (dot && (dot > strrchr(buf, '\\') && dot >
-					strrchr(buf, '/')))
-					*dot = '\0';
-				else
-					break;
-			}
-			if (!getSavestatePath(buf, buf) && !getSavestatePath(
-				untruncatedName, buf))
-			{
-				printf(
-					"[VCR]: Precautionary movie respective savestate exist check failed. No .savestate or .st found for movie!\n");
-				reset_titlebar();
-				if (m_file != NULL)
-					fclose(m_file);
-				return VCR_PLAYBACK_SAVESTATE_MISSING;
-			}
-
-			savestates_do(buf, e_st_job::load);
-			m_task = e_task::start_playback_from_snapshot;
-		} else
-		{
-			m_task = e_task::start_playback;
-		}
-
-		// utf8 strings are also null-terminated so this method still works
-		if (authorUTF8)
-			strncpy(m_header.author, authorUTF8, MOVIE_AUTHOR_DATA_SIZE);
-		m_header.author[MOVIE_AUTHOR_DATA_SIZE - 1] = '\0';
-		if (descriptionUTF8)
-			strncpy(m_header.description, descriptionUTF8,
-			        MOVIE_DESCRIPTION_DATA_SIZE);
-		m_header.description[MOVIE_DESCRIPTION_DATA_SIZE - 1] = '\0';
-		main_dispatcher_invoke(AtPlayMovieLuaCallback);
-		return code;
-	}
+	main_dispatcher_invoke(AtPlayMovieLuaCallback);
+	return 0;
 }
 
 int restartPlayback()
 {
 	is_restarting_flag = true;
-	return VCR_startPlayback(VCR_Lastpath, 0, 0);
+	return vcr_start_playback(VCR_Lastpath, true);
 }
 
-int VCR_stopPlayback()
-{
-	return stopPlayback(true);
-}
 
-static int
-stopPlayback(bool bypassLoopSetting)
+int vcr_stop_playback(bool bypass_loop_setting)
 {
-	if (!bypassLoopSetting && VCR_isLooping())
+	if (!bypass_loop_setting && VCR_isLooping())
 	{
 		return restartPlayback();
 	}
 	reset_titlebar();
-	if (m_file && m_task != e_task::start_recording && m_task != e_task::recording)
-	{
-		fclose(m_file);
-		m_file = 0;
-	}
 
 	if (m_task == e_task::start_playback)
 	{
@@ -1538,19 +837,9 @@ stopPlayback(bool bypassLoopSetting)
 		printf("[VCR]: Playback stopped (%ld samples played)\n",
 		       m_currentSample);
 
-		extern void EnableEmulationMenuItems(BOOL flag);
 		EnableEmulationMenuItems(TRUE);
-
 		statusbar_post_text("", 1);
 		statusbar_post_text("Stopped playback");
-
-		if (m_inputBuffer)
-		{
-			free(m_inputBuffer);
-			m_inputBuffer = NULL;
-			m_inputBufferPtr = NULL;
-			m_inputBufferSize = 0;
-		}
 
 		main_dispatcher_invoke(AtStopMovieLuaCallback);
 		return 0;
@@ -1643,7 +932,7 @@ void VCR_updateScreen()
 			if (audio_frames < 0)
 			{
 				printError("Audio frames became negative!");
-				VCR_stopCapture();
+				vcr_stop_capture();
 				goto cleanup;
 			}
 
@@ -1657,7 +946,7 @@ void VCR_updateScreen()
 				{
 					printError(
 						"Video codec failure!\nA call to addVideoFrame() (AVIStreamWrite) failed.\nPerhaps you ran out of memory?");
-					VCR_stopCapture();
+					vcr_stop_capture();
 					goto cleanup;
 				} else
 				{
@@ -1673,7 +962,7 @@ void VCR_updateScreen()
 				{
 					printError(
 						"Video codec failure!\nA call to addVideoFrame() (AVIStreamWrite) failed.\nPerhaps you ran out of memory?");
-					VCR_stopCapture();
+					vcr_stop_capture();
 					goto cleanup;
 				} else
 				{
@@ -1689,7 +978,7 @@ void VCR_updateScreen()
 			{
 				printError(
 					"Video codec failure!\nA call to addVideoFrame() (AVIStreamWrite) failed.\nPerhaps you ran out of memory?");
-				VCR_stopCapture();
+				vcr_stop_capture();
 				goto cleanup;
 			} else
 			{
@@ -1713,7 +1002,7 @@ VCR_aiDacrateChanged(system_type type)
 	if (VCR_isCapturing())
 	{
 		printf("Fatal error, audio frequency changed during capture\n");
-		VCR_stopCapture();
+		vcr_stop_capture();
 		return;
 	}
 	aiDacrateChanged(type);
@@ -1767,7 +1056,7 @@ static void writeSound(char* buf, int len, int minWriteSize, int maxWriteSize,
 				{
 					printError(
 						"Audio output failure!\nA call to addAudioData() (AVIStreamWrite) failed.\nPerhaps you ran out of memory?");
-					VCR_stopCapture();
+					vcr_stop_capture();
 				}
 			}
 			soundBufPos = 0;
@@ -1906,27 +1195,7 @@ void VCR_aiLenChanged()
 
 void UpdateTitleBarCapture(const char* filename)
 {
-	// Setting titlebar to include currently capturing AVI file
-	char title[PATH_MAX];
-	char avi[PATH_MAX];
-	char ext[PATH_MAX];
-	strncpy(avi, AVIFileName, PATH_MAX);
-	_splitpath(avi, 0, 0, avi, ext);
-
-	if (VCR_isPlaying())
-	{
-		char m64[PATH_MAX];
-		strncpy(m64, m_filename, PATH_MAX);
-		_splitpath(m64, 0, 0, m64, 0);
-		sprintf(title, MUPEN_VERSION " - %s | %s.m64 | %s%s",
-		        (char*)ROM_HEADER.nom, m64, avi, ext);
-	} else
-	{
-		sprintf(title, MUPEN_VERSION " - %s | %s%s", (char*)ROM_HEADER.nom,
-		        avi, ext);
-	}
-	printf("title %s\n", title);
-	SetWindowText(mainHWND, title);
+	// TODO: reimplement but less ugly
 }
 
 bool vcr_start_capture(const char* path, bool show_codec_dialog)
@@ -2044,10 +1313,6 @@ void VCR_StopFFmpegCapture()
 void
 VCR_toggleReadOnly()
 {
-	if (m_task == e_task::recording)
-	{
-		flush_movie();
-	}
 	VCR_setReadOnly(!m_readOnly);
 
 	statusbar_post_text(m_readOnly ? "Read" : "Read-write");
@@ -2071,7 +1336,7 @@ VCR_toggleLoopMovie()
 }
 
 
-int VCR_stopCapture()
+int vcr_stop_capture()
 {
 	if (captureWithFFmpeg)
 	{
@@ -2089,20 +1354,7 @@ int VCR_stopCapture()
 	toolbar_set_visibility(Config.is_toolbar_enabled);
 
 	SetWindowPos(mainHWND, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-	if (VCR_isPlaying())
-	{
-		char title[PATH_MAX];
-		char m64[PATH_MAX];
-		strncpy(m64, m_filename, PATH_MAX);
-		_splitpath(m64, 0, 0, m64, 0);
-		sprintf(title, MUPEN_VERSION " - %s | %s.m64", (char*)ROM_HEADER.nom,
-		        m64);
-		SetWindowText(mainHWND, title);
-	} else
-	{
-		//atme
-		reset_titlebar();
-	}
+	reset_titlebar();
 	SetWindowLong(mainHWND, GWL_STYLE, GetWindowLong(mainHWND, GWL_STYLE) | WS_MINIMIZEBOX);
 	// we remove WS_EX_LAYERED again, because dwm sucks at dealing with layered top-level windows
 	SetWindowLong(mainHWND, GWL_EXSTYLE, GetWindowLong(mainHWND, GWL_EXSTYLE) & ~WS_EX_LAYERED);
@@ -2126,17 +1378,17 @@ VCR_coreStopped()
 	case e_task::start_recording:
 	case e_task::start_recording_from_snapshot:
 	case e_task::recording:
-		VCR_stopRecord(1);
+		vcr_stop_record();
 		break;
 	case e_task::start_playback:
 	case e_task::start_playback_from_snapshot:
 	case e_task::playback:
-		VCR_stopPlayback();
+		vcr_stop_playback(false);
 		break;
 	}
 
 	if (m_capture != 0)
-		VCR_stopCapture();
+		vcr_stop_capture();
 }
 
 void vcr_update_statusbar()
@@ -2252,7 +1504,7 @@ int32_t vcr_recent_movies_play(uint16_t menu_item_id)
 	if (index >= 0 && index < Config.recent_movie_paths.size())
 	{
 		VCR_setReadOnly(TRUE);
-		return VCR_startPlayback(Config.recent_movie_paths[index], "", "");
+		return vcr_start_playback(Config.recent_movie_paths[index], false);
 	}
 	return 0;
 }

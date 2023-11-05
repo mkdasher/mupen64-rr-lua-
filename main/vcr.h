@@ -6,8 +6,8 @@
 #include "plugin.hpp"
 
 #ifdef __cplusplus	//don't include cpp headers when .c compilation unit includes the file
-
 #include <string>	//(also done later for ffmpeg functions)
+#include <vector>
 #endif
 
 #define SUCCESS (0)
@@ -85,7 +85,6 @@ extern BOOL VCR_isPlaying();
 extern BOOL VCR_isRecording();
 extern BOOL VCR_isCapturing();
 extern void VCR_invalidatedCaptureFrame();
-extern const char* VCR_getMovieFilename();
 extern BOOL VCR_getReadOnly();
 extern bool VCR_isLooping();
 extern bool VCR_isRestarting();
@@ -97,18 +96,6 @@ extern void VCR_setLengthSamples(unsigned long val);
 extern void VCR_toggleReadOnly();
 extern void VCR_toggleLoopMovie();
 
-extern void VCR_movieFreeze(char** buf, unsigned long* size);
-extern int VCR_movieUnfreeze(const char* buf, unsigned long size);
-
-
-extern int VCR_startRecord(const char* filename, unsigned short flags,
-                           const char* authorUTF8, const char* descriptionUTF8,
-                           int defExt);
-extern int VCR_stopRecord(int defExt);
-extern int VCR_startPlayback(const std::string &filename, const char* authorUTF8,
-                             const char* descriptionUTF8);
-extern int VCR_stopPlayback();
-extern int VCR_stopCapture();
 
 //ffmpeg
 #ifdef __cplusplus
@@ -141,11 +128,47 @@ void vcr_clear_save_data();
 bool vcr_start_capture(const char* path, bool show_codec_dialog);
 
 /**
+ * \brief Stops the current capture
+ * \return The operation's status code
+ */
+int vcr_stop_capture();
+
+/**
  * \brief Notifies VCR engine about controller being polled
  * \param index The polled controller's index
  * \param input The controller's input data
  */
 void vcr_on_controller_poll(int index, BUTTONS* input);
+
+/**
+ * \brief Starts recording a movie
+ * \param path The path to record the movie to
+ * \param start_flag The movie's start flag
+ * \return The operation's status code
+ */
+int vcr_start_record(std::filesystem::path path, uint16_t start_flag);
+
+/**
+ * \brief Stops recording a movie
+ * \return The operation's status code
+ */
+int vcr_stop_record();
+
+/**
+ * \brief Starts playing back a movie
+ * \param path The movie's path
+ * \param restarting TBD
+ * \return The operation's status code
+ */
+int vcr_start_playback(std::filesystem::path path, bool restarting);
+
+/**
+ * \brief Stops playing back a movie
+ * \param bypass_loop_setting Whether the movie loop setting should be ignored
+ * \return The operation's status code
+ */
+int vcr_stop_playback(bool bypass_loop_setting);
+
 
 void vcr_recent_movies_build(int32_t reset = 0);
 void vcr_recent_movies_add(const std::string path);
@@ -305,5 +328,7 @@ inline bool is_task_recording(e_task task)
 extern t_movie_header VCR_getHeaderInfo(const char* filename);
 extern char VCR_Lastpath[MAX_PATH];
 extern uint64_t screen_updates;
+extern std::vector<BUTTONS> movie_inputs;
+extern std::filesystem::path movie_path;
 
 #endif // VCR_H_

@@ -2835,13 +2835,13 @@ int LuaD2DDrawText(lua_State* L)
 	{
 		const char* fname = lua_tostring(L, 1);
 		VCR_setReadOnly(true);
-		VCR_startPlayback(fname, "", "");
+		vcr_start_playback(fname, false);
 		return 0;
 	}
 
 	int StopMovie(lua_State* L)
 	{
-		VCR_stopPlayback();
+		vcr_stop_playback(true);
 		return 0;
 	}
 
@@ -2849,7 +2849,7 @@ int LuaD2DDrawText(lua_State* L)
 	{
 		if (VCR_isStarting() || VCR_isPlaying())
 		{
-			lua_pushstring(L, VCR_getMovieFilename());
+			lua_pushstring(L, movie_path.string().c_str());
 		} else
 		{
 			luaL_error(L, "No movie is currently playing");
@@ -2915,7 +2915,7 @@ int LuaD2DDrawText(lua_State* L)
 	int StopCapture(lua_State* L)
 	{
 		if (VCR_isCapturing())
-			VCR_stopCapture();
+			vcr_stop_capture();
 		else
 			luaL_error(L, "Tried to end AVI capture when none was in progress");
 		return 0;

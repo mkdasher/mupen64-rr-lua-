@@ -300,7 +300,7 @@ DWORD WINAPI close_rom(LPVOID lpParam)
 
 		if (VCR_isCapturing() && !continue_vcr_on_restart_mode) {
 			// we need to stop capture before closing rom because rombrowser might show up in recording otherwise lol
-			if (VCR_stopCapture() != 0)
+			if (vcr_stop_capture() != 0)
 				MessageBox(NULL, "Couldn't stop capturing", "VCR", MB_OK);
 			else {
 				SetWindowPos(mainHWND, HWND_TOP, 0, 0, 0, 0,
@@ -430,6 +430,7 @@ LRESULT CALLBACK PlayMovieProc(HWND hwnd, UINT Message, WPARAM wParam,
 	case WM_INITDIALOG:
 		descriptionDialog = GetDlgItem(hwnd, IDC_INI_DESCRIPTION);
 		authorDialog = GetDlgItem(hwnd, IDC_INI_AUTHOR);
+		SetDlgItemInt(hwnd, IDC_PAUSEAT_FIELD, 0, FALSE);
 
 		SendMessage(descriptionDialog, EM_SETLIMITTEXT,
 		            MOVIE_DESCRIPTION_DATA_SIZE, 0);
@@ -492,11 +493,7 @@ LRESULT CALLBACK PlayMovieProc(HWND hwnd, UINT Message, WPARAM wParam,
 		SetDlgItemText(hwnd, IDC_MOVIE_CONTROLLER4_TEXT2, tempbuf);
 
 		CheckDlgButton(hwnd, IDC_MOVIE_READONLY, VCR_getReadOnly());
-
-
 		SetFocus(GetDlgItem(hwnd, IDC_INI_MOVIEFILE));
-
-
 		goto refresh;
 	// better than making it a macro or zillion-argument function
 
@@ -510,77 +507,26 @@ LRESULT CALLBACK PlayMovieProc(HWND hwnd, UINT Message, WPARAM wParam,
 		case IDOK:
 			{
 				VCR_coreStopped();
+
 				{
 					BOOL success;
-					unsigned int num = GetDlgItemInt(
+					const unsigned int frame = GetDlgItemInt(
 						hwnd, IDC_PAUSEAT_FIELD, &success, TRUE);
-					if (((signed int)num) >= 0 && success)
-						pauseAtFrame = (int)num;
+					if (success && frame > 0)
+						pauseAtFrame = frame;
 					else
 						pauseAtFrame = -1;
 				}
+
 				GetDlgItemText(hwnd, IDC_INI_MOVIEFILE, tempbuf, MAX_PATH);
-
-				// turn WCHAR into UTF8
-				WCHAR authorWC[MOVIE_AUTHOR_DATA_SIZE];
-				char authorUTF8[MOVIE_AUTHOR_DATA_SIZE * 4];
-				if (GetDlgItemTextW(hwnd, IDC_INI_AUTHOR, authorWC,
-				                    MOVIE_AUTHOR_DATA_SIZE))
-					WideCharToMultiByte(CP_UTF8, 0, authorWC, -1, authorUTF8,
-					                    sizeof(authorUTF8), NULL, NULL);
-				else
-					GetDlgItemTextA(hwnd, IDC_INI_AUTHOR, authorUTF8,
-					                MOVIE_AUTHOR_DATA_SIZE);
-
-				WCHAR descriptionWC[MOVIE_DESCRIPTION_DATA_SIZE];
-				char descriptionUTF8[MOVIE_DESCRIPTION_DATA_SIZE * 4];
-				if (GetDlgItemTextW(hwnd, IDC_INI_DESCRIPTION, descriptionWC,
-				                    MOVIE_DESCRIPTION_DATA_SIZE))
-					WideCharToMultiByte(CP_UTF8, 0, descriptionWC, -1,
-					                    descriptionUTF8,
-					                    sizeof(descriptionUTF8), NULL, NULL);
-				else
-					GetDlgItemTextA(hwnd, IDC_INI_DESCRIPTION, descriptionUTF8,
-					                MOVIE_DESCRIPTION_DATA_SIZE);
 
 				VCR_setReadOnly(
 					(BOOL)IsDlgButtonChecked(hwnd, IDC_MOVIE_READONLY));
 
-				auto playbackResult = VCR_startPlayback(
-					tempbuf, authorUTF8, descriptionUTF8);
+				int result = vcr_start_playback(tempbuf, false);
 
-				if (tempbuf[0] == '\0' || playbackResult !=
-					VCR_PLAYBACK_SUCCESS)
-				{
-					char errorString[MAX_PATH];
-
-					sprintf(errorString, "Failed to start movie \"%s\" ",
-					        tempbuf);
-
-					switch (playbackResult)
-					{
-					case VCR_PLAYBACK_ERROR:
-						strcat(errorString, " - unknown error");
-						break;
-					case VCR_PLAYBACK_SAVESTATE_MISSING:
-						strcat(errorString, " - savestate is missing");
-						break;
-					case VCR_PLAYBACK_FILE_BUSY:
-						strcat(errorString, " - file is locked");
-						break;
-					case VCR_PLAYBACK_INCOMPATIBLE:
-						strcat(errorString, " - configuration incompatibility");
-						break;
-					default: break;
-					}
-
-					MessageBox(hwnd, errorString, "VCR", MB_OK);
-					break;
-				} else
-				{
-					SetStatusPlaybackStarted();
-					resumeEmu(TRUE); // Unpause emu if it was paused before
-				}
+				SetStatusPlaybackStarted();
+				resumeEmu(TRUE);
 				EndDialog(hwnd, IDOK);
 			}
 			break;
@@ -939,22 +885,12 @@ LRESULT CALLBACK RecordMovieProc(HWND hwnd, UINT Message, WPARAM wParam,
 
 				if (allowClosing)
 				{
-					if (tempbuf[0] == '\0' || VCR_startRecord(
-						tempbuf, flag, authorUTF8, descriptionUTF8,
-						!IsDlgButtonChecked(hwnd, IDC_EXTSAVESTATE)) < 0)
-					{
-						sprintf(tempbuf2,
-						        "Couldn't start recording\nof \"%s\".",
-						        tempbuf);
-						MessageBox(hwnd, tempbuf2, "VCR", MB_OK);
-						break;
-					} else
-					{
-						HMENU hMenu = GetMenu(mainHWND);
-						EnableMenuItem(hMenu, ID_STOP_RECORD, MF_ENABLED);
-						EnableMenuItem(hMenu, ID_STOP_PLAYBACK, MF_GRAYED);
-						statusbar_post_text("Recording replay");
-					}
+					vcr_start_record(tempbuf, flag);
+
+					HMENU hMenu = GetMenu(mainHWND);
+					EnableMenuItem(hMenu, ID_STOP_RECORD, MF_ENABLED);
+					EnableMenuItem(hMenu, ID_STOP_PLAYBACK, MF_GRAYED);
+					statusbar_post_text("Recording replay");
 
 					EndDialog(hwnd, IDOK);
 				}
@@ -1422,15 +1358,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			{
 				if (!emu_launched) break;
 				if (!VCR_getReadOnly()) VCR_toggleReadOnly();
-				if (VCR_startPlayback(fname, nullptr, nullptr) >= 0)
-					SetStatusPlaybackStarted();
-				else
-				{
-					printf(
-						"[VCR]: Drag drop Failed to start playback of %s",
-						fname);
-					break;
-				}
+
+				vcr_start_playback(fname, false);
+				SetStatusPlaybackStarted();
 			}else if (extension == ".st" || extension == ".savestate")
 			{
 				if (!emu_launched) break;
@@ -1702,28 +1632,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				if (VCR_isPlaying())
 				{
 					VCR_setReadOnly(TRUE);
-					bool err = VCR_startPlayback(
-						Config.recent_movie_paths[0], 0, 0);
-					if (err == VCR_PLAYBACK_SUCCESS)
-						SetStatusPlaybackStarted();
-					else
-						statusbar_post_text("Latest movie couldn't be started");
+					vcr_start_playback(Config.recent_movie_paths[0], false);
+					SetStatusPlaybackStarted();
 				}
 				break;
 			case ID_REPLAY_LATEST:
-				// Don't try to load a recent movie if not emulating!
-				if (rom)
-				{
-					// Overwrite prevention? Path sanity check (Leave to internal handling)?
-					VCR_setReadOnly(TRUE);
-					bool err = VCR_startPlayback(
-						Config.recent_movie_paths[0], 0, 0);
-					if (err == VCR_PLAYBACK_SUCCESS)
-						SetStatusPlaybackStarted();
-					else
-						statusbar_post_text("Latest movie couldn't be started");
-				} else
-					statusbar_post_text("Movie can't be loaded while not emulating");
+				if (!emu_launched)
+					break;
+				// Overwrite prevention? Path sanity check (Leave to internal handling)?
+				VCR_setReadOnly(TRUE);
+				vcr_start_playback(Config.recent_movie_paths[0], false);
+				SetStatusPlaybackStarted();
 				break;
 			case ID_RECENTMOVIES_FREEZE:
 				CheckMenuItem(hMenu, ID_RECENTMOVIES_FREEZE,
@@ -1920,16 +1839,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			case ID_STOP_RECORD:
 				if (VCR_isRecording())
 				{
-					if (VCR_stopRecord(1) < 0) // seems ok (no)
-						; // fail quietly
-					//                        MessageBox(NULL, "Couldn't stop recording.", "VCR", MB_OK);
-					else
-					{
-						ClearButtons();
-						EnableMenuItem(hMenu, ID_STOP_RECORD, MF_GRAYED);
-						EnableMenuItem(hMenu, ID_START_RECORD, MF_ENABLED);
-						statusbar_post_text("Recording stopped");
-					}
+					vcr_stop_record();
+					ClearButtons();
+					EnableMenuItem(hMenu, ID_STOP_RECORD, MF_GRAYED);
+					EnableMenuItem(hMenu, ID_START_RECORD, MF_ENABLED);
+					statusbar_post_text("Recording stopped");
 				}
 				break;
 			case ID_START_PLAYBACK:
@@ -1940,15 +1854,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			case ID_STOP_PLAYBACK:
 				if (VCR_isPlaying())
 				{
-					if (VCR_stopPlayback() < 0); // fail quietly
-					//                        MessageBox(NULL, "Couldn't stop playback.", "VCR", MB_OK);
-					else
-					{
-						ClearButtons();
-						EnableMenuItem(hMenu, ID_STOP_PLAYBACK, MF_GRAYED);
-						EnableMenuItem(hMenu, ID_START_PLAYBACK, MF_ENABLED);
-						statusbar_post_text("Playback stopped");
-					}
+					vcr_stop_playback(true);
+					ClearButtons();
+					EnableMenuItem(hMenu, ID_STOP_PLAYBACK, MF_GRAYED);
+					EnableMenuItem(hMenu, ID_START_PLAYBACK, MF_ENABLED);
+					statusbar_post_text("Playback stopped");
 				}
 				break;
 
@@ -2010,7 +1920,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 				break;
 			case ID_END_CAPTURE:
-				if (VCR_stopCapture() < 0)
+				if (vcr_stop_capture() < 0)
 					MessageBox(NULL, "Couldn't stop capturing.", "VCR", MB_OK);
 				else
 				{
