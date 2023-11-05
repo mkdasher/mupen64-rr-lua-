@@ -499,11 +499,6 @@ void VCR_setLengthVIs(unsigned long val)
 	m_header.length_vis = val;
 }
 
-void VCR_setLengthSamples(unsigned long val)
-{
-	m_header.length_samples = val;
-}
-
 
 extern BOOL continue_vcr_on_restart_mode;
 extern BOOL just_restarted_flag;
@@ -602,14 +597,6 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 			if (!savestates_job_success)
 			{
 				m_task = e_task::idle;
-				if (!dontPlay)
-				{
-					// TODO: reset titlebar properly
-					char title[MAX_PATH];
-					GetWindowText(mainHWND, title, MAX_PATH);
-					title[titleLength] = '\0'; //remove movie being played part
-					SetWindowText(mainHWND, title);
-				}
 				getKeys(index, input);
 				return;
 			}
@@ -620,7 +607,6 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 
 	if (m_task == e_task::recording)
 	{
-		// TODO: as old comments already state, remove vcr flush mechanism (reasons for it are long gone, at this point it's just huge complexity for no reason)
 		extern bool scheduled_restart;
 		if (scheduled_restart)
 		{
@@ -631,6 +617,7 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 			};
 		}
 
+		printf("Recording Input [%d] (len %d): %d %d\n", m_currentSample, movie_inputs.size(), input->Y_AXIS, input->X_AXIS);
 		movie_inputs.push_back(*input);
 		m_header.length_samples++;
 		m_currentSample++;
@@ -731,9 +718,14 @@ int vcr_stop_record()
 {
 	if (m_task != e_task::recording) return -1;
 
+	for (int i = 0; i < movie_inputs.size(); ++i)
+	{
+		printf("Recorded Input [%d]: %d %d\n", i, movie_inputs[i].Y_AXIS, movie_inputs[i].X_AXIS);
+	}
+
 	FILE* f = fopen(movie_path.string().c_str(), "wb");
 	fwrite(&m_header, sizeof(t_movie_header), 1, f);
-	fwrite(movie_inputs.data(), sizeof(BUTTONS), movie_inputs.size(), f);
+	fwrite(movie_inputs.data(), m_header.length_samples * sizeof(BUTTONS), 1, f);
 	fclose(f);
 
 	m_task = e_task::idle;
@@ -742,7 +734,7 @@ int vcr_stop_record()
 	statusbar_post_text("", 1);
 	statusbar_post_text("Stopped recording");
 
-	movie_inputs = {};
+	movie_inputs.clear();
 	return 0;
 }
 
@@ -783,6 +775,7 @@ int vcr_start_playback(std::filesystem::path path, const bool restarting)
 {
 	is_restarting_flag = false;
 	movie_path = path;
+	movie_inputs.clear();
 	vcr_recent_movies_add(path.string());
 
 	auto buf = read_file_buffer(path);

@@ -92,7 +92,6 @@ extern void VCR_setReadOnly(BOOL val);
 extern unsigned long VCR_getLengthVIs();
 extern unsigned long VCR_getLengthSamples();
 extern void VCR_setLengthVIs(unsigned long val);
-extern void VCR_setLengthSamples(unsigned long val);
 extern void VCR_toggleReadOnly();
 extern void VCR_toggleLoopMovie();
 
