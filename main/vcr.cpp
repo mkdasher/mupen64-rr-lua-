@@ -646,10 +646,7 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 	// our input source is movie, input plugin is overriden
 	if (m_task == e_task::playback)
 	{
-		// This if previously also checked for if the VI is over the amount specified in the header,
-		// but that can cause movies to end playback early on laggy plugins.
-		// TODO: only rely on samples for movie termination
-		if (m_currentSample >= (long)m_header.length_samples)
+		if (m_currentSample >= m_header.length_samples)
 		{
 			vcr_stop_playback(false);
 			commandline_on_movie_playback_stop();
@@ -660,6 +657,7 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 
 		if (m_header.controller_flags & CONTROLLER_X_PRESENT(index))
 		{
+			*input = movie_inputs[m_currentSample];
 			setKeys(index, movie_inputs[m_currentSample]);
 
 			//no readable code because 120 star tas can't get this right >:(
@@ -783,17 +781,19 @@ bool getSavestatePath(const char* filename, char* outBuffer)
 
 int vcr_start_playback(std::filesystem::path path, const bool restarting)
 {
-	vcr_recent_movies_add(path.string());
-	VCR_coreStopped();
 	is_restarting_flag = false;
+	movie_path = path;
+	vcr_recent_movies_add(path.string());
 
 	auto buf = read_file_buffer(path);
 
 	m_header = {0};
-	memcpy(&m_header, buf.data(), sizeof(t_movie_header));
 	m_currentSample = 0;
 	m_currentVI = 0;
-	strcpy(VCR_Lastpath, path.string().c_str());
+	memcpy(&m_header, buf.data(), sizeof(t_movie_header));
+
+	movie_inputs.resize(m_header.length_samples);
+	memcpy(movie_inputs.data(), buf.data() + 1024, m_header.length_samples * sizeof(BUTTONS));
 
 	if (m_header.startFlags & MOVIE_START_FROM_SNAPSHOT)
 	{

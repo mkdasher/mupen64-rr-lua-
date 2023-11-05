@@ -201,14 +201,14 @@ void get_effective_paths(std::filesystem::path& st_path, std::filesystem::path& 
 void savestates_save_immediate()
 {
 	auto start_time = std::chrono::high_resolution_clock::now();
-    savestates_job_success = TRUE;
+    savestates_job_success = true;
 
 	auto st = generate_savestate();
 
 	if (!savestates_job_success)
 	{
 		statusbar_post_text("Failed to save savestate");
-		savestates_job_success = FALSE;
+		savestates_job_success = false;
 		return;
 	}
 
@@ -232,7 +232,7 @@ void savestates_save_immediate()
 		if (f == nullptr)
 		{
 			statusbar_post_text("Failed to save savestate");
-			savestates_job_success = FALSE;
+			savestates_job_success = false;
 			return;
 		}
 
@@ -337,7 +337,7 @@ void savestates_load_immediate()
     //handle to st
     int len;
 
-    savestates_job_success = TRUE;
+    savestates_job_success = true;
 
 	std::filesystem::path new_st_path = st_path;
 	std::filesystem::path new_sd_path = "";
@@ -350,7 +350,7 @@ void savestates_load_immediate()
     if (st_buf.empty())
     {
     	statusbar_post_text(std::format("{} not found", new_st_path.filename().string()));
-        savestates_job_success = FALSE;
+        savestates_job_success = false;
         return;
     }
 
@@ -358,7 +358,7 @@ void savestates_load_immediate()
 	if(decompressed_buf.empty())
 	{
 		MessageBox(mainHWND, "Failed to decompress savestate", nullptr, MB_ICONERROR);
-		savestates_job_success = FALSE;
+		savestates_job_success = false;
 		return;
 	}
 
@@ -375,7 +375,7 @@ void savestates_load_immediate()
 		MessageBox(mainHWND, std::format("The savestate was created on a rom with CRC {}, but is being loaded on a rom with CRC {}.", md5, rom_md5).c_str(), nullptr, MB_ICONWARNING);
 
 		if (!Config.is_state_independent_state_loading_allowed) {
-			savestates_job_success = FALSE;
+			savestates_job_success = false;
 			return;
 		}
 	}
@@ -395,9 +395,8 @@ void savestates_load_immediate()
     {
         // Exhausted the buffer and still no terminator. Prevents the buffer overflow "Queuecrush".
         fprintf(stderr, "Snapshot event queue terminator not reached.\n");
-        savestates_job_success = FALSE;
         warn_savestate("Savestate error", "Event queue too long (Savestate corrupted?)");
-        savestates_job_success = FALSE;
+        savestates_job_success = false;
         return;
     }
 
@@ -425,7 +424,7 @@ void savestates_load_immediate()
 		    if (!Config.is_state_independent_state_loading_allowed)
 		    {
 		    	MessageBox(mainHWND, "Can't load a non-movie snapshot while a movie is active", nullptr, MB_ICONERROR);
-			    savestates_job_success = FALSE;
+			    savestates_job_success = false;
 			    return;
 		    }
 		    statusbar_post_text("Loading non-movie savestate can desync playback");
