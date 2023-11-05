@@ -183,7 +183,7 @@ std::vector<uint8_t> generate_savestate()
     {
     	unsigned long movie_inputs_size = movie_inputs.size();
     	vecwrite(b, &movie_inputs_size, sizeof(movie_inputs_size));
-    	vecwrite(b, movie_inputs.data(), movie_inputs.size());
+    	vecwrite(b, movie_inputs.data(), movie_inputs.size() * sizeof(BUTTONS));
     }
 	return b;
 }
@@ -412,8 +412,8 @@ void savestates_load_immediate()
 	    unsigned long movie_input_data_size = 0;
 	    memread(&ptr, &movie_input_data_size, sizeof(movie_input_data_size));
 
-	    auto movie_input_data = (char*)malloc(movie_input_data_size);
-	    memread(&ptr, movie_input_data, movie_input_data_size);
+	    auto movie_input_data = (BUTTONS*)malloc(movie_input_data_size * sizeof(BUTTONS));
+	    memread(&ptr, movie_input_data, movie_input_data_size * sizeof(BUTTONS));
 
 	    movie_inputs.resize(movie_input_data_size);
     	memcpy(movie_inputs.data(), movie_input_data, movie_input_data_size);
