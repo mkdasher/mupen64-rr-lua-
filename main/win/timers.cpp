@@ -143,7 +143,7 @@ void timer_new_vi()
 	if (VCR_isPlaying())
 	{
 		extern int pauseAtFrame;
-		if (m_currentSample >= pauseAtFrame && pauseAtFrame >= 0)
+		if (vcr_current_sample >= pauseAtFrame && pauseAtFrame >= 0)
 		{
 			pauseEmu(TRUE); // maybe this is multithreading unsafe?
 			pauseAtFrame = -1; // don't pause again

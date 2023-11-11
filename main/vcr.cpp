@@ -65,7 +65,7 @@
 #define MUP_VERSION (3)
 #define MUP_HEADER_SIZE_OLD (512)
 #define MUP_HEADER_SIZE (sizeof(t_movie_header))
-#define MUP_HEADER_SIZE_CUR (m_header.version <= 2 ? MUP_HEADER_SIZE_OLD : MUP_HEADER_SIZE)
+#define MUP_HEADER_SIZE_CUR (vcr_movie_header.version <= 2 ? MUP_HEADER_SIZE_OLD : MUP_HEADER_SIZE)
 #define MAX_AVI_SIZE 0x7B9ACA00
 
 BOOL dontPlay = false;
@@ -90,10 +90,10 @@ static char AVIFileName[PATH_MAX];
 std::filesystem::path movie_path;
 std::vector<BUTTONS> movie_inputs;
 
-t_movie_header m_header = {0};
+t_movie_header vcr_movie_header = {0};
 static BOOL m_readOnly = FALSE;
 
-long m_currentSample = -1;
+int64_t vcr_current_sample = -1;
 // should = length_samples when recording, and be < length_samples when playing
 int m_currentVI = -1;
 static int m_visPerSecond = -1;
@@ -422,7 +422,7 @@ VCR_isStartingAndJustRestarted()
 		just_restarted_flag)
 	{
 		just_restarted_flag = FALSE;
-		m_currentSample = 0;
+		vcr_current_sample = 0;
 		m_currentVI = 0;
 		m_task = e_task::playback;
 		return TRUE;
@@ -486,17 +486,17 @@ void VCR_setLoopMovie(bool val)
 
 unsigned long VCR_getLengthVIs()
 {
-	return VCR_isActive() ? m_header.length_vis : 0;
+	return VCR_isActive() ? vcr_movie_header.length_vis : 0;
 }
 
 unsigned long VCR_getLengthSamples()
 {
-	return VCR_isActive() ? m_header.length_samples : 0;
+	return VCR_isActive() ? vcr_movie_header.length_samples : 0;
 }
 
 void VCR_setLengthVIs(unsigned long val)
 {
-	m_header.length_vis = val;
+	vcr_movie_header.length_vis = val;
 }
 
 
@@ -533,7 +533,7 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 			if (just_restarted_flag)
 			{
 				just_restarted_flag = FALSE;
-				m_currentSample = 0;
+				vcr_current_sample = 0;
 				m_currentVI = 0;
 				m_task = e_task::recording;
 				*input = {0};
@@ -542,7 +542,7 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 			{
 				printf("[VCR]: Starting recording...\n");
 				hardResetAndClearAllSaveData(
-					!(m_header.startFlags & MOVIE_START_FROM_EEPROM));
+					!(vcr_movie_header.startFlags & MOVIE_START_FROM_EEPROM));
 			}
 		}
 	}
@@ -577,14 +577,14 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 			if (just_restarted_flag)
 			{
 				just_restarted_flag = FALSE;
-				m_currentSample = 0;
+				vcr_current_sample = 0;
 				m_currentVI = 0;
 				m_task = e_task::playback;
 			} else
 			{
 				printf("[VCR]: Starting playback...\n");
 				hardResetAndClearAllSaveData(
-					!(m_header.startFlags & MOVIE_START_FROM_EEPROM));
+					!(vcr_movie_header.startFlags & MOVIE_START_FROM_EEPROM));
 			}
 		}
 	}
@@ -617,10 +617,10 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 			};
 		}
 
-		printf("Recording Input [%d] (len %d): %d %d\n", m_currentSample, movie_inputs.size(), input->Y_AXIS, input->X_AXIS);
+		printf("Recording Input [%d] (len %d): %d %d\n", vcr_current_sample, movie_inputs.size(), input->Y_AXIS, input->X_AXIS);
 		movie_inputs.push_back(*input);
-		m_header.length_samples++;
-		m_currentSample++;
+		vcr_movie_header.length_samples++;
+		vcr_current_sample++;
 
 		if (scheduled_restart)
 		{
@@ -633,7 +633,7 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 	// our input source is movie, input plugin is overriden
 	if (m_task == e_task::playback)
 	{
-		if (m_currentSample >= m_header.length_samples)
+		if (vcr_current_sample >= vcr_movie_header.length_samples)
 		{
 			vcr_stop_playback(false);
 			commandline_on_movie_playback_stop();
@@ -642,10 +642,10 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 			return;
 		}
 
-		if (m_header.controller_flags & CONTROLLER_X_PRESENT(index))
+		if (vcr_movie_header.controller_flags & CONTROLLER_X_PRESENT(index))
 		{
-			*input = movie_inputs[m_currentSample];
-			setKeys(index, movie_inputs[m_currentSample]);
+			*input = movie_inputs[vcr_current_sample];
+			setKeys(index, movie_inputs[vcr_current_sample]);
 
 			//no readable code because 120 star tas can't get this right >:(
 			if (input->Value == 0xC000)
@@ -666,7 +666,7 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 				last_controller_data[index] = *input;
 				overwrite_controller_data[index] = false;
 			}
-			m_currentSample++;
+			vcr_current_sample++;
 		} else
 		{
 			// disconnected controls are forced to have no input during playback
@@ -684,14 +684,15 @@ int vcr_start_record(std::filesystem::path path, uint16_t start_flag)
 	vcr_recent_movies_add(path.string());
 	movie_path = path;
 
-	m_header = {0};
-	m_header.magic = MUP_MAGIC;
-	m_header.version = MUP_VERSION;
-	m_header.uid = (unsigned long)time(NULL);
-	m_header.startFlags = start_flag;
+	vcr_movie_header = {0};
+	vcr_movie_header.magic = MUP_MAGIC;
+	vcr_movie_header.version = MUP_VERSION;
+	vcr_movie_header.uid = (unsigned long)time(NULL);
+	vcr_movie_header.startFlags = start_flag;
 
-	m_currentSample = 0;
+	vcr_current_sample = 0;
 	m_currentVI = 0;
+	movie_inputs = {};
 
 	if (start_flag & MOVIE_START_FROM_SNAPSHOT)
 	{
@@ -703,13 +704,13 @@ int vcr_start_record(std::filesystem::path path, uint16_t start_flag)
 		savestates_do(strip_extension(path.string()) + ".st", e_st_job::load);
 
 		// set this to the normal snapshot flag to maintain compatibility
-		m_header.startFlags = MOVIE_START_FROM_SNAPSHOT;
+		vcr_movie_header.startFlags = MOVIE_START_FROM_SNAPSHOT;
 	} else
 	{
 		m_task = e_task::start_recording;
 	}
 
-	apply_rom_info(&m_header);
+	apply_rom_info(&vcr_movie_header);
 	return 0;
 }
 
@@ -724,17 +725,16 @@ int vcr_stop_record()
 	}
 
 	FILE* f = fopen(movie_path.string().c_str(), "wb");
-	fwrite(&m_header, sizeof(t_movie_header), 1, f);
-	fwrite(movie_inputs.data(), m_header.length_samples * sizeof(BUTTONS), 1, f);
+	fwrite(&vcr_movie_header, sizeof(t_movie_header), 1, f);
+	fwrite(movie_inputs.data(), vcr_movie_header.length_samples * sizeof(BUTTONS), 1, f);
 	fclose(f);
 
 	m_task = e_task::idle;
-	printf("[VCR]: Record stopped. Recorded %ld input samples\n", m_header.length_samples);
+	printf("[VCR]: Record stopped. Recorded %ld input samples\n", vcr_movie_header.length_samples);
 	EnableEmulationMenuItems(TRUE);
 	statusbar_post_text("", 1);
 	statusbar_post_text("Stopped recording");
 
-	movie_inputs.clear();
 	return 0;
 }
 
@@ -775,20 +775,20 @@ int vcr_start_playback(std::filesystem::path path, const bool restarting)
 {
 	is_restarting_flag = false;
 	movie_path = path;
-	movie_inputs.clear();
+	movie_inputs = {};
 	vcr_recent_movies_add(path.string());
 
 	auto buf = read_file_buffer(path);
 
-	m_header = {0};
-	m_currentSample = 0;
+	vcr_movie_header = {0};
+	vcr_current_sample = 0;
 	m_currentVI = 0;
-	memcpy(&m_header, buf.data(), sizeof(t_movie_header));
+	memcpy(&vcr_movie_header, buf.data(), sizeof(t_movie_header));
 
-	movie_inputs.resize(m_header.length_samples);
-	memcpy(movie_inputs.data(), buf.data() + 1024, m_header.length_samples * sizeof(BUTTONS));
+	movie_inputs.resize(vcr_movie_header.length_samples);
+	memcpy(movie_inputs.data(), buf.data() + 1024, vcr_movie_header.length_samples * sizeof(BUTTONS));
 
-	if (m_header.startFlags & MOVIE_START_FROM_SNAPSHOT)
+	if (vcr_movie_header.startFlags & MOVIE_START_FROM_SNAPSHOT)
 	{
 		// load state
 		printf("[VCR]: Loading state...\n");
@@ -828,7 +828,7 @@ int vcr_stop_playback(bool bypass_loop_setting)
 	{
 		m_task = e_task::idle;
 		printf("[VCR]: Playback stopped (%ld samples played)\n",
-		       m_currentSample);
+		       vcr_current_sample);
 
 		EnableEmulationMenuItems(TRUE);
 		statusbar_post_text("", 1);
@@ -1415,14 +1415,14 @@ void vcr_update_statusbar()
 
 	if (VCR_isRecording())
 	{
-		std::string text = std::format("{} ({}) ", m_currentVI, m_currentSample);
+		std::string text = std::format("{} ({}) ", m_currentVI, vcr_current_sample);
 		statusbar_post_text(text + input_string);
-		statusbar_post_text(std::format("{} rr", m_header.rerecord_count), 1);
+		statusbar_post_text(std::format("{} rr", vcr_movie_header.rerecord_count), 1);
 	}
 
 	if (VCR_isPlaying())
 	{
-		std::string text = std::format("{} / {} ({} / {}) ", m_currentVI, VCR_getLengthVIs(), m_currentSample, VCR_getLengthSamples());
+		std::string text = std::format("{} / {} ({} / {}) ", m_currentVI, VCR_getLengthVIs(), vcr_current_sample, VCR_getLengthSamples());
 		statusbar_post_text(text + input_string);
 	}
 

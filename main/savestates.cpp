@@ -414,8 +414,11 @@ void savestates_load_immediate()
 	    auto movie_input_data = (BUTTONS*)malloc(movie_input_data_size * sizeof(BUTTONS));
 	    memread(&ptr, movie_input_data, movie_input_data_size * sizeof(BUTTONS));
 
+    	// rerecording: we overwrite the current input buffer with the st's one, and adjust the current sample
 	    movie_inputs.resize(movie_input_data_size);
     	memcpy(movie_inputs.data(), movie_input_data, movie_input_data_size);
+    	vcr_current_sample = movie_input_data_size;
+    	vcr_movie_header.length_samples = movie_input_data_size;
     }
     else
     {

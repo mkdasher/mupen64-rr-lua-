@@ -2693,7 +2693,7 @@ int LuaD2DDrawText(lua_State* L)
 
 	int GetSampleCount(lua_State* L)
 	{
-		lua_pushinteger(L, m_currentSample);
+		lua_pushinteger(L, vcr_current_sample);
 		return 1;
 	}
 

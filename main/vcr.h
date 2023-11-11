@@ -329,5 +329,7 @@ extern char VCR_Lastpath[MAX_PATH];
 extern uint64_t screen_updates;
 extern std::vector<BUTTONS> movie_inputs;
 extern std::filesystem::path movie_path;
+extern int64_t vcr_current_sample;
+extern t_movie_header vcr_movie_header;
 
 #endif // VCR_H_
