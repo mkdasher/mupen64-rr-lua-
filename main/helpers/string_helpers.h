@@ -131,3 +131,19 @@ inline static std::vector<std::wstring> split_wstring(const std::wstring& s, con
 	res.emplace_back (s.substr (pos_start));
 	return res;
 }
+
+inline static std::string format_duration(double seconds)
+{
+	double minutes = seconds / 60.0;
+	if (seconds)
+		seconds = fmod(seconds, 60.0);
+	double hours = minutes / 60.0;
+	if (minutes)
+		minutes = fmod(minutes, 60.0);
+
+	 if (hours >= 1.0)
+	 	return std::format("{:.0f} hours and {:.1f} minutes", hours, minutes);
+	if (minutes >= 1.0)
+		return std::format("{:.0f} minutes and {:.0f} seconds", minutes, seconds);
+	return std::format("{:.0f} seconds", seconds);
+}

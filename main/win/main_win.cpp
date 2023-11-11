@@ -572,152 +572,46 @@ LRESULT CALLBACK PlayMovieProc(HWND hwnd, UINT Message, WPARAM wParam,
 refresh:
 
 	GetDlgItemText(hwnd, IDC_INI_MOVIEFILE, tempbuf, MAX_PATH);
-	t_movie_header m_header = VCR_getHeaderInfo(tempbuf);
-
-	SetDlgItemText(hwnd, IDC_ROM_INTERNAL_NAME, m_header.rom_name);
-
- 	SetDlgItemText(hwnd, IDC_ROM_COUNTRY, country_code_to_country_name(m_header.rom_country).c_str());
-
-	sprintf(tempbuf, "%X", (unsigned int)m_header.rom_crc1);
-	SetDlgItemText(hwnd, IDC_ROM_CRC, tempbuf);
-
-	SetDlgItemText(hwnd, IDC_MOVIE_VIDEO_TEXT, m_header.video_plugin_name);
-	SetDlgItemText(hwnd, IDC_MOVIE_INPUT_TEXT, m_header.input_plugin_name);
-	SetDlgItemText(hwnd, IDC_MOVIE_SOUND_TEXT, m_header.audio_plugin_name);
-	SetDlgItemText(hwnd, IDC_MOVIE_RSP_TEXT, m_header.rsp_plugin_name);
-
-	strcpy(tempbuf, (m_header.controller_flags & CONTROLLER_1_PRESENT)
-		                ? "Present"
-		                : "Disconnected");
-	if (m_header.controller_flags & CONTROLLER_1_MEMPAK)
-		strcat(tempbuf, " with mempak");
-	if (m_header.controller_flags & CONTROLLER_1_RUMBLE)
-		strcat(tempbuf, " with rumble");
-	SetDlgItemText(hwnd, IDC_MOVIE_CONTROLLER1_TEXT, tempbuf);
-
-	strcpy(tempbuf, (m_header.controller_flags & CONTROLLER_2_PRESENT)
-		                ? "Present"
-		                : "Disconnected");
-	if (m_header.controller_flags & CONTROLLER_2_MEMPAK)
-		strcat(tempbuf, " with mempak");
-	if (m_header.controller_flags & CONTROLLER_2_RUMBLE)
-		strcat(tempbuf, " with rumble");
-	SetDlgItemText(hwnd, IDC_MOVIE_CONTROLLER2_TEXT, tempbuf);
-
-	strcpy(tempbuf, (m_header.controller_flags & CONTROLLER_3_PRESENT)
-		                ? "Present"
-		                : "Disconnected");
-	if (m_header.controller_flags & CONTROLLER_3_MEMPAK)
-		strcat(tempbuf, " with mempak");
-	if (m_header.controller_flags & CONTROLLER_3_RUMBLE)
-		strcat(tempbuf, " with rumble");
-	SetDlgItemText(hwnd, IDC_MOVIE_CONTROLLER3_TEXT, tempbuf);
-
-	strcpy(tempbuf, (m_header.controller_flags & CONTROLLER_4_PRESENT)
-		                ? "Present"
-		                : "Disconnected");
-	if (m_header.controller_flags & CONTROLLER_4_MEMPAK)
-		strcat(tempbuf, " with mempak");
-	if (m_header.controller_flags & CONTROLLER_4_RUMBLE)
-		strcat(tempbuf, " with rumble");
-	SetDlgItemText(hwnd, IDC_MOVIE_CONTROLLER4_TEXT, tempbuf);
-
-	SetDlgItemText(hwnd, IDC_FROMSNAPSHOT_TEXT,
-	               (m_header.startFlags & MOVIE_START_FROM_SNAPSHOT)
-		               ? "Savestate"
-		               : "Start");
-	if (m_header.startFlags & MOVIE_START_FROM_EEPROM)
+	t_movie_header hdr = {0};
+	auto buf = read_file_buffer(tempbuf);
+	if(!vcr_parse_header(buf, &hdr))
 	{
-		SetDlgItemTextA(hwnd, IDC_FROMSNAPSHOT_TEXT, "EEPROM");
+		return FALSE;
 	}
 
-	sprintf(tempbuf, "%u  (%u input)", (int)m_header.length_vis,
-	        (int)m_header.length_samples);
-	SetDlgItemText(hwnd, IDC_MOVIE_FRAMES, tempbuf);
-
-	if (m_header.vis_per_second == 0)
-		m_header.vis_per_second = 60;
-
-	double seconds = (double)m_header.length_vis / (double)m_header.
-		vis_per_second;
-	double minutes = seconds / 60.0;
-	if ((bool)seconds)
-		seconds = fmod(seconds, 60.0);
-	double hours = minutes / 60.0;
-	if ((bool)minutes)
-		minutes = fmod(minutes, 60.0);
-
-	if (hours >= 1.0)
-		sprintf(tempbuf, "%d hours and %.1f minutes", (unsigned int)hours,
-		        (float)minutes);
-	else if (minutes >= 1.0)
-		sprintf(tempbuf, "%d minutes and %.0f seconds", (unsigned int)minutes,
-		        (float)seconds);
-	else if (m_header.length_vis != 0)
-		sprintf(tempbuf, "%.1f seconds", (float)seconds);
-	else
-		strcpy(tempbuf, "0 seconds");
-	SetDlgItemText(hwnd, IDC_MOVIE_LENGTH, tempbuf);
-
-	sprintf(tempbuf, "%lu", m_header.rerecord_count);
-	SetDlgItemText(hwnd, IDC_MOVIE_RERECORDS, tempbuf);
-
+	SetDlgItemText(hwnd, IDC_ROM_INTERNAL_NAME, hdr.rom_name);
+ 	SetDlgItemText(hwnd, IDC_ROM_COUNTRY, country_code_to_country_name(hdr.rom_country).c_str());
+	SetDlgItemText(hwnd, IDC_ROM_CRC, std::format("{:#04x}", (unsigned int)hdr.rom_crc1).c_str());
+	SetDlgItemText(hwnd, IDC_MOVIE_VIDEO_TEXT, hdr.video_plugin_name);
+	SetDlgItemText(hwnd, IDC_MOVIE_INPUT_TEXT, hdr.input_plugin_name);
+	SetDlgItemText(hwnd, IDC_MOVIE_SOUND_TEXT, hdr.audio_plugin_name);
+	SetDlgItemText(hwnd, IDC_MOVIE_RSP_TEXT, hdr.rsp_plugin_name);
+	for (int i = 0; i < 4; ++i)
 	{
-		// convert utf8 metadata to windows widechar
-		WCHAR wszMeta[MOVIE_MAX_METADATA_SIZE];
-		if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
-		                        m_header.author, -1, wszMeta,
-		                        MOVIE_AUTHOR_DATA_SIZE))
-		{
-			SetLastError(0);
-			SetWindowTextW(GetDlgItem(hwnd, IDC_INI_AUTHOR), wszMeta);
-			if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
-			{
-				// not implemented on this system - convert as best we can to 1-byte characters and set with that
-				// TODO: load unicows.dll instead so SetWindowTextW won't fail even on Win98/ME
-				char ansiStr[MOVIE_AUTHOR_DATA_SIZE];
-				WideCharToMultiByte(CP_ACP, 0, wszMeta, -1, ansiStr,
-				                    MOVIE_AUTHOR_DATA_SIZE, NULL, NULL);
-				SetWindowTextA(GetDlgItem(hwnd, IDC_INI_AUTHOR), ansiStr);
-
-				if (ansiStr[0] == '\0')
-					SetWindowTextA(GetDlgItem(hwnd, IDC_INI_AUTHOR),
-					               "(too lazy to type name)");
-
-				SetLastError(0);
-			} else
-			{
-				if (wszMeta[0] == '\0')
-					SetWindowTextW(GetDlgItem(hwnd, IDC_INI_AUTHOR),
-					               L"(too lazy to type name)");
-			}
-		}
-		if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
-		                        m_header.description, -1, wszMeta,
-		                        MOVIE_DESCRIPTION_DATA_SIZE))
-		{
-			SetWindowTextW(GetDlgItem(hwnd, IDC_INI_DESCRIPTION), wszMeta);
-			if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
-			{
-				char ansiStr[MOVIE_DESCRIPTION_DATA_SIZE];
-				WideCharToMultiByte(CP_ACP, 0, wszMeta, -1, ansiStr,
-				                    MOVIE_DESCRIPTION_DATA_SIZE, NULL, NULL);
-				SetWindowTextA(GetDlgItem(hwnd, IDC_INI_DESCRIPTION), ansiStr);
-
-				if (ansiStr[0] == '\0')
-					SetWindowTextA(GetDlgItem(hwnd, IDC_INI_DESCRIPTION),
-					               "(no description entered)");
-
-				SetLastError(0);
-			} else
-			{
-				if (wszMeta[0] == '\0')
-					SetWindowTextW(GetDlgItem(hwnd, IDC_INI_DESCRIPTION),
-					               L"(no description entered)");
-			}
-		}
+		SetDlgItemText(hwnd, IDC_MOVIE_CONTROLLER1_TEXT + i, std::format("{}{}{}",
+		hdr.controller_flags & CONTROLLER_X_PRESENT(i) ? "Connected" : "Disconnected",
+		hdr.controller_flags & CONTROLLER_X_MEMPAK(i) ? ", Mempak" : "",
+		hdr.controller_flags & CONTROLLER_X_RUMBLE(i) ? ", Rumblepak" : ""
+		).c_str());
 	}
 
+	if (hdr.startFlags & MOVIE_START_FROM_SNAPSHOT)
+	{
+		SetDlgItemText(hwnd, IDC_FROMSNAPSHOT_TEXT, "Savestate");
+	}
+	if (hdr.startFlags & MOVIE_START_FROM_EEPROM)
+	{
+		SetDlgItemText(hwnd, IDC_FROMSNAPSHOT_TEXT, "EEPROM");
+	}
+	if (hdr.startFlags & MOVIE_START_FROM_NOTHING)
+	{
+		SetDlgItemText(hwnd, IDC_FROMSNAPSHOT_TEXT, "Start");
+	}
+	SetDlgItemText(hwnd, IDC_MOVIE_FRAMES, std::format("{} ({})", hdr.length_vis, hdr.length_samples).c_str());
+	SetDlgItemText(hwnd, IDC_MOVIE_RERECORDS, std::to_string(hdr.rerecord_count).c_str());
+	SetWindowTextW(GetDlgItem(hwnd, IDC_INI_AUTHOR), string_to_wstring(hdr.author).c_str());
+	SetWindowTextW(GetDlgItem(hwnd, IDC_INI_DESCRIPTION), string_to_wstring(hdr.description).c_str());
+	SetDlgItemText(hwnd, IDC_MOVIE_LENGTH, format_duration((double)hdr.length_vis / (double)hdr.vis_per_second).c_str());
 	return FALSE;
 }
 

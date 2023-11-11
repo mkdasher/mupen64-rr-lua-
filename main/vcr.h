@@ -324,7 +324,14 @@ inline bool is_task_recording(e_task task)
 	return task == e_task::start_recording || task == e_task::start_recording_from_snapshot || task == e_task::start_recording_from_existing_snapshot || task == e_task::recording;
 }
 
-extern t_movie_header VCR_getHeaderInfo(const char* filename);
+/**
+ * \brief Parses a buffer into a movie header with the current format
+ * \param buffer The buffer to read from
+ * \param header The target header
+ * \return Whether the operation succeeded
+ */
+bool vcr_parse_header(std::vector<uint8_t>& buffer, t_movie_header* header);
+
 extern char VCR_Lastpath[MAX_PATH];
 extern uint64_t screen_updates;
 extern std::vector<BUTTONS> movie_inputs;

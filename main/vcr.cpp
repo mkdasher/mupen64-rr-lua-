@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <vector>
+
 #ifdef _MSC_VER
 #define snprintf	_snprintf
 #define strcasecmp	_stricmp
@@ -189,130 +190,92 @@ void apply_rom_info(t_movie_header* header)
 }
 
 
-static int read_movie_header(FILE* file, t_movie_header* header)
+int parse_header(std::vector<uint8_t>& buffer, t_movie_header* out_header)
 {
-	fseek(file, 0L, SEEK_SET);
+	// movie doesnt have a complete header
+	if (buffer.size() < sizeof(t_movie_header))
+	{
+		return false;
+	}
 
-	t_movie_header newHeader;
-	memset(&newHeader, 0, sizeof(t_movie_header));
+	uint8_t* ptr = buffer.data();
+	t_movie_header header = {0};
 
-	if (fread(&newHeader, 1, MUP_HEADER_SIZE_OLD, file) != MUP_HEADER_SIZE_OLD)
+	memread(&ptr, &header, sizeof(t_movie_header));
+
+	if (header.magic != MUP_MAGIC)
 		return WRONG_FORMAT;
 
-	if (newHeader.magic != MUP_MAGIC)
-		return WRONG_FORMAT;
-
-	if (newHeader.version <= 0 || newHeader.version > MUP_VERSION)
+	if (header.version <= 0 || header.version > MUP_VERSION)
 		return WRONG_VERSION;
 
-	if (newHeader.version == 1 || newHeader.version == 2)
+	if (header.version == 1 || header.version == 2)
 	{
 		// attempt to recover screwed-up plugin data caused by
 		// version mishandling and format problems of first versions
 
-#define isAlpha(x) (((x) >= 'A' && (x) <= 'Z') || ((x) >= 'a' && (x) <= 'z') || ((x) == '1'))
+#define IS_ALPHA(x) (((x) >= 'A' && (x) <= 'Z') || ((x) >= 'a' && (x) <= 'z') || ((x) == '1'))
 		int i;
 		for (i = 0; i < 56 + 64; i++)
-			if (isAlpha(newHeader.reserved_bytes[i])
-				&& isAlpha(newHeader.reserved_bytes[i + 64])
-				&& isAlpha(newHeader.reserved_bytes[i + 64 + 64])
-				&& isAlpha(newHeader.reserved_bytes[i + 64 + 64 + 64]))
+			if (IS_ALPHA(header.reserved_bytes[i])
+				&& IS_ALPHA(header.reserved_bytes[i + 64])
+				&& IS_ALPHA(header.reserved_bytes[i + 64 + 64])
+				&& IS_ALPHA(header.reserved_bytes[i + 64 + 64 + 64]))
 				break;
 		if (i != 56 + 64)
 		{
-			memmove(newHeader.video_plugin_name, newHeader.reserved_bytes + i,
+			memmove(header.video_plugin_name, header.reserved_bytes + i,
 			        256);
 		} else
 		{
 			for (i = 0; i < 56 + 64; i++)
-				if (isAlpha(newHeader.reserved_bytes[i])
-					&& isAlpha(newHeader.reserved_bytes[i + 64])
-					&& isAlpha(newHeader.reserved_bytes[i + 64 + 64]))
+				if (IS_ALPHA(header.reserved_bytes[i])
+					&& IS_ALPHA(header.reserved_bytes[i + 64])
+					&& IS_ALPHA(header.reserved_bytes[i + 64 + 64]))
 					break;
 			if (i != 56 + 64)
-				memmove(newHeader.audio_plugin_name, newHeader.reserved_bytes + i,
+				memmove(header.audio_plugin_name, header.reserved_bytes + i,
 				        256 - 64);
 			else
 			{
 				for (i = 0; i < 56 + 64; i++)
-					if (isAlpha(newHeader.reserved_bytes[i])
-						&& isAlpha(newHeader.reserved_bytes[i + 64]))
+					if (IS_ALPHA(header.reserved_bytes[i])
+						&& IS_ALPHA(header.reserved_bytes[i + 64]))
 						break;
 				if (i != 56 + 64)
-					memmove(newHeader.input_plugin_name,
-					        newHeader.reserved_bytes + i, 256 - 64 - 64);
+					memmove(header.input_plugin_name,
+					        header.reserved_bytes + i, 256 - 64 - 64);
 				else
 				{
 					for (i = 0; i < 56 + 64; i++)
-						if (isAlpha(newHeader.reserved_bytes[i]))
+						if (IS_ALPHA(header.reserved_bytes[i]))
 							break;
 					if (i != 56 + 64)
-						memmove(newHeader.rsp_plugin_name,
-						        newHeader.reserved_bytes + i,
+						memmove(header.rsp_plugin_name,
+						        header.reserved_bytes + i,
 						        256 - 64 - 64 - 64);
 					else
-						strncpy(newHeader.rsp_plugin_name, "(unknown)", 64);
+						strncpy(header.rsp_plugin_name, "(unknown)", 64);
 
-					strncpy(newHeader.input_plugin_name, "(unknown)", 64);
+					strncpy(header.input_plugin_name, "(unknown)", 64);
 				}
-				strncpy(newHeader.audio_plugin_name, "(unknown)", 64);
+				strncpy(header.audio_plugin_name, "(unknown)", 64);
 			}
-			strncpy(newHeader.video_plugin_name, "(unknown)", 64);
+			strncpy(header.video_plugin_name, "(unknown)", 64);
 		}
 		// attempt to convert old author and description to utf8
-		strncpy(newHeader.author, newHeader.old_author_info, 48);
-		strncpy(newHeader.description, newHeader.old_description, 80);
-	}
-	if (newHeader.version == 3)
-	{
-		// read rest of header
-		if (fread((char*)(&newHeader) + MUP_HEADER_SIZE_OLD, 1,
-		          MUP_HEADER_SIZE - MUP_HEADER_SIZE_OLD,
-		          file) != MUP_HEADER_SIZE - MUP_HEADER_SIZE_OLD)
-			return WRONG_FORMAT;
+		strncpy(header.author, header.old_author_info, 48);
+		strncpy(header.description, header.old_description, 80);
+		header.version = MUP_VERSION;
 	}
 
-	*header = newHeader;
-
+	*out_header = header;
 	return SUCCESS;
 }
 
-t_movie_header VCR_getHeaderInfo(const char* filename)
+bool vcr_parse_header(std::vector<uint8_t>& buffer, t_movie_header* header)
 {
-	char buf[PATH_MAX];
-	char temp_filename[PATH_MAX];
-	t_movie_header tempHeader;
-	memset(&tempHeader, 0, sizeof(t_movie_header));
-	tempHeader.rom_country = -1;
-	strcpy(tempHeader.rom_name, "(no ROM)");
-
-	strncpy(temp_filename, filename, PATH_MAX);
-	char* p = strrchr(temp_filename, '.');
-	if (p)
-	{
-		if (!strcasecmp(p, ".m64") || !strcasecmp(p, ".st"))
-			*p = '\0';
-	}
-	// open record file
-	strncpy(buf, temp_filename, PATH_MAX);
-	FILE* tempFile = fopen(buf, "rb+");
-	if (tempFile == 0 && (tempFile = fopen(buf, "rb")) == 0)
-	{
-		strncat(buf, ".m64", 4);
-		tempFile = fopen(buf, "rb+");
-		if (tempFile == 0 && (tempFile = fopen(buf, "rb")) == 0)
-		{
-			fprintf(
-				stderr,
-				"[VCR]: Could not get header info of .m64 file\n\"%s\": %s\n",
-				filename, strerror(errno));
-			return tempHeader;
-		}
-	}
-
-	read_movie_header(tempFile, &tempHeader);
-	fclose(tempFile);
-	return tempHeader;
+	return parse_header(buffer, header) == SUCCESS;
 }
 
 void vcr_clear_save_data()
@@ -745,7 +708,7 @@ int vcr_start_playback(std::filesystem::path path, const bool restarting)
 	memcpy(&vcr_movie_header, buf.data(), sizeof(t_movie_header));
 
 	movie_inputs.resize(vcr_movie_header.length_samples);
-	memcpy(movie_inputs.data(), buf.data() + 1024, vcr_movie_header.length_samples * sizeof(BUTTONS));
+	memcpy(movie_inputs.data(), buf.data() + sizeof(t_movie_header), vcr_movie_header.length_samples * sizeof(BUTTONS));
 	strcpy(VCR_Lastpath, path.string().c_str());
 
 	if (vcr_movie_header.startFlags & MOVIE_START_FROM_SNAPSHOT)

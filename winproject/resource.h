@@ -359,11 +359,11 @@
 #define IDC_MOVIE_CONTROLLER1_TEXT      9432
 #define IDC_MOVIE_CONTROLLER2_TEXT      9433
 #define IDC_MOVIE_CONTROLLER3_TEXT      9434
-#define IDC_INI_MOVIEFILE_TEXT          9435
+#define IDC_MOVIE_CONTROLLER4_TEXT      9435
+#define IDC_INI_MOVIEFILE_TEXT          9439
 #define IDC_INI_AUTHOR                  9436
 #define IDC_INI_DESCRIPTION             9437
 #define IDC_INI_MOVIEFILE               9438
-#define IDC_MOVIE_CONTROLLER4_TEXT      9439
 #define IDC_ROM_INTERNAL_NAME2          9440
 #define IDC_ROM_COUNTRY2                9441
 #define IDC_ROM_CRC_TEXT2               9442
