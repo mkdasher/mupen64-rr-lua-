@@ -746,6 +746,7 @@ int vcr_start_playback(std::filesystem::path path, const bool restarting)
 
 	movie_inputs.resize(vcr_movie_header.length_samples);
 	memcpy(movie_inputs.data(), buf.data() + 1024, vcr_movie_header.length_samples * sizeof(BUTTONS));
+	strcpy(VCR_Lastpath, path.string().c_str());
 
 	if (vcr_movie_header.startFlags & MOVIE_START_FROM_SNAPSHOT)
 	{
@@ -1260,24 +1261,6 @@ VCR_toggleReadOnly()
 
 	statusbar_post_text(m_readOnly ? "Read" : "Read-write");
 }
-
-void
-VCR_toggleLoopMovie()
-{
-	Config.is_movie_loop_enabled ^= 1;
-
-	extern HWND mainHWND;
-	CheckMenuItem(GetMenu(mainHWND), ID_LOOP_MOVIE,
-	              MF_BYCOMMAND | (Config.is_movie_loop_enabled
-		                              ? MFS_CHECKED
-		                              : MFS_UNCHECKED));
-
-	if (emu_launched)
-		statusbar_post_text(Config.is_movie_loop_enabled
-								 ? "Movies restart after ending"
-								 : "Movies stop after ending");
-}
-
 
 int vcr_stop_capture()
 {

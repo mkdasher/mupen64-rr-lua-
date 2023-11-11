@@ -154,6 +154,20 @@ std::string get_app_full_path()
 	return ret;
 }
 
+void set_is_movie_loop_enabled(bool value)
+{
+	Config.is_movie_loop_enabled = value;
+
+	CheckMenuItem(GetMenu(mainHWND), ID_LOOP_MOVIE,
+				  MF_BYCOMMAND | (Config.is_movie_loop_enabled
+									  ? MFS_CHECKED
+									  : MFS_UNCHECKED));
+
+	if (emu_launched)
+		statusbar_post_text(Config.is_movie_loop_enabled
+								 ? "Movies restart after ending"
+								 : "Movies stop after ending");
+}
 
 static void gui_ChangeWindow()
 {
@@ -1626,7 +1640,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				break;
 
 			case ID_LOOP_MOVIE:
-				VCR_toggleLoopMovie();
+				set_is_movie_loop_enabled(!Config.is_movie_loop_enabled);
 				break;
 			case ID_RESTART_MOVIE:
 				if (VCR_isPlaying())
@@ -2064,13 +2078,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	return TRUE;
 }
 
-// Loads various variables from the current config state
-void LoadConfigExternals()
-{
-	if (VCR_isLooping() != (bool)Config.is_movie_loop_enabled)
-		VCR_toggleLoopMovie();
-}
-
 // kaboom
 LONG WINAPI ExceptionReleaseTarget(_EXCEPTION_POINTERS* ExceptionInfo)
 {
@@ -2172,13 +2179,13 @@ int WINAPI WinMain(
 	rombrowser_create();
 	rombrowser_build();
 	rombrowser_update_size();
+	set_is_movie_loop_enabled(Config.is_movie_loop_enabled);
 
 	vcr_recent_movies_build();
 	lua_recent_scripts_build();
 	main_recent_roms_build();
 
 	EnableEmulationMenuItems(0);
-	LoadConfigExternals();
 
 	//warning, this is ignored when debugger is attached (like visual studio)
 	SetUnhandledExceptionFilter(ExceptionReleaseTarget);

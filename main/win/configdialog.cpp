@@ -646,7 +646,6 @@ BOOL CALLBACK AdvancedSettingsProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
             Config.capture_delay = GetDlgItemInt(hwnd, IDC_CAPTUREDELAY, 0, 0);
 
             rombrowser_build();
-            LoadConfigExternals();
         }
         break;
 

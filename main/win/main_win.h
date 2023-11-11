@@ -56,7 +56,6 @@ extern void resumeEmu(BOOL quiet);
 extern void pauseEmu(BOOL quiet);
 extern void OpenMoviePlaybackDialog();
 extern void OpenMovieRecordDialog();
-extern void LoadConfigExternals();
 /**
  * \brief Starts the rom from the path contained in <c>rom_path</c>
  */
