@@ -108,7 +108,6 @@ static char soundBuf[SOUND_BUF_SIZE];
 static char soundBufEmpty[SOUND_BUF_SIZE];
 static int soundBufPos = 0;
 long lastSound = 0;
-volatile BOOL captureFrameValid = FALSE;
 int AVIIncrement = 0;
 int titleLength;
 char VCR_Lastpath[MAX_PATH];
@@ -801,11 +800,6 @@ int vcr_stop_playback(bool bypass_loop_setting)
 	return -1;
 }
 
-void VCR_invalidatedCaptureFrame()
-{
-	captureFrameValid = FALSE;
-}
-
 void VCR_updateScreen()
 {
 	if (!VCR_isCapturing())
@@ -1192,8 +1186,6 @@ bool vcr_start_capture(const char* path, bool show_codec_dialog)
 	// we apply WS_EX_LAYERED to fix off-screen blitting (off-screen window portions are not included otherwise)
 	SetWindowLong(mainHWND, GWL_EXSTYLE, GetWindowLong(mainHWND, GWL_EXSTYLE) | WS_EX_LAYERED);
 
-	VCR_invalidatedCaptureFrame();
-
 	if (!was_paused || (m_task == e_task::playback || m_task == e_task::start_playback || m_task
 		== e_task::start_playback_from_snapshot))
 	{
@@ -1297,7 +1289,6 @@ int vcr_stop_capture()
 
 	m_capture = 0;
 	writeSound(NULL, 0, m_audioFreq, m_audioFreq * 2, TRUE);
-	VCR_invalidatedCaptureFrame();
 
 	// re-enable the toolbar (m_capture==0 causes this call to do that)
 	// check previous update_toolbar_visibility call
