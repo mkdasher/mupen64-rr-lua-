@@ -506,7 +506,7 @@ LRESULT CALLBACK PlayMovieProc(HWND hwnd, UINT Message, WPARAM wParam,
 		case IDC_OK:
 		case IDOK:
 			{
-				VCR_coreStopped();
+				vcr_stop_all();
 
 				{
 					BOOL success;

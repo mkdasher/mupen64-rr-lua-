@@ -96,7 +96,6 @@ static BOOL m_readOnly = FALSE;
 int64_t vcr_current_sample = -1;
 // should = length_samples when recording, and be < length_samples when playing
 int m_currentVI = -1;
-static int m_visPerSecond = -1;
 
 static int m_capture = 0; // capture movie
 static int m_audioFreq = 33000; //0x30018;
@@ -134,11 +133,6 @@ char* strtrimext(char* myStr)
 	return retStr;
 }
 
-void printWarning(const char* str)
-{
-	MessageBox(NULL, str, "Warning", MB_OK | MB_ICONWARNING);
-}
-
 void printError(const char* str)
 {
 	MessageBox(NULL, str, "Error", MB_OK | MB_ICONERROR);
@@ -155,40 +149,6 @@ static void hardResetAndClearAllSaveData(bool clear)
 	else
 		printf("Playing movie without clearing save data\n");
 	SendMessage(mainHWND, WM_COMMAND, EMU_RESET, 0);
-}
-
-static int visByCountrycode()
-{
-	if (m_visPerSecond == -1)
-	{
-		switch (ROM_HEADER.Country_code & 0xFF)
-		{
-		case 0x44:
-		case 0x46:
-		case 0x49:
-		case 0x50:
-		case 0x53:
-		case 0x55:
-		case 0x58:
-		case 0x59:
-			m_visPerSecond = 50;
-			break;
-
-		case 0x37:
-		case 0x41:
-		case 0x45:
-		case 0x4a:
-			m_visPerSecond = 60;
-			break;
-		default:
-			printWarning(
-				"[VCR]: Warning - unknown country code, using 60 FPS for video.\n");
-			m_visPerSecond = 60;
-			break;
-		}
-	}
-
-	return m_visPerSecond;
 }
 
 void apply_rom_info(t_movie_header* header)
@@ -679,7 +639,7 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 
 int vcr_start_record(std::filesystem::path path, uint16_t start_flag)
 {
-	VCR_coreStopped();
+	vcr_stop_all();
 	VCR_setReadOnly(FALSE);
 	vcr_recent_movies_add(path.string());
 	movie_path = path;
@@ -893,19 +853,17 @@ void VCR_updateScreen()
 			DllCrtFree(image);
 
 		return;
-	} else
+	}
+
+	if (VCRComp_GetSize() > MAX_AVI_SIZE)
 	{
-		if (VCRComp_GetSize() > MAX_AVI_SIZE)
-		{
-			static char* endptr;
-			VCRComp_finishFile(1);
-			if (!AVIIncrement)
-				endptr = AVIFileName + strlen(AVIFileName) - 4;
-			//AVIIncrement
-			sprintf(endptr, "%d.avi", ++AVIIncrement);
-			VCRComp_startFile(AVIFileName, width, height, visByCountrycode(),
-			                  0);
-		}
+		static char* endptr;
+		VCRComp_finishFile(1);
+		if (!AVIIncrement)
+			endptr = AVIFileName + strlen(AVIFileName) - 4;
+		//AVIIncrement
+		sprintf(endptr, "%d.avi", ++AVIIncrement);
+		VCRComp_startFile(AVIFileName, width, height, get_vis_per_second(ROM_HEADER.Country_code), 0);
 	}
 
 	if (Config.synchronization_mode == VCR_SYNC_AUDIO_DUPL || Config.
@@ -1076,14 +1034,14 @@ static void writeSound(char* buf, int len, int minWriteSize, int maxWriteSize,
 		memcpy(soundBuf + soundBufPos, (char*)buf, len);
 		soundBufPos += len;
 		m_audioFrame += ((len / 4) / (long double)m_audioFreq) *
-			visByCountrycode();
+			get_vis_per_second(ROM_HEADER.Country_code);
 	}
 }
 
 // calculates how long the audio data will last
 float GetPercentOfFrame(int aiLen, int audioFreq, int audioBitrate)
 {
-	int limit = visByCountrycode();
+	int limit = get_vis_per_second(ROM_HEADER.Country_code);
 	float viLen = 1.f / (float)limit; //how much seconds one VI lasts
 	float time = (float)(aiLen * 8) / ((float)audioFreq * 2.f * (float)
 		audioBitrate); //how long the buffer can play for
@@ -1155,7 +1113,7 @@ void VCR_aiLenChanged()
 				printf(
 					"[VCR]: Correcting for A/V desynchronization of %+Lf frames\n",
 					desync);
-				len3 = (int)(m_audioFreq / (long double)visByCountrycode()) * (
+				len3 = (int)(m_audioFreq / (long double)get_vis_per_second(ROM_HEADER.Country_code)) * (
 					int)desync;
 				len3 <<= 2;
 
@@ -1219,7 +1177,7 @@ bool vcr_start_capture(const char* path, bool show_codec_dialog)
 	long width = vcrcomp_window_info.width & ~3;
 	long height = vcrcomp_window_info.height & ~3;
 
-	VCRComp_startFile(path, width, height, visByCountrycode(), show_codec_dialog);
+	VCRComp_startFile(path, width, height, get_vis_per_second(ROM_HEADER.Country_code), show_codec_dialog);
 	m_capture = 1;
 	captureWithFFmpeg = false;
 	strncpy(AVIFileName, path, PATH_MAX);
@@ -1270,7 +1228,7 @@ int VCR_StartFFmpegCapture(const std::string& outputName,
 
 	InitReadScreenFFmpeg(sInfo);
 	captureManager = std::make_unique<FFmpegManager>(
-		sInfo.width, sInfo.height, visByCountrycode(), m_audioFreq,
+		sInfo.width, sInfo.height, get_vis_per_second(ROM_HEADER.Country_code), m_audioFreq,
 		arguments + " " + outputName);
 
 	auto err = captureManager->initError;
@@ -1338,7 +1296,6 @@ int vcr_stop_capture()
 	}
 
 	m_capture = 0;
-	m_visPerSecond = -1;
 	writeSound(NULL, 0, m_audioFreq, m_audioFreq * 2, TRUE);
 	VCR_invalidatedCaptureFrame();
 
@@ -1359,10 +1316,8 @@ int vcr_stop_capture()
 }
 
 
-void
-VCR_coreStopped()
+void vcr_stop_all()
 {
-	extern BOOL continue_vcr_on_restart_mode;
 	if (continue_vcr_on_restart_mode)
 		return;
 
@@ -1378,9 +1333,11 @@ VCR_coreStopped()
 	case e_task::playback:
 		vcr_stop_playback(false);
 		break;
+	default:
+		break;
 	}
 
-	if (m_capture != 0)
+	if (m_capture)
 		vcr_stop_capture();
 }
 

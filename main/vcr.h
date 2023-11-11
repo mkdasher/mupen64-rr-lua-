@@ -103,9 +103,11 @@ int VCR_StartFFmpegCapture(const std::string& outputName,
 void VCR_StopFFmpegCapture();
 #endif
 
-extern void VCR_coreStopped();
+/**
+ * \brief Stops and finalizes all current and pending VCR operations, such as pending or active movie recording
+ */
+void vcr_stop_all();
 
-extern void printWarning(const char*);
 extern void printError(const char*);
 
 /**
