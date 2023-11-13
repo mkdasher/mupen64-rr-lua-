@@ -1587,7 +1587,7 @@ void gensb()
 
     mov_reg32_reg32(EBX, EAX);
     shr_reg32_imm8(EBX, 12);
-    cmp_preg32pimm32_imm8(EBX, (unsigned long)invalid_code, 0);
+    cmp_preg32_pimm32_imm8(EBX, (unsigned long)invalid_code, 0);
     jne_rj(54);
     mov_reg32_reg32(ECX, EBX); // 2
     shl_reg32_imm8(EBX, 2); // 3
@@ -1644,7 +1644,7 @@ void gensh()
 
     mov_reg32_reg32(EBX, EAX);
     shr_reg32_imm8(EBX, 12);
-    cmp_preg32pimm32_imm8(EBX, (unsigned long)invalid_code, 0);
+    cmp_preg32_pimm32_imm8(EBX, (unsigned long)invalid_code, 0);
     jne_rj(54);
     mov_reg32_reg32(ECX, EBX); // 2
     shl_reg32_imm8(EBX, 2); // 3
@@ -1705,7 +1705,7 @@ void gensw()
 
     mov_reg32_reg32(EBX, EAX);
     shr_reg32_imm8(EBX, 12);
-    cmp_preg32pimm32_imm8(EBX, (unsigned long)invalid_code, 0);
+    cmp_preg32_pimm32_imm8(EBX, (unsigned long)invalid_code, 0);
     jne_rj(54);
     mov_reg32_reg32(ECX, EBX); // 2
     shl_reg32_imm8(EBX, 2); // 3
@@ -1933,7 +1933,7 @@ void genswc1()
 
     mov_reg32_reg32(EBX, EAX);
     shr_reg32_imm8(EBX, 12);
-    cmp_preg32pimm32_imm8(EBX, (unsigned long)invalid_code, 0);
+    cmp_preg32_pimm32_imm8(EBX, (unsigned long)invalid_code, 0);
     jne_rj(54);
     mov_reg32_reg32(ECX, EBX); // 2
     shl_reg32_imm8(EBX, 2); // 3
@@ -1993,7 +1993,7 @@ void gensdc1()
 
     mov_reg32_reg32(EBX, EAX);
     shr_reg32_imm8(EBX, 12);
-    cmp_preg32pimm32_imm8(EBX, (unsigned long)invalid_code, 0);
+    cmp_preg32_pimm32_imm8(EBX, (unsigned long)invalid_code, 0);
     jne_rj(54);
     mov_reg32_reg32(ECX, EBX); // 2
     shl_reg32_imm8(EBX, 2); // 3
@@ -2053,7 +2053,7 @@ void gensd()
 
     mov_reg32_reg32(EBX, EAX);
     shr_reg32_imm8(EBX, 12);
-    cmp_preg32pimm32_imm8(EBX, (unsigned long)invalid_code, 0);
+    cmp_preg32_pimm32_imm8(EBX, (unsigned long)invalid_code, 0);
     jne_rj(54);
     mov_reg32_reg32(ECX, EBX); // 2
     shl_reg32_imm8(EBX, 2); // 3

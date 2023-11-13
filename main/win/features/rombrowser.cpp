@@ -319,7 +319,7 @@ void rombrowser_update_size()
 
 void rombrowser_notify(const LPARAM lparam)
 {
-	switch (((LPNMHDR)lparam)->code)
+	switch (LPNMHDR(lparam)->code)
 	{
 		case LVN_COLUMNCLICK:
 		{

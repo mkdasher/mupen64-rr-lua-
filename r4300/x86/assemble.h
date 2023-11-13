@@ -75,7 +75,7 @@ void put32(unsigned long dword);
 void put16(unsigned short word);
 
 void push_reg32(int reg32);
-void mov_eax_memoffs32(void* _memoffs32);
+void mov_eax_memoffs32(void* memoffs32);
 void cmp_reg32_m32(int reg32, void* _m32);
 void jne_rj(unsigned char saut);
 void mov_reg32_imm32(int reg32, unsigned long imm32);
@@ -174,7 +174,7 @@ void sub_reg32_reg32(int reg1, int reg2);
 void cbw();
 void movsx_reg32_reg8(int reg32, int reg8);
 void and_reg32_imm8(int reg32, unsigned char imm8);
-void movsx_reg32_reg16(int reg32, int reg8);
+void movsx_reg32_reg16(int reg32, int reg16);
 void movsx_reg32_m16(int reg32, unsigned short* m16);
 void cmp_reg32_imm8(int reg32, unsigned char imm8);
 void add_m32_imm8(void* _m32, unsigned char imm8);
@@ -238,7 +238,7 @@ void adc_reg32_reg32(unsigned long reg1, unsigned long reg2);
 void sbb_reg32_reg32(int reg1, int reg2);
 void shld_reg32_reg32_imm8(unsigned long reg1, unsigned long reg2,
                            unsigned char imm8);
-void cmp_preg32pimm32_imm8(int reg32, unsigned long imm32, unsigned char imm8);
+void cmp_preg32_pimm32_imm8(int reg32, unsigned long imm32, unsigned char imm8);
 void test_m32_imm32(void* _m32, unsigned long imm32);
 void fldcw_m16(unsigned short* m16);
 void fsqrt();
