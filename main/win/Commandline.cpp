@@ -109,13 +109,13 @@ void commandline_start_capture()
 
 void commandline_on_movie_playback_stop()
 {
-	if (commandline_stop_capture_on_movie_end && VCR_isCapturing())
+	if (commandline_stop_capture_on_movie_end && vcr_is_capturing())
 	{
 		vcr_stop_capture();
 	}
 
 	if (commandline_stop_capture_on_movie_end)
 	{
-		SendMessage(mainHWND, WM_DESTROY, 0, 0);
+		SendMessage(main_hwnd, WM_DESTROY, 0, 0);
 	}
 }

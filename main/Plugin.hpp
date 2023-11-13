@@ -53,7 +53,7 @@ struct ProcAddress
 		{
 			FARPROC fp;
 			T func;
-		} converter;
+		} converter{};
 		converter.fp = _fp;
 		return converter.func;
 	}
@@ -247,7 +247,7 @@ typedef union
 
 typedef struct
 {
-	HWND hMainWindow;
+	HWND h_main_window;
 	HINSTANCE hinst;
 
 	BOOL MemoryBswaped; // If this is set to TRUE, then the memory has been pre
@@ -261,12 +261,12 @@ typedef struct
 
 static DWORD __cdecl dummy_doRspCycles(DWORD Cycles) { return Cycles; };
 
-extern CONTROL Controls[4];
+extern CONTROL controls[4];
 
 extern void (__cdecl*getDllInfo)(PLUGIN_INFO* PluginInfo);
-extern void (__cdecl*dllConfig)(HWND hParent);
-extern void (__cdecl*dllTest)(HWND hParent);
-extern void (__cdecl*dllAbout)(HWND hParent);
+extern void (__cdecl*dllConfig)(HWND h_parent);
+extern void (__cdecl*dllTest)(HWND h_parent);
+extern void (__cdecl*dllAbout)(HWND h_parent);
 
 extern void (__cdecl*changeWindow)();
 extern void (__cdecl*closeDLL_gfx)();
@@ -282,29 +282,29 @@ extern void (__cdecl*viWidthChanged)();
 extern void (__cdecl*readScreen)(void** dest, long* width, long* height);
 extern void (__cdecl*DllCrtFree)(void* block);
 
-extern void (__cdecl*aiDacrateChanged)(int SystemType);
+extern void (__cdecl*aiDacrateChanged)(int system_type);
 extern void (__cdecl*aiLenChanged)();
 extern DWORD (__cdecl*aiReadLength)();
 extern void (__cdecl*closeDLL_audio)();
-extern BOOL (__cdecl*initiateAudio)(AUDIO_INFO Audio_Info);
+extern BOOL (__cdecl*initiateAudio)(AUDIO_INFO audio_info);
 extern void (__cdecl*processAList)();
 extern void (__cdecl*romClosed_audio)();
 extern void (__cdecl*romOpen_audio)();
 
 extern void (__cdecl*closeDLL_input)();
-extern void (__cdecl*controllerCommand)(int Control, BYTE* Command);
-extern void (__cdecl*getKeys)(int Control, BUTTONS* Keys);
-extern void (__cdecl*setKeys)(int Control, BUTTONS Keys);
-extern void (__cdecl*initiateControllers)(CONTROL_INFO ControlInfo);
-extern void (__cdecl*readController)(int Control, BYTE* Command);
+extern void (__cdecl*controllerCommand)(int control, BYTE* command);
+extern void (__cdecl*getKeys)(int control, BUTTONS* keys);
+extern void (__cdecl*setKeys)(int control, BUTTONS keys);
+extern void (__cdecl*initiateControllers)(CONTROL_INFO control_info);
+extern void (__cdecl*readController)(int control, BYTE* command);
 extern void (__cdecl*romClosed_input)();
 extern void (__cdecl*romOpen_input)();
-extern void (__cdecl*keyDown)(WPARAM wParam, LPARAM lParam);
-extern void (__cdecl*keyUp)(WPARAM wParam, LPARAM lParam);
+extern void (__cdecl*keyDown)(WPARAM w_param, LPARAM l_param);
+extern void (__cdecl*keyUp)(WPARAM w_param, LPARAM l_param);
 
 extern void (__cdecl*closeDLL_RSP)();
-extern DWORD (__cdecl*doRspCycles)(DWORD Cycles);
-extern void (__cdecl*initiateRSP)(RSP_INFO Rsp_Info, DWORD* CycleCount);
+extern DWORD (__cdecl*doRspCycles)(DWORD cycles);
+extern void (__cdecl*initiateRSP)(RSP_INFO rsp_info, DWORD* cycle_count);
 extern void (__cdecl*romClosed_RSP)();
 
 extern void (__cdecl*fBRead)(DWORD addr);
@@ -312,10 +312,10 @@ extern void (__cdecl*fBWrite)(DWORD addr, DWORD size);
 extern void (__cdecl*fBGetFrameBufferInfo)(void* p);
 
 extern void (__cdecl*moveScreen)(int xpos, int ypos);
-extern void (__cdecl*CaptureScreen)(char* Directory);
-extern void (__cdecl*old_initiateControllers)(HWND hMainWindow,
-                                              CONTROL Controls[4]);
-extern void (__cdecl*aiUpdate)(BOOL Wait);
+extern void (__cdecl*CaptureScreen)(char* directory);
+extern void (__cdecl*old_initiateControllers)(HWND h_main_window,
+                                              CONTROL controls[4]);
+extern void (__cdecl*aiUpdate)(BOOL wait);
 
 // ReSharper restore CppInconsistentNaming
 
@@ -326,7 +326,7 @@ typedef struct
 	DWORD size;
 	DWORD width;
 	DWORD height;
-} FrameBufferInfo;
+} frame_buffer_info;
 
 
 typedef struct s_plugin

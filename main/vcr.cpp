@@ -1,60 +1,48 @@
 //#include "../config.h"
-#include <assert.h>
-
+#include <cassert>
+#include <cstring>
+#include <malloc.h>
+#include <memory>
+#include <filesystem>
+#include <vector>
+#include <string>
+#include <cstdio>
+#include <ctime>
+#include <chrono>
 #include "win/main_win.h"
-#include "win/timers.h"
 #include "win/features/Statusbar.hpp"
 #include "win/features/Toolbar.hpp"
 
 #include "../lua/LuaConsole.h"
-
 #include "vcr.h"
 #include "vcr_compress.h"
 #include "vcr_resample.h"
 
 //ffmpeg
 #include "ffmpeg_capture/ffmpeg_capture.hpp"
-#include <memory>
 
 #include "plugin.hpp"
 #include "rom.h"
 #include "savestates.h"
 #include "../memory/memory.h"
 
-#include <filesystem>
-#include <errno.h>
-#include <limits.h>
-#include <memory.h>
-#include <malloc.h>
-#include <math.h>
-#include <stdio.h>
-#include <string.h>
-#include <vector>
-
 #ifdef _MSC_VER
-#define snprintf	_snprintf
-#define strcasecmp	_stricmp
-#define strncasecmp	_strnicmp
+#define SNPRINTF	_snprintf
+#define STRCASECMP	_stricmp
+#define STRNCASECMP	_strnicmp
 #else
 #include <unistd.h>
 #endif
 //#include <zlib.h>
-#include <stdio.h>
-#include <time.h>
-#include <chrono>
 
 #include <commctrl.h> // for SendMessage, SB_SETTEXT
 #include <Windows.h> // for truncate functions
 #include <../../winproject/resource.h> // for EMU_RESET
 #include "win/Config.hpp" //config struct
-#include "win/main_win.h" // mainHWND
 #include <WinUser.h>
-
 #include "win/Commandline.h"
 
-
 #ifdef _DEBUG
-#include "../r4300/macros.h"
 #endif
 
 #ifndef PATH_MAX
@@ -62,18 +50,22 @@
 #endif
 
 // M64\0x1a
-#define MUP_MAGIC (0x1a34364d)
-#define MUP_VERSION (3)
-#define MUP_HEADER_SIZE_OLD (512)
+enum
+{
+	mup_magic = (0x1a34364d),
+	mup_version = (3),
+	mup_header_size_old = (512)
+};
+
 #define MUP_HEADER_SIZE (sizeof(t_movie_header))
 #define MUP_HEADER_SIZE_CUR (vcr_movie_header.version <= 2 ? MUP_HEADER_SIZE_OLD : MUP_HEADER_SIZE)
-#define MAX_AVI_SIZE 0x7B9ACA00
+enum { max_avi_size = 0x7B9ACA00 };
 
-BOOL dontPlay = false;
+BOOL dont_play = false;
 
-#define BUFFER_GROWTH_SIZE (4096)
+enum { buffer_growth_size = (4096) };
 
-static const char* m_errCodeName[] =
+[[maybe_unused]] static const char* m_err_code_name[] =
 {
 	"Success",
 	"Wrong Format",
@@ -87,59 +79,57 @@ static const char* m_errCodeName[] =
 
 e_task m_task = e_task::idle;
 
-static char AVIFileName[PATH_MAX];
+static char avi_file_name[PATH_MAX];
 std::filesystem::path movie_path;
 std::vector<BUTTONS> movie_inputs;
 
 t_movie_header vcr_movie_header = {0};
-static BOOL m_readOnly = FALSE;
+static BOOL m_read_only = FALSE;
 
 int64_t vcr_current_sample = -1;
 // should = length_samples when recording, and be < length_samples when playing
-int m_currentVI = -1;
+int m_current_vi = -1;
 
 static int m_capture = 0; // capture movie
-static int m_audioFreq = 33000; //0x30018;
-static int m_audioBitrate = 16; // 16 bits
-static long double m_videoFrame = 0;
-static long double m_audioFrame = 0;
-#define SOUND_BUF_SIZE 44100*2*2 // 44100=1s sample, soundbuffer capable of holding 4s future data in circular buffer
+static int m_audio_freq = 33000; //0x30018;
+static int m_audio_bitrate = 16; // 16 bits
+static long double m_video_frame = 0;
+static long double m_audio_frame = 0;
+#define SOUND_BUF_SIZE (44100*2*2) // 44100=1s sample, soundbuffer capable of holding 4s future data in circular buffer
 
-static char soundBuf[SOUND_BUF_SIZE];
-static char soundBufEmpty[SOUND_BUF_SIZE];
-static int soundBufPos = 0;
-long lastSound = 0;
-int AVIIncrement = 0;
-int titleLength;
-char VCR_Lastpath[MAX_PATH];
+static char sound_buf[SOUND_BUF_SIZE];
+static char sound_buf_empty[SOUND_BUF_SIZE];
+static int sound_buf_pos = 0;
+long last_sound = 0;
+int avi_increment = 0;
+int title_length;
+char vcr_lastpath[MAX_PATH];
 bool is_restarting_flag = false;
 
-bool captureWithFFmpeg = true;
-std::unique_ptr<FFmpegManager> captureManager;
+bool capture_with_ffmpeg = true;
+std::unique_ptr<FFmpegManager> capture_manager;
 uint64_t screen_updates = 0;
 
-static int restartPlayback();
+static int restart_playback();
 
-char* strtrimext(char* myStr)
+char* strtrimext(const char* my_str)
 {
-	char* retStr;
-	char* lastExt;
-	if (myStr == NULL) return NULL;
-	if ((retStr = (char*)malloc(strlen(myStr) + 1)) == NULL) return NULL;
-	strcpy(retStr, myStr);
-	lastExt = strrchr(retStr, '.');
-	if (lastExt != NULL)
-		*lastExt = '\0';
-	return retStr;
+	char* ret_str;
+	if (my_str == nullptr) return nullptr;
+	if ((ret_str = (char*)malloc(strlen(my_str) + 1)) == nullptr) return nullptr;
+	strcpy(ret_str, my_str);
+	if (char* last_ext = strrchr(ret_str, '.'); last_ext != nullptr)
+		*last_ext = '\0';
+	return ret_str;
 }
 
-void printError(const char* str)
+void print_error(const char* str)
 {
-	MessageBox(NULL, str, "Error", MB_OK | MB_ICONERROR);
+	MessageBox(nullptr, str, "Error", MB_OK | MB_ICONERROR);
 }
 
 
-static void hardResetAndClearAllSaveData(bool clear)
+static void hard_reset_and_clear_all_save_data(const bool clear)
 {
 	extern BOOL clear_sram_on_restart_mode;
 	clear_sram_on_restart_mode = clear;
@@ -148,7 +138,7 @@ static void hardResetAndClearAllSaveData(bool clear)
 		printf("Clearing save data...\n");
 	else
 		printf("Playing movie without clearing save data\n");
-	SendMessage(mainHWND, WM_COMMAND, EMU_RESET, 0);
+	SendMessage(main_hwnd, WM_COMMAND, EMU_RESET, 0);
 }
 
 void apply_rom_info(t_movie_header* header)
@@ -159,16 +149,16 @@ void apply_rom_info(t_movie_header* header)
 
 	for (int i = 0; i < 4; ++i)
 	{
-		if (Controls[i].Plugin == controller_extension::mempak)
+		if (controls[i].Plugin == controller_extension::mempak)
 		{
 			header->controller_flags |= CONTROLLER_X_MEMPAK(i);
 		}
-		if (Controls[i].Plugin == controller_extension::rumblepak)
+		if (controls[i].Plugin == controller_extension::rumblepak)
 		{
 			header->controller_flags |= CONTROLLER_X_RUMBLE(i);
 		}
 
-		if (!Controls[i].Present)
+		if (!controls[i].Present)
 		{
 			continue;
 		}
@@ -203,11 +193,11 @@ int parse_header(std::vector<uint8_t>& buffer, t_movie_header* out_header)
 
 	memread(&ptr, &header, sizeof(t_movie_header));
 
-	if (header.magic != MUP_MAGIC)
-		return WRONG_FORMAT;
+	if (header.magic != mup_magic)
+		return wrong_format;
 
-	if (header.version <= 0 || header.version > MUP_VERSION)
-		return WRONG_VERSION;
+	if (header.version <= 0 || header.version > mup_version)
+		return wrong_version;
 
 	if (header.version == 1 || header.version == 2)
 	{
@@ -266,33 +256,31 @@ int parse_header(std::vector<uint8_t>& buffer, t_movie_header* out_header)
 		// attempt to convert old author and description to utf8
 		strncpy(header.author, header.old_author_info, 48);
 		strncpy(header.description, header.old_description, 80);
-		header.version = MUP_VERSION;
+		header.version = mup_version;
 	}
 
 	*out_header = header;
-	return SUCCESS;
+	return success;
 }
 
 bool vcr_parse_header(std::vector<uint8_t>& buffer, t_movie_header* header)
 {
-	return parse_header(buffer, header) == SUCCESS;
+	return parse_header(buffer, header) == success;
 }
 
 void vcr_clear_save_data()
 {
 	{
-		FILE* f = fopen(get_sram_path().string().c_str(), "wb");
-		if (f)
+		if (FILE* f = fopen(get_sram_path().string().c_str(), "wb"))
 		{
 			extern unsigned char sram[0x8000];
-			for (int i = 0; i < 0x8000; i++) sram[i] = 0;
+			for (unsigned char& i : sram) i = 0;
 			fwrite(sram, 1, 0x8000, f);
 			fclose(f);
 		}
 	}
 	{
-		FILE* f = fopen(get_eeprom_path().string().c_str(), "wb");
-		if (f)
+		if (FILE* f = fopen(get_eeprom_path().string().c_str(), "wb"))
 		{
 			extern unsigned char eeprom[0x8000];
 			for (int i = 0; i < 0x800; i++) eeprom[i] = 0;
@@ -301,14 +289,13 @@ void vcr_clear_save_data()
 		}
 	}
 	{
-		FILE* f = fopen(get_mempak_path().string().c_str(), "wb");
-		if (f)
+		if (FILE* f = fopen(get_mempak_path().string().c_str(), "wb"))
 		{
 			extern unsigned char mempack[4][0x8000];
-			for (int j = 0; j < 4; j++)
+			for (auto& j : mempack)
 			{
-				for (int i = 0; i < 0x800; i++) mempack[j][i] = 0;
-				fwrite(mempack[j], 1, 0x800, f);
+				for (int i = 0; i < 0x800; i++) j[i] = 0;
+				fwrite(j, 1, 0x800, f);
 			}
 			fclose(f);
 		}
@@ -317,19 +304,19 @@ void vcr_clear_save_data()
 
 
 BOOL
-VCR_isActive()
+vcr_is_active()
 {
 	return (m_task == e_task::recording || m_task == e_task::playback) ? TRUE : FALSE;
 }
 
 BOOL
-VCR_isIdle()
+vcr_is_idle()
 {
 	return (m_task == e_task::idle) ? TRUE : FALSE;
 }
 
 BOOL
-VCR_isStarting()
+vcr_is_starting()
 {
 	return (m_task == e_task::start_playback || m_task == e_task::start_playback_from_snapshot)
 		       ? TRUE
@@ -337,15 +324,14 @@ VCR_isStarting()
 }
 
 BOOL
-VCR_isStartingAndJustRestarted()
+vcr_is_starting_and_just_restarted()
 {
-	extern BOOL just_restarted_flag;
-	if (m_task == e_task::start_playback && !continue_vcr_on_restart_mode &&
-		just_restarted_flag)
+	if (extern BOOL just_restarted_flag; m_task == e_task::start_playback &&
+		!continue_vcr_on_restart_mode && just_restarted_flag)
 	{
 		just_restarted_flag = FALSE;
 		vcr_current_sample = 0;
-		m_currentVI = 0;
+		m_current_vi = 0;
 		m_task = e_task::playback;
 		return TRUE;
 	}
@@ -354,69 +340,69 @@ VCR_isStartingAndJustRestarted()
 }
 
 BOOL
-VCR_isPlaying()
+vcr_is_playing()
 {
 	return (m_task == e_task::playback) ? TRUE : FALSE;
 }
 
 BOOL
-VCR_isRecording()
+vcr_is_recording()
 {
 	return (m_task == e_task::recording) ? TRUE : FALSE;
 }
 
 BOOL
-VCR_isCapturing()
+vcr_is_capturing()
 {
 	return m_capture ? TRUE : FALSE;
 }
 
 BOOL
-VCR_getReadOnly()
+vcr_get_read_only()
 {
-	return m_readOnly;
+	return m_read_only;
 }
 
 void
-VCR_setReadOnly(BOOL val)
+vcr_set_read_only(const BOOL val)
 {
-	extern HWND mainHWND;
-	if (m_readOnly != val)
-		CheckMenuItem(GetMenu(mainHWND), EMU_VCRTOGGLEREADONLY,
+	extern HWND main_hwnd;
+	if (m_read_only != val)
+		CheckMenuItem(GetMenu(main_hwnd), EMU_VCRTOGGLEREADONLY,
 		              MF_BYCOMMAND | (val ? MFS_CHECKED : MFS_UNCHECKED));
-	m_readOnly = val;
+	m_read_only = val;
 }
 
-bool VCR_isLooping()
+bool vcr_is_looping()
 {
 	return Config.is_movie_loop_enabled;
 }
 
-bool VCR_isRestarting()
+bool vcr_is_restarting()
 {
 	return is_restarting_flag;
 }
 
-void VCR_setLoopMovie(bool val)
+void vcr_set_loop_movie(const bool val)
 {
-	extern HWND mainHWND;
-	if (VCR_isLooping() != val)
-		CheckMenuItem(GetMenu(mainHWND), ID_LOOP_MOVIE,
+	extern HWND main_hwnd;
+	if (vcr_is_looping() != val)
+		CheckMenuItem(GetMenu(main_hwnd), ID_LOOP_MOVIE,
 		              MF_BYCOMMAND | (val ? MFS_CHECKED : MFS_UNCHECKED));
 	Config.is_movie_loop_enabled = val;
 }
 
-unsigned long VCR_getLengthVIs()
+unsigned long vcr_get_length_v_is()
 {
-	return VCR_isActive() ? vcr_movie_header.length_vis : 0;
+	return vcr_is_active() ? vcr_movie_header.length_vis : 0;
 }
 
-unsigned long VCR_getLengthSamples()
+unsigned long vcr_get_length_samples()
 {
-	return VCR_isActive() ? vcr_movie_header.length_samples : 0;
+	return vcr_is_active() ? vcr_movie_header.length_samples : 0;
 }
 
-void VCR_setLengthVIs(unsigned long val)
+void vcr_set_length_v_is(const unsigned long val)
 {
 	vcr_movie_header.length_vis = val;
 }
@@ -456,15 +442,15 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 			{
 				just_restarted_flag = FALSE;
 				vcr_current_sample = 0;
-				m_currentVI = 0;
+				m_current_vi = 0;
 				m_task = e_task::recording;
 				*input = {0};
-				EnableMenuItem(GetMenu(mainHWND), ID_STOP_RECORD, MF_ENABLED);
+				EnableMenuItem(GetMenu(main_hwnd), ID_STOP_RECORD, MF_ENABLED);
 			} else
 			{
 				printf("[VCR]: Starting recording...\n");
-				hardResetAndClearAllSaveData(
-					!(vcr_movie_header.startFlags & MOVIE_START_FROM_EEPROM));
+				hard_reset_and_clear_all_save_data(
+					!(vcr_movie_header.start_flags & movie_start_from_eeprom));
 			}
 		}
 	}
@@ -500,13 +486,13 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 			{
 				just_restarted_flag = FALSE;
 				vcr_current_sample = 0;
-				m_currentVI = 0;
+				m_current_vi = 0;
 				m_task = e_task::playback;
 			} else
 			{
 				printf("[VCR]: Starting playback...\n");
-				hardResetAndClearAllSaveData(
-					!(vcr_movie_header.startFlags & MOVIE_START_FROM_EEPROM));
+				hard_reset_and_clear_all_save_data(
+					!(vcr_movie_header.start_flags & movie_start_from_eeprom));
 			}
 		}
 	}
@@ -539,14 +525,14 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 			};
 		}
 
-		printf("Recording Input [%d] (len %d): %d %d\n", vcr_current_sample, movie_inputs.size(), input->Y_AXIS, input->X_AXIS);
+		printf("Recording Input [%lld] (len %d): %d %d\n", vcr_current_sample, movie_inputs.size(), input->Y_AXIS, input->X_AXIS);
 		movie_inputs.push_back(*input);
 		vcr_movie_header.length_samples++;
 		vcr_current_sample++;
 
 		if (scheduled_restart)
 		{
-			resetEmu();
+			reset_emu();
 			scheduled_restart = false;
 		}
 		return;
@@ -566,14 +552,14 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 
 		if (vcr_movie_header.controller_flags & CONTROLLER_X_PRESENT(index))
 		{
-			*input = movie_inputs[vcr_current_sample];
-			setKeys(index, movie_inputs[vcr_current_sample]);
+			*input = movie_inputs[(int)vcr_current_sample];
+			setKeys(index, movie_inputs[(int)vcr_current_sample]);
 
 			//no readable code because 120 star tas can't get this right >:(
 			if (input->Value == 0xC000)
 			{
 				continue_vcr_on_restart_mode = true;
-				resetEmu();
+				reset_emu();
 			}
 
 			last_controller_data[index] = *input;
@@ -599,34 +585,34 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 }
 
 
-int vcr_start_record(std::filesystem::path path, uint16_t start_flag)
+int vcr_start_record(const std::filesystem::path& path, const uint16_t start_flag)
 {
 	vcr_stop_all();
-	VCR_setReadOnly(FALSE);
+	vcr_set_read_only(FALSE);
 	vcr_recent_movies_add(path.string());
 	movie_path = path;
 
 	vcr_movie_header = {0};
-	vcr_movie_header.magic = MUP_MAGIC;
-	vcr_movie_header.version = MUP_VERSION;
-	vcr_movie_header.uid = (unsigned long)time(NULL);
-	vcr_movie_header.startFlags = start_flag;
+	vcr_movie_header.magic = mup_magic;
+	vcr_movie_header.version = mup_version;
+	vcr_movie_header.uid = (unsigned long)time(nullptr);
+	vcr_movie_header.start_flags = start_flag;
 
 	vcr_current_sample = 0;
-	m_currentVI = 0;
+	m_current_vi = 0;
 	movie_inputs = {};
 
-	if (start_flag & MOVIE_START_FROM_SNAPSHOT)
+	if (start_flag & movie_start_from_snapshot)
 	{
 		m_task = e_task::start_recording_from_snapshot;
 		savestates_do(strip_extension(path.string()) + ".st", e_st_job::save);
-	} else if (start_flag & MOVIE_START_FROM_EXISTING_SNAPSHOT)
+	} else if (start_flag & movie_start_from_existing_snapshot)
 	{
 		m_task = e_task::start_recording_from_existing_snapshot;
 		savestates_do(strip_extension(path.string()) + ".st", e_st_job::load);
 
 		// set this to the normal snapshot flag to maintain compatibility
-		vcr_movie_header.startFlags = MOVIE_START_FROM_SNAPSHOT;
+		vcr_movie_header.start_flags = movie_start_from_snapshot;
 	} else
 	{
 		m_task = e_task::start_recording;
@@ -641,7 +627,7 @@ int vcr_stop_record()
 {
 	if (m_task != e_task::recording) return -1;
 
-	for (int i = 0; i < movie_inputs.size(); ++i)
+	for (int i = 0; (unsigned int)i < movie_inputs.size(); ++i)
 	{
 		printf("Recorded Input [%d]: %d %d\n", i, movie_inputs[i].Y_AXIS, movie_inputs[i].X_AXIS);
 	}
@@ -653,14 +639,14 @@ int vcr_stop_record()
 
 	m_task = e_task::idle;
 	printf("[VCR]: Record stopped. Recorded %ld input samples\n", vcr_movie_header.length_samples);
-	EnableEmulationMenuItems(TRUE);
+	enable_emulation_menu_items(TRUE);
 	statusbar_post_text("", 1);
 	statusbar_post_text("Stopped recording");
 
 	return 0;
 }
 
-bool getSavestatePath(const char* filename, char* outBuffer)
+bool get_savestate_path(const char* filename, char* out_buffer)
 {
 	bool found = true;
 
@@ -670,20 +656,19 @@ bool getSavestatePath(const char* filename, char* outBuffer)
 
 	strcpy(filenameWithExtension, filename);
 	strncat(filenameWithExtension, ".st", 4);
-	std::filesystem::path stPath = filenameWithExtension;
 
-	if (std::filesystem::exists(stPath))
-		strcpy(outBuffer, filenameWithExtension);
+	if (std::filesystem::path st_path = filenameWithExtension; std::filesystem::exists(st_path))
+		strcpy(out_buffer, filenameWithExtension);
 	else
 	{
 		/* try .savestate (old extension created bc of discord
 		trying to display a preview of .st data when uploaded) */
 		strcpy(filenameWithExtension, filename);
 		strncat(filenameWithExtension, ".savestate", 11);
-		stPath = filenameWithExtension;
+		st_path = filenameWithExtension;
 
-		if (std::filesystem::exists(stPath))
-			strcpy(outBuffer, filenameWithExtension);
+		if (std::filesystem::exists(st_path))
+			strcpy(out_buffer, filenameWithExtension);
 		else
 			found = false;
 	}
@@ -693,25 +678,25 @@ bool getSavestatePath(const char* filename, char* outBuffer)
 }
 
 
-int vcr_start_playback(std::filesystem::path path, const bool restarting)
+int vcr_start_playback(const std::filesystem::path& path, const bool restarting)
 {
 	is_restarting_flag = false;
 	movie_path = path;
 	movie_inputs = {};
 	vcr_recent_movies_add(path.string());
 
-	auto buf = read_file_buffer(path);
+	const auto buf = read_file_buffer(path);
 
 	vcr_movie_header = {0};
 	vcr_current_sample = 0;
-	m_currentVI = 0;
+	m_current_vi = 0;
 	memcpy(&vcr_movie_header, buf.data(), sizeof(t_movie_header));
 
 	movie_inputs.resize(vcr_movie_header.length_samples);
 	memcpy(movie_inputs.data(), buf.data() + sizeof(t_movie_header), vcr_movie_header.length_samples * sizeof(BUTTONS));
-	strcpy(VCR_Lastpath, path.string().c_str());
+	strcpy(vcr_lastpath, path.string().c_str());
 
-	if (vcr_movie_header.startFlags & MOVIE_START_FROM_SNAPSHOT)
+	if (vcr_movie_header.start_flags & movie_start_from_snapshot)
 	{
 		// load state
 		printf("[VCR]: Loading state...\n");
@@ -726,18 +711,18 @@ int vcr_start_playback(std::filesystem::path path, const bool restarting)
 	return 0;
 }
 
-int restartPlayback()
+int restart_playback()
 {
 	is_restarting_flag = true;
-	return vcr_start_playback(VCR_Lastpath, true);
+	return vcr_start_playback(vcr_lastpath, true);
 }
 
 
-int vcr_stop_playback(bool bypass_loop_setting)
+int vcr_stop_playback(const bool bypass_loop_setting)
 {
-	if (!bypass_loop_setting && VCR_isLooping())
+	if (!bypass_loop_setting && vcr_is_looping())
 	{
-		return restartPlayback();
+		return restart_playback();
 	}
 	reset_titlebar();
 
@@ -750,10 +735,10 @@ int vcr_stop_playback(bool bypass_loop_setting)
 	if (m_task == e_task::playback)
 	{
 		m_task = e_task::idle;
-		printf("[VCR]: Playback stopped (%ld samples played)\n",
+		printf("[VCR]: Playback stopped (%lld samples played)\n",
 		       vcr_current_sample);
 
-		EnableEmulationMenuItems(TRUE);
+		enable_emulation_menu_items(TRUE);
 		statusbar_post_text("", 1);
 		statusbar_post_text("Stopped playback");
 
@@ -764,9 +749,9 @@ int vcr_stop_playback(bool bypass_loop_setting)
 	return -1;
 }
 
-void VCR_updateScreen()
+void vcr_update_screen()
 {
-	if (!VCR_isCapturing())
+	if (!vcr_is_capturing())
 	{
 		if (!is_frame_skipped()) {
 			updateScreen();
@@ -789,10 +774,10 @@ void VCR_updateScreen()
 	void* image = nullptr;
 	long width = 0, height = 0;
 
-	auto start = std::chrono::high_resolution_clock::now();
+	const auto start = std::chrono::high_resolution_clock::now();
 	readScreen(&image, &width, &height);
-	auto end = std::chrono::high_resolution_clock::now();
-	std::chrono::duration<double, std::milli> time = (end - start);
+	const auto end = std::chrono::high_resolution_clock::now();
+	const std::chrono::duration<double, std::milli> time = (end - start);
 	printf("ReadScreen (ffmpeg): %lf ms\n", time.count());
 
 	if (image == nullptr)
@@ -801,9 +786,9 @@ void VCR_updateScreen()
 		return;
 	}
 
-	if (captureWithFFmpeg)
+	if (capture_with_ffmpeg)
 	{
-		captureManager->WriteVideoFrame((unsigned char*)image,
+		capture_manager->WriteVideoFrame((unsigned char*)image,
 		                                width * height * 3);
 
 		//free only with external capture, since plugin can't reuse same buffer...
@@ -813,19 +798,19 @@ void VCR_updateScreen()
 		return;
 	}
 
-	if (VCRComp_GetSize() > MAX_AVI_SIZE)
+	if (vcr_comp_get_size() > max_avi_size)
 	{
 		static char* endptr;
-		VCRComp_finishFile(1);
-		if (!AVIIncrement)
-			endptr = AVIFileName + strlen(AVIFileName) - 4;
+		vcr_comp_finish_file(1);
+		if (!avi_increment)
+			endptr = avi_file_name + strlen(avi_file_name) - 4;
 		//AVIIncrement
-		sprintf(endptr, "%d.avi", ++AVIIncrement);
-		VCRComp_startFile(AVIFileName, width, height, get_vis_per_second(ROM_HEADER.Country_code), 0);
+		sprintf(endptr, "%d.avi", ++avi_increment);
+		vcr_comp_start_file(avi_file_name, width, height, (int)get_vis_per_second(ROM_HEADER.Country_code), 0);
 	}
 
-	if (Config.synchronization_mode == VCR_SYNC_AUDIO_DUPL || Config.
-		synchronization_mode == VCR_SYNC_NONE)
+	if (Config.synchronization_mode == vcr_sync_audio_dupl || Config.
+		synchronization_mode == vcr_sync_none)
 	{
 		// AUDIO SYNC
 		// This type of syncing assumes the audio is authoratative, and drops or duplicates frames to keep the video as close to
@@ -833,33 +818,33 @@ void VCR_updateScreen()
 		// audio to drift away by default. This method of syncing prevents this, at the cost of the video feed possibly freezing or jumping
 		// (though in practice this rarely happens - usually a loading scene just appears shorter or something).
 
-		int audio_frames = (int)(m_audioFrame - m_videoFrame + 0.1);
+		int audio_frames = (int)(m_audio_frame - m_video_frame + 0.1);
 		// i've seen a few games only do ~0.98 frames of audio for a frame, let's account for that here
 
-		if (Config.synchronization_mode == VCR_SYNC_AUDIO_DUPL)
+		if (Config.synchronization_mode == vcr_sync_audio_dupl)
 		{
 			if (audio_frames < 0)
 			{
-				printError("Audio frames became negative!");
+				print_error("Audio frames became negative!");
 				vcr_stop_capture();
 				goto cleanup;
 			}
 
 			if (audio_frames == 0)
 			{
-				printf("\nDropped Frame! a/v: %Lg/%Lg", m_videoFrame,
-				       m_audioFrame);
+				printf("\nDropped Frame! a/v: %Lg/%Lg", m_video_frame,
+				       m_audio_frame);
 			} else if (audio_frames > 0)
 			{
-				if (!VCRComp_addVideoFrame((unsigned char*)image))
+				if (!vcr_comp_add_video_frame((unsigned char*)image))
 				{
-					printError(
+					print_error(
 						"Video codec failure!\nA call to addVideoFrame() (AVIStreamWrite) failed.\nPerhaps you ran out of memory?");
 					vcr_stop_capture();
 					goto cleanup;
 				} else
 				{
-					m_videoFrame += 1.0;
+					m_video_frame += 1.0;
 					audio_frames--;
 				}
 			}
@@ -867,31 +852,31 @@ void VCR_updateScreen()
 			// can this actually happen?
 			while (audio_frames > 0)
 			{
-				if (!VCRComp_addVideoFrame((unsigned char*)image))
+				if (!vcr_comp_add_video_frame((unsigned char*)image))
 				{
-					printError(
+					print_error(
 						"Video codec failure!\nA call to addVideoFrame() (AVIStreamWrite) failed.\nPerhaps you ran out of memory?");
 					vcr_stop_capture();
 					goto cleanup;
 				} else
 				{
-					printf("\nDuped Frame! a/v: %Lg/%Lg", m_videoFrame,
-					       m_audioFrame);
-					m_videoFrame += 1.0;
+					printf("\nDuped Frame! a/v: %Lg/%Lg", m_video_frame,
+					       m_audio_frame);
+					m_video_frame += 1.0;
 					audio_frames--;
 				}
 			}
 		} else /*if (Config.synchronization_mode == VCR_SYNC_NONE)*/
 		{
-			if (!VCRComp_addVideoFrame((unsigned char*)image))
+			if (!vcr_comp_add_video_frame((unsigned char*)image))
 			{
-				printError(
+				print_error(
 					"Video codec failure!\nA call to addVideoFrame() (AVIStreamWrite) failed.\nPerhaps you ran out of memory?");
 				vcr_stop_capture();
 				goto cleanup;
 			} else
 			{
-				m_videoFrame += 1.0;
+				m_video_frame += 1.0;
 			}
 		}
 	}
@@ -906,9 +891,9 @@ cleanup:
 
 
 void
-VCR_aiDacrateChanged(system_type type)
+vcr_ai_dacrate_changed(const system_type type)
 {
-	if (VCR_isCapturing())
+	if (vcr_is_capturing())
 	{
 		printf("Fatal error, audio frequency changed during capture\n");
 		vcr_stop_capture();
@@ -916,17 +901,17 @@ VCR_aiDacrateChanged(system_type type)
 	}
 	aiDacrateChanged(type);
 
-	m_audioBitrate = (int)ai_register.ai_bitrate + 1;
+	m_audio_bitrate = (int)ai_register.ai_bitrate + 1;
 	switch (type)
 	{
 	case ntsc:
-		m_audioFreq = (int)(48681812 / (ai_register.ai_dacrate + 1));
+		m_audio_freq = (int)(48681812 / (ai_register.ai_dacrate + 1));
 		break;
 	case pal:
-		m_audioFreq = (int)(49656530 / (ai_register.ai_dacrate + 1));
+		m_audio_freq = (int)(49656530 / (ai_register.ai_dacrate + 1));
 		break;
 	case mpal:
-		m_audioFreq = (int)(48628316 / (ai_register.ai_dacrate + 1));
+		m_audio_freq = (int)(48628316 / (ai_register.ai_dacrate + 1));
 		break;
 	default:
 		assert(false);
@@ -935,22 +920,21 @@ VCR_aiDacrateChanged(system_type type)
 }
 
 // assumes: len <= writeSize
-static void writeSound(char* buf, int len, int minWriteSize, int maxWriteSize,
-                       BOOL force)
+static void write_sound(char* buf, const int len, const int min_write_size, const int max_write_size,
+                        const BOOL force)
 {
-	if ((len <= 0 && !force) || len > maxWriteSize)
+	if ((len <= 0 && !force) || len > max_write_size)
 		return;
 
-	if (soundBufPos + len > minWriteSize || force)
+	if (sound_buf_pos + len > min_write_size || force)
 	{
-		int len2 = VCR_getResampleLen(44100, m_audioFreq, m_audioBitrate,
-		                              soundBufPos);
-		if ((len2 % 8) == 0 || len > maxWriteSize)
+		if (int len2 = VCR_getResampleLen(44100, m_audio_freq, m_audio_bitrate,
+		                                  sound_buf_pos); (len2 % 8) == 0 || len > max_write_size)
 		{
-			static short* buf2 = NULL;
+			static short* buf2 = nullptr;
 			len2 = VCR_resample(&buf2, 44100,
-			                    reinterpret_cast<short*>(soundBuf), m_audioFreq,
-			                    m_audioBitrate, soundBufPos);
+			                    reinterpret_cast<short*>(sound_buf), m_audio_freq,
+			                    m_audio_bitrate, sound_buf_pos);
 			if (len2 > 0)
 			{
 				if ((len2 % 4) != 0)
@@ -961,75 +945,75 @@ static void writeSound(char* buf, int len, int minWriteSize, int maxWriteSize,
 						stderr,
 						"[VCR]: Warning: Possible stereo sound error detected.\n");
 				}
-				if (!VCRComp_addAudioData((unsigned char*)buf2, len2))
+				if (!vcr_comp_add_audio_data((unsigned char*)buf2, len2))
 				{
-					printError(
+					print_error(
 						"Audio output failure!\nA call to addAudioData() (AVIStreamWrite) failed.\nPerhaps you ran out of memory?");
 					vcr_stop_capture();
 				}
 			}
-			soundBufPos = 0;
+			sound_buf_pos = 0;
 		}
 	}
 
 	if (len > 0)
 	{
-		if ((unsigned int)(soundBufPos + len) > SOUND_BUF_SIZE * sizeof(char))
+		if ((unsigned int)(sound_buf_pos + len) > SOUND_BUF_SIZE * sizeof(char))
 		{
-			MessageBox(0, "Fatal error", "Sound buffer overflow", MB_ICONERROR);
+			MessageBox(nullptr, "Fatal error", "Sound buffer overflow", MB_ICONERROR);
 			printf("SOUND BUFFER OVERFLOW\n");
 			return;
 		}
 #ifdef _DEBUG
 		else
 		{
-			long double pro = (long double)(soundBufPos + len) * 100 / (
+			const long double pro = (long double)(sound_buf_pos + len) * 100 / (
 				SOUND_BUF_SIZE * sizeof(char));
 			if (pro > 75) printf("---!!!---");
-			printf("sound buffer: %.2f%%\n", pro);
+			printf("sound buffer: %.2Lf%%\n", pro);
 		}
 #endif
-		memcpy(soundBuf + soundBufPos, (char*)buf, len);
-		soundBufPos += len;
-		m_audioFrame += ((len / 4) / (long double)m_audioFreq) *
+		memcpy(sound_buf + sound_buf_pos, (char*)buf, len);
+		sound_buf_pos += len;
+		m_audio_frame += ((len / 4) / (long double)m_audio_freq) *
 			get_vis_per_second(ROM_HEADER.Country_code);
 	}
 }
 
 // calculates how long the audio data will last
-float GetPercentOfFrame(int aiLen, int audioFreq, int audioBitrate)
+float get_percent_of_frame(const int ai_len, const int audio_freq, const int audio_bitrate)
 {
-	int limit = get_vis_per_second(ROM_HEADER.Country_code);
-	float viLen = 1.f / (float)limit; //how much seconds one VI lasts
-	float time = (float)(aiLen * 8) / ((float)audioFreq * 2.f * (float)
-		audioBitrate); //how long the buffer can play for
-	return time / viLen; //ratio
+	const int limit = (int)get_vis_per_second(ROM_HEADER.Country_code);
+	const float vi_len = 1.f / (float)limit; //how much seconds one VI lasts
+	const float time = (float)(ai_len * 8) / ((float)audio_freq * 2.f * (float)
+		audio_bitrate); //how long the buffer can play for
+	return time / vi_len; //ratio
 }
 
-void VCR_aiLenChanged()
+void vcr_ai_len_changed()
 {
-	short* p = reinterpret_cast<short*>((char*)rdram + (ai_register.ai_dram_addr
+	const auto p = reinterpret_cast<short*>((char*)rdram + (ai_register.ai_dram_addr
 		& 0xFFFFFF));
-	char* buf = (char*)p;
-	int aiLen = (int)ai_register.ai_len;
+	const auto buf = (char*)p;
+	const int ai_len = (int)ai_register.ai_len;
 	aiLenChanged();
 
 	// hack - mupen64 updates bitrate after calling aiDacrateChanged
-	m_audioBitrate = (int)ai_register.ai_bitrate + 1;
+	m_audio_bitrate = (int)ai_register.ai_bitrate + 1;
 
 	if (m_capture == 0)
 		return;
 
-	if (captureWithFFmpeg)
+	if (capture_with_ffmpeg)
 	{
-		captureManager->WriteAudioFrame(buf, aiLen);
+		capture_manager->WriteAudioFrame(buf, ai_len);
 		return;
 	}
 
-	if (aiLen > 0)
+	if (ai_len > 0)
 	{
-		int len = aiLen;
-		int writeSize = 2 * m_audioFreq;
+		const int len = ai_len;
+		const int write_size = 2 * m_audio_freq;
 		// we want (writeSize * 44100 / m_audioFreq) to be an integer
 
 		/*
@@ -1046,8 +1030,8 @@ void VCR_aiLenChanged()
 				}
 		*/
 
-		if (Config.synchronization_mode == VCR_SYNC_VIDEO_SNDROP || Config.
-			synchronization_mode == VCR_SYNC_NONE)
+		if (Config.synchronization_mode == vcr_sync_video_sndrop || Config.
+			synchronization_mode == vcr_sync_none)
 		{
 			// VIDEO SYNC
 			// This is the original syncing code, which adds silence to the audio track to get it to line up with video.
@@ -1060,34 +1044,32 @@ void VCR_aiLenChanged()
 			// over time. Checking if desync is not 0 causes the audio stream to to get thrashed which results in clicks
 			// and pops.
 
-			long double desync = m_videoFrame - m_audioFrame;
+			long double desync = m_video_frame - m_audio_frame;
 
-			if (Config.synchronization_mode == VCR_SYNC_NONE) // HACK
+			if (Config.synchronization_mode == vcr_sync_none) // HACK
 				desync = 0;
 
 			if (desync > 1.0)
 			{
-				int len3;
 				printf(
 					"[VCR]: Correcting for A/V desynchronization of %+Lf frames\n",
 					desync);
-				len3 = (int)(m_audioFreq / (long double)get_vis_per_second(ROM_HEADER.Country_code)) * (
+				int len3 = (int)(m_audio_freq / (long double)get_vis_per_second(ROM_HEADER.Country_code)) * (
 					int)desync;
 				len3 <<= 2;
 
-				int emptySize = len3 > writeSize ? writeSize : len3;
-				int i;
+				const int empty_size = len3 > write_size ? write_size : len3;
 
-				for (i = 0; i < emptySize; i += 4)
-					*reinterpret_cast<long*>(soundBufEmpty + i) = lastSound;
+				for (int i = 0; i < empty_size; i += 4)
+					*reinterpret_cast<long*>(sound_buf_empty + i) = last_sound;
 
-				while (len3 > writeSize)
+				while (len3 > write_size)
 				{
-					writeSound(soundBufEmpty, writeSize, m_audioFreq, writeSize,
+					write_sound(sound_buf_empty, write_size, m_audio_freq, write_size,
 					           FALSE);
-					len3 -= writeSize;
+					len3 -= write_size;
 				}
-				writeSound(soundBufEmpty, len3, m_audioFreq, writeSize, FALSE);
+				write_sound(sound_buf_empty, len3, m_audio_freq, write_size, FALSE);
 			} else if (desync <= -10.0)
 			{
 				printf(
@@ -1096,24 +1078,24 @@ void VCR_aiLenChanged()
 			}
 		}
 
-		writeSound(buf, len, m_audioFreq, writeSize, FALSE);
+		write_sound(buf, len, m_audio_freq, write_size, FALSE);
 
-		lastSound = *(reinterpret_cast<long*>(buf + len) - 1);
+		last_sound = *(reinterpret_cast<long*>(buf + len) - 1);
 	}
 }
 
-void UpdateTitleBarCapture(const char* filename)
+void update_title_bar_capture(const char* filename)
 {
 	// TODO: reimplement but less ugly
 }
 
-bool vcr_start_capture(const char* path, bool show_codec_dialog)
+bool vcr_start_capture(const char* path, const bool show_codec_dialog)
 {
 	extern BOOL emu_paused;
-	BOOL was_paused = emu_paused;
+	const BOOL was_paused = emu_paused;
 	if (!emu_paused)
 	{
-		pauseEmu(TRUE);
+		pause_emu(TRUE);
 	}
 
 	if (readScreen == nullptr)
@@ -1122,38 +1104,38 @@ bool vcr_start_capture(const char* path, bool show_codec_dialog)
 		readScreen = vcrcomp_internal_read_screen;
 	}
 
-	memset(soundBufEmpty, 0, std::size(soundBufEmpty));
-	memset(soundBuf, 0, std::size(soundBuf));
-	lastSound = 0;
-	m_videoFrame = 0.0;
-	m_audioFrame = 0.0;
+	memset(sound_buf_empty, 0, std::size(sound_buf_empty));
+	memset(sound_buf, 0, std::size(sound_buf));
+	last_sound = 0;
+	m_video_frame = 0.0;
+	m_audio_frame = 0.0;
 
 	// fill in window size at avi start, which can't change
 	// scrap whatever was written there even if window didnt change, for safety
 	vcrcomp_window_info = {0};
-	get_window_info(mainHWND, vcrcomp_window_info);
-	long width = vcrcomp_window_info.width & ~3;
-	long height = vcrcomp_window_info.height & ~3;
+	get_window_info(main_hwnd, vcrcomp_window_info);
+	const long width = vcrcomp_window_info.width & ~3;
+	const long height = vcrcomp_window_info.height & ~3;
 
-	VCRComp_startFile(path, width, height, get_vis_per_second(ROM_HEADER.Country_code), show_codec_dialog);
+	vcr_comp_start_file(path, width, height, (int)get_vis_per_second(ROM_HEADER.Country_code), show_codec_dialog);
 	m_capture = 1;
-	captureWithFFmpeg = false;
-	strncpy(AVIFileName, path, PATH_MAX);
+	capture_with_ffmpeg = false;
+	strncpy(avi_file_name, path, PATH_MAX);
 	Config.avi_capture_path = path;
 
 
 	// toolbar could get captured in AVI, so we disable it
 	toolbar_set_visibility(0);
-	UpdateTitleBarCapture(AVIFileName);
-	EnableEmulationMenuItems(TRUE);
-	SetWindowLong(mainHWND, GWL_STYLE, GetWindowLong(mainHWND, GWL_STYLE) & ~WS_MINIMIZEBOX);
+	update_title_bar_capture(avi_file_name);
+	enable_emulation_menu_items(TRUE);
+	SetWindowLong(main_hwnd, GWL_STYLE, GetWindowLong(main_hwnd, GWL_STYLE) & ~WS_MINIMIZEBOX);
 	// we apply WS_EX_LAYERED to fix off-screen blitting (off-screen window portions are not included otherwise)
-	SetWindowLong(mainHWND, GWL_EXSTYLE, GetWindowLong(mainHWND, GWL_EXSTYLE) | WS_EX_LAYERED);
+	SetWindowLong(main_hwnd, GWL_EXSTYLE, GetWindowLong(main_hwnd, GWL_EXSTYLE) | WS_EX_LAYERED);
 
 	if (!was_paused || (m_task == e_task::playback || m_task == e_task::start_playback || m_task
 		== e_task::start_playback_from_snapshot))
 	{
-		resumeEmu(TRUE);
+		resume_emu(TRUE);
 	}
 
 	printf("[VCR]: Starting capture...\n");
@@ -1164,14 +1146,14 @@ bool vcr_start_capture(const char* path, bool show_codec_dialog)
 /// <summary>
 /// Start capture using ffmpeg, if this function fails, manager (process and pipes) isn't created and error is returned.
 /// </summary>
-/// <param name="outputName">name of video file output</param>
+/// <param name="output_name">name of video file output</param>
 /// <param name="arguments">additional ffmpeg params (output stream only)</param>
 /// <returns></returns>
-int VCR_StartFFmpegCapture(const std::string& outputName,
+int vcr_start_ffmpeg_capture(const std::string& output_name,
                            const std::string& arguments)
 {
 	if (!emu_launched) return INIT_EMU_NOT_LAUNCHED;
-	if (captureManager != nullptr)
+	if (capture_manager != nullptr)
 	{
 #ifdef _DEBUG
 		printf(
@@ -1180,21 +1162,21 @@ int VCR_StartFFmpegCapture(const std::string& outputName,
 		return INIT_ALREADY_RUNNING;
 	}
 	t_window_info sInfo{};
-	get_window_info(mainHWND, sInfo);
+	get_window_info(main_hwnd, sInfo);
 
-	InitReadScreenFFmpeg(sInfo);
-	captureManager = std::make_unique<FFmpegManager>(
-		sInfo.width, sInfo.height, get_vis_per_second(ROM_HEADER.Country_code), m_audioFreq,
-		arguments + " " + outputName);
+	init_read_screen_ffmpeg(sInfo);
+	capture_manager = std::make_unique<FFmpegManager>(
+		sInfo.width, sInfo.height, get_vis_per_second(ROM_HEADER.Country_code), m_audio_freq,
+		arguments + " " + output_name);
 
-	auto err = captureManager->initError;
+	const auto err = capture_manager->initError;
 	if (err != INIT_SUCCESS)
-		captureManager.reset();
+		capture_manager.reset();
 	else
 	{
-		UpdateTitleBarCapture(outputName.data());
+		update_title_bar_capture(output_name.data());
 		m_capture = 1;
-		captureWithFFmpeg = 1;
+		capture_with_ffmpeg = true;
 	}
 #ifdef _DEBUG
 	if (err == INIT_SUCCESS)
@@ -1205,12 +1187,12 @@ int VCR_StartFFmpegCapture(const std::string& outputName,
 	return err;
 }
 
-void VCR_StopFFmpegCapture()
+void vcr_stop_ffmpeg_capture()
 {
-	if (captureManager == nullptr) return; // no error code but its no big deal
+	if (capture_manager == nullptr) return; // no error code but its no big deal
 	m_capture = 0;
 	//this must be first in case object is being destroyed and other thread still sees m_capture=1
-	captureManager.reset();
+	capture_manager.reset();
 	//apparently closing the pipes is enough to tell ffmpeg the movie ended.
 #ifdef _DEBUG
 	printf("[VCR] ffmpeg capture stopped\n");
@@ -1218,36 +1200,36 @@ void VCR_StopFFmpegCapture()
 }
 
 void
-VCR_toggleReadOnly()
+vcr_toggle_read_only()
 {
-	VCR_setReadOnly(!m_readOnly);
+	vcr_set_read_only(!m_read_only);
 
-	statusbar_post_text(m_readOnly ? "Read" : "Read-write");
+	statusbar_post_text(m_read_only ? "Read" : "Read-write");
 }
 
 int vcr_stop_capture()
 {
-	if (captureWithFFmpeg)
+	if (capture_with_ffmpeg)
 	{
-		VCR_StopFFmpegCapture();
+		vcr_stop_ffmpeg_capture();
 		return 0;
 	}
 
 	m_capture = 0;
-	writeSound(NULL, 0, m_audioFreq, m_audioFreq * 2, TRUE);
+	write_sound(nullptr, 0, m_audio_freq, m_audio_freq * 2, TRUE);
 
 	// re-enable the toolbar (m_capture==0 causes this call to do that)
 	// check previous update_toolbar_visibility call
 	toolbar_set_visibility(Config.is_toolbar_enabled);
 
-	SetWindowPos(mainHWND, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+	SetWindowPos(main_hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 	reset_titlebar();
-	SetWindowLong(mainHWND, GWL_STYLE, GetWindowLong(mainHWND, GWL_STYLE) | WS_MINIMIZEBOX);
+	SetWindowLong(main_hwnd, GWL_STYLE, GetWindowLong(main_hwnd, GWL_STYLE) | WS_MINIMIZEBOX);
 	// we remove WS_EX_LAYERED again, because dwm sucks at dealing with layered top-level windows
-	SetWindowLong(mainHWND, GWL_EXSTYLE, GetWindowLong(mainHWND, GWL_EXSTYLE) & ~WS_EX_LAYERED);
+	SetWindowLong(main_hwnd, GWL_EXSTYLE, GetWindowLong(main_hwnd, GWL_EXSTYLE) & ~WS_EX_LAYERED);
 
-	VCRComp_finishFile(0);
-	AVIIncrement = 0;
+	vcr_comp_finish_file(0);
+	avi_increment = 0;
 	printf("[VCR]: Capture finished.\n");
 	return 0;
 }
@@ -1307,20 +1289,20 @@ void vcr_update_statusbar()
 		if (b.R_DPAD) input_string += ">";
 	}
 
-	if (VCR_isRecording())
+	if (vcr_is_recording())
 	{
-		std::string text = std::format("{} ({}) ", m_currentVI, vcr_current_sample);
+		std::string text = std::format("{} ({}) ", m_current_vi, vcr_current_sample);
 		statusbar_post_text(text + input_string);
 		statusbar_post_text(std::format("{} rr", vcr_movie_header.rerecord_count), 1);
 	}
 
-	if (VCR_isPlaying())
+	if (vcr_is_playing())
 	{
-		std::string text = std::format("{} / {} ({} / {}) ", m_currentVI, VCR_getLengthVIs(), vcr_current_sample, VCR_getLengthSamples());
+		std::string text = std::format("{} / {} ({} / {}) ", m_current_vi, vcr_get_length_v_is(), vcr_current_sample, vcr_get_length_samples());
 		statusbar_post_text(text + input_string);
 	}
 
-	if (!VCR_isActive())
+	if (!vcr_is_active())
 	{
 		statusbar_post_text(input_string);
 	}
@@ -1330,9 +1312,9 @@ void vcr_update_statusbar()
 /////////////////////////// Recent Movies //////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-void vcr_recent_movies_build(int32_t reset)
+void vcr_recent_movies_build(const int32_t reset)
 {
-	HMENU h_menu = GetMenu(mainHWND);
+	const HMENU h_menu = GetMenu(main_hwnd);
 
 	for (size_t i = 0; i < Config.recent_movie_paths.size(); i++)
 	{
@@ -1370,7 +1352,7 @@ void vcr_recent_movies_build(int32_t reset)
 	}
 }
 
-void vcr_recent_movies_add(const std::string path)
+void vcr_recent_movies_add(const std::string& path)
 {
 	if (Config.is_recent_movie_paths_frozen)
 	{
@@ -1385,12 +1367,11 @@ void vcr_recent_movies_add(const std::string path)
 	vcr_recent_movies_build();
 }
 
-int32_t vcr_recent_movies_play(uint16_t menu_item_id)
+int32_t vcr_recent_movies_play(const uint16_t menu_item_id)
 {
-	int index = menu_item_id - ID_RECENTMOVIES_FIRST;
-	if (index >= 0 && index < Config.recent_movie_paths.size())
+	if (const int index = menu_item_id - ID_RECENTMOVIES_FIRST; index >= 0 && (unsigned int) index < Config.recent_movie_paths.size())
 	{
-		VCR_setReadOnly(TRUE);
+		vcr_set_read_only(TRUE);
 		return vcr_start_playback(Config.recent_movie_paths[index], false);
 	}
 	return 0;

@@ -131,7 +131,7 @@ FFmpegManager::~FFmpegManager()
 	videoThread.join();
 
 	free(silenceBuffer);
-	FFMpegCleanup();
+	ffmpeg_cleanup();
 	// free buffer used by readscreen (starting two captures at once would break this way because buffer is global)
 }
 
@@ -199,7 +199,7 @@ void FFmpegManager::WriteAudioThread()
 		{
 			//printf("Writing audio (thread)\n");
 			this->audioQueueMutex.lock();
-			auto frame = this->audioQueue.front();
+			auto& frame = this->audioQueue.front();
 			this->audioQueueMutex.unlock();
 			if (!this->_WriteAudioFrame(frame.data(), frame.size()))
 			// waits here
@@ -233,7 +233,7 @@ void FFmpegManager::WriteVideoThread()
 		{
 			//printf("Writing video (thread)\n");
 			this->videoQueueMutex.lock();
-			auto frame = this->videoQueue.front();
+			auto& frame = this->videoQueue.front();
 			this->videoQueueMutex.unlock();
 			if (!this->_WriteVideoFrame(frame.data(), frame.size()))
 			// waits here

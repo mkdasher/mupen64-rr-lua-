@@ -188,7 +188,7 @@ void internal_ReadController(int Control, BYTE* Command)
     switch (Command[2])
     {
     case 1:
-        if (Controls[Control].Present)
+        if (controls[Control].Present)
         {
             BUTTONS Keys;
             vcr_on_controller_poll(Control, &Keys);
@@ -199,16 +199,16 @@ void internal_ReadController(int Control, BYTE* Command)
         }
         break;
     case 2: // read controller pack
-        if (Controls[Control].Present)
+        if (controls[Control].Present)
         {
-            if (Controls[Control].Plugin == controller_extension::raw)
+            if (controls[Control].Plugin == controller_extension::raw)
                 if (controllerCommand) readController(Control, Command);
         }
         break;
     case 3: // write controller pack
-        if (Controls[Control].Present)
+        if (controls[Control].Present)
         {
-            if (Controls[Control].Plugin == controller_extension::raw)
+            if (controls[Control].Plugin == controller_extension::raw)
                 if (controllerCommand) readController(Control, Command);
         }
         break;
@@ -223,11 +223,11 @@ void internal_ControllerCommand(int Control, BYTE* Command)
     case 0xFF:
         if ((Command[1] & 0x80))
             break;
-        if (Controls[Control].Present)
+        if (controls[Control].Present)
         {
             Command[3] = 0x05;
             Command[4] = 0x00;
-            switch (Controls[Control].Plugin)
+            switch (controls[Control].Plugin)
             {
             case controller_extension::mempak:
                 Command[5] = 1;
@@ -244,13 +244,13 @@ void internal_ControllerCommand(int Control, BYTE* Command)
             Command[1] |= 0x80;
         break;
     case 0x01:
-        if (!Controls[Control].Present)
+        if (!controls[Control].Present)
             Command[1] |= 0x80;
         break;
     case 0x02: // read controller pack
-        if (Controls[Control].Present)
+        if (controls[Control].Present)
         {
-            switch (Controls[Control].Plugin)
+            switch (controls[Control].Plugin)
             {
             case controller_extension::mempak:
                 {
@@ -298,9 +298,9 @@ void internal_ControllerCommand(int Control, BYTE* Command)
             Command[1] |= 0x80;
         break;
     case 0x03: // write controller pack
-        if (Controls[Control].Present)
+        if (controls[Control].Present)
         {
-            switch (Controls[Control].Plugin)
+            switch (controls[Control].Plugin)
             {
             case controller_extension::mempak:
                 {
@@ -403,8 +403,8 @@ void update_pif_write()
             {
                 if (channel < 4)
                 {
-                    if (Controls[channel].Present &&
-                        Controls[channel].RawData)
+                    if (controls[channel].Present &&
+                        controls[channel].RawData)
                         controllerCommand(channel, &PIF_RAMb[i]);
                     else
                         internal_ControllerCommand(channel, &PIF_RAMb[i]);
@@ -481,7 +481,7 @@ void update_pif_read(bool stcheck)
                     {
                         once = false;
                         frame_advancing = 0;
-                        pauseEmu(TRUE);
+                        pause_emu(TRUE);
                         while (emu_paused)
                         {
                             Sleep(10);
@@ -528,9 +528,9 @@ void update_pif_read(bool stcheck)
 
                     // we handle raw data-mode controllers here:
                     // this is incompatible with VCR!
-                    if (Controls[channel].Present &&
-                        Controls[channel].RawData
-                        && VCR_isIdle()
+                    if (controls[channel].Present &&
+                        controls[channel].RawData
+                        && vcr_is_idle()
                     )
                     {
                         readController(channel, &PIF_RAMb[i]);

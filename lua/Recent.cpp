@@ -1,14 +1,13 @@
 #include "LuaConsole.h"
 #include "Recent.h"
-#include <algorithm>
 #include <Windows.h>
 #include "win/main_win.h"
 #include "../winproject/resource.h"
 #include "../main/win/Config.hpp"
 
-void lua_recent_scripts_build(int32_t reset)
+void lua_recent_scripts_build(const int32_t reset)
 {
-	HMENU h_menu = GetMenu(mainHWND);
+	const HMENU h_menu = GetMenu(main_hwnd);
 	for (size_t i = 0; i < Config.recent_lua_script_paths.size(); i++)
 	{
 		if (Config.recent_lua_script_paths[i].empty())
@@ -38,7 +37,7 @@ void lua_recent_scripts_build(int32_t reset)
 		{
 			continue;
 		}
-		menu_info.dwTypeData = (LPSTR)Config.recent_lua_script_paths[i].c_str();
+		menu_info.dwTypeData = const_cast<LPSTR>(Config.recent_lua_script_paths[i].c_str());
 		menu_info.cch = strlen(menu_info.dwTypeData);
 		menu_info.wID = ID_LUA_RECENT + i;
 		InsertMenuItem(h_sub_menu, i + 3, TRUE, &menu_info);
@@ -61,10 +60,9 @@ void lua_recent_scripts_add(const std::string& path)
 	lua_recent_scripts_build();
 }
 
-int32_t lua_recent_scripts_run(uint16_t menu_item_id)
+int32_t lua_recent_scripts_run(const uint16_t menu_item_id)
 {
-	const int index = menu_item_id - ID_LUA_RECENT;
-	if (index >= 0 && index < Config.recent_lua_script_paths.size())
+	if (const int index = menu_item_id - ID_LUA_RECENT; index >= 0 && index < (int)Config.recent_lua_script_paths.size())
 	{
 		lua_create_and_run(Config.recent_lua_script_paths[index].c_str(), false);
 		return 1;

@@ -1,4 +1,4 @@
-﻿#include "Statusbar.hpp"
+#include "Statusbar.hpp"
 
 #include <Windows.h>
 #include <commctrl.h>
@@ -10,7 +10,7 @@
 
 HWND statusbar_hwnd;
 
-void statusbar_post_text(const std::string& text, int32_t section)
+void statusbar_post_text(const std::string& text, const int32_t section)
 {
 	SendMessage(statusbar_hwnd, SB_SETTEXT, section, (LPARAM)text.c_str());
 }
@@ -82,13 +82,13 @@ void statusbar_create()
 									WS_CHILD | WS_VISIBLE | CCS_BOTTOM,
 									0, 0,
 									0, 0,
-									mainHWND, (HMENU)IDC_MAIN_STATUS,
+									main_hwnd, (HMENU)IDC_MAIN_STATUS,
 									app_instance, nullptr);
 
 	statusbar_set_mode(emu_launched ? statusbar_mode::emulating : statusbar_mode::rombrowser);
 }
 
-void statusbar_set_visibility(int32_t is_visible)
+void statusbar_set_visibility(const int32_t is_visible)
 {
 	if (statusbar_hwnd)
 	{

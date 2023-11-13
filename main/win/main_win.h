@@ -19,12 +19,12 @@
 #include <Windows.h>
 #include <string>
 #include <functional>
-#define MUPEN_VERSION "Mupen 64 1.1.6"
+constexpr auto mupen_version = "Mupen 64 1.1.6";
 
-extern BOOL CALLBACK CfgDlgProc(HWND hwnd, UINT Message, WPARAM wParam,
-                                LPARAM lParam);
+extern BOOL CALLBACK cfg_dlg_proc(HWND hwnd, UINT message, WPARAM w_param,
+                                LPARAM l_param);
 
-extern char TempMessage[MAX_PATH];
+extern char temp_message[MAX_PATH];
 extern char rom_path[MAX_PATH];
 
 // TODO: use state enum
@@ -34,7 +34,7 @@ extern int emu_paused;
 // TODO: remove
 extern int recording;
 
-extern HWND mainHWND;
+extern HWND main_hwnd;
 extern HINSTANCE app_instance;
 
 // TODO: rename
@@ -42,28 +42,28 @@ extern BOOL fast_forward;
 extern char statusmsg[800];
 
 extern HWND hwnd_plug;
-extern HANDLE EmuThreadHandle;
+extern HANDLE emu_thread_handle;
 extern DWORD emu_id;
 extern DWORD start_rom_id;
 extern DWORD close_rom_id;
 
 void main_dispatcher_invoke(const std::function<void()>& func);
 extern std::string app_path;
-extern void EnableEmulationMenuItems(BOOL flag);
-BOOL IsMenuItemEnabled(HMENU hMenu, UINT uId);
-extern void resetEmu();
-extern void resumeEmu(BOOL quiet);
-extern void pauseEmu(BOOL quiet);
-extern void OpenMoviePlaybackDialog();
-extern void OpenMovieRecordDialog();
+extern void enable_emulation_menu_items(BOOL);
+BOOL is_menu_item_enabled(HMENU h_menu, UINT u_id);
+extern void reset_emu();
+extern void resume_emu(BOOL quiet);
+extern void pause_emu(BOOL quiet);
+extern void open_movie_playback_dialog();
+extern void open_movie_record_dialog();
 /**
  * \brief Starts the rom from the path contained in <c>rom_path</c>
  */
-DWORD WINAPI start_rom(LPVOID lpParam);
+DWORD WINAPI start_rom(LPVOID lp_param);
 DWORD WINAPI close_rom(LPVOID lpParam);
 
 extern BOOL continue_vcr_on_restart_mode;
-extern BOOL ignoreErrorEmulation;
+extern BOOL ignore_error_emulation;
 extern int frame_count;
 extern long long total_vi;
 void main_recent_roms_build(int32_t reset = 0);

@@ -11,15 +11,15 @@ typedef struct
 
 extern t_window_info vcrcomp_window_info;
 
-void VCRComp_init();
+void vcr_comp_init();
 
-void VCRComp_startFile(const char* filename, long width, long height, int fps,
+void vcr_comp_start_file(const char* filename, long width, long height, int fps,
                        int New);
-void VCRComp_finishFile(int split);
-BOOL VCRComp_addVideoFrame(unsigned char* data);
-BOOL VCRComp_addAudioData(unsigned char* data, int len);
+void vcr_comp_finish_file(int split);
+BOOL vcr_comp_add_video_frame(unsigned char* data);
+BOOL vcr_comp_add_audio_data(unsigned char* data, int len);
 
-unsigned int VCRComp_GetSize();
+unsigned int vcr_comp_get_size();
 
 void get_window_info(HWND hwnd, t_window_info& info);
 

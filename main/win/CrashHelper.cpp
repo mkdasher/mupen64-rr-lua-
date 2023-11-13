@@ -14,7 +14,7 @@ int CrashHelper::FindModuleName(char* error, void* addr, int len)
 	printf("addr: %p\n", addr);
 	if (EnumProcessModules(hProcess, hMods, sizeof(hMods), &cbNeeded))
 	{
-		HMODULE maxbase = 0;
+		HMODULE maxbase = nullptr;
 		for (int i = 0; i < (int)(cbNeeded / sizeof(HMODULE)); i++)
 		{
 			//find closest addr
@@ -80,9 +80,9 @@ void CrashHelper::GenerateLog(_EXCEPTION_POINTERS* exceptionPointersPtr,
 
 		//emu info
 #ifdef _DEBUG
-		len += sprintf(logPtr + len, "Version:" MUPEN_VERSION " DEBUG\n");
+		len += sprintf(logPtr + len, "Version: \"%s\" DEBUG\n", mupen_version);
 #else
-		len += sprintf(logPtr + len, "Version:" MUPEN_VERSION "\n");
+		len += sprintf(logPtr + len, "Version: \" %s \"\n", mupen_version);
 #endif
 		char exceptionCodeFriendly[1024] = {0};
 		GetExceptionCodeFriendlyName(exceptionPointersPtr,
@@ -95,9 +95,9 @@ void CrashHelper::GenerateLog(_EXCEPTION_POINTERS* exceptionPointersPtr,
 	{
 		//emu info
 #ifdef _DEBUG
-		len += sprintf(logPtr + len, "Version:" MUPEN_VERSION " DEBUG\n");
+		len += sprintf(logPtr + len, "Version:\"%s\" DEBUG\n", mupen_version);
 #else
-		len += sprintf(logPtr + len, "Version:" MUPEN_VERSION "\n");
+		len += sprintf(logPtr + len, "Version: \" %s \"\n", mupen_version);
 #endif
 		len += sprintf(logPtr + len,
 		               "Exception code: unknown (no exception thrown, was crash log called manually?)\n");
@@ -113,7 +113,7 @@ void CrashHelper::GenerateLog(_EXCEPTION_POINTERS* exceptionPointersPtr,
 	//some flags
 	len += sprintf(logPtr + len, "m_task:%d\n", m_task);
 	len += sprintf(logPtr + len, "emu_launched:%d\n", emu_launched);
-	len += sprintf(logPtr + len, "is_capturing_avi:%d\n", VCR_isCapturing());
+	len += sprintf(logPtr + len, "is_capturing_avi:%d\n", vcr_is_capturing());
 
 	strcpy(logPtr, logPtr); // ????
 }

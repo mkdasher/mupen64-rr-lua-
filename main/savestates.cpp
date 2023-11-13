@@ -30,8 +30,7 @@
 #include "savestates.h"
 
 #include <libdeflate.h>
-#include <map>
-#include <stdlib.h>
+#include <cstdlib>
 #include <string>
 
 #include "guifuncs.h"
@@ -66,7 +65,7 @@ bool fix_new_st = true;
 bool st_skip_dma = false;
 
 //last bit seems to be free
-#define NEW_ST_FIXED_BIT (1<<31)
+enum { new_st_fixed_bit = (1<<31) };
 
 constexpr int buflen = 1024;
 constexpr int first_block_size = 0xA02BB4 - 32; //32 is md5 hash
@@ -128,7 +127,7 @@ std::vector<uint8_t> generate_savestate()
 				rdram[si_register.si_dram_addr / 4 + i] = sl(PIF_RAM[i]);
 			update_count();
 			add_interrupt_event(SI_INT, /*0x100*/0x900);
-			rdram_register.rdram_device_manuf |= NEW_ST_FIXED_BIT;
+			rdram_register.rdram_device_manuf |= new_st_fixed_bit;
 			st_skip_dma = true;
 		}
         //hack end
@@ -173,13 +172,13 @@ std::vector<uint8_t> generate_savestate()
     vecwrite(b, &next_vi, 4);
     vecwrite(b, &vi_field, 4);
 
-    int len = save_eventqueue_infos(buf);
+	const int len = save_eventqueue_infos(buf);
     vecwrite(b, buf, len);
 
     // re-recording
-    BOOL movieActive = VCR_isActive();
-    vecwrite(b, &movieActive, sizeof(movieActive));
-    if (movieActive)
+    BOOL movie_active = vcr_is_active();
+    vecwrite(b, &movie_active, sizeof(movie_active));
+    if (movie_active)
     {
     	unsigned long movie_inputs_size = movie_inputs.size();
     	vecwrite(b, &movie_inputs_size, sizeof(movie_inputs_size));
@@ -200,10 +199,10 @@ void get_effective_paths(std::filesystem::path& st_path, std::filesystem::path& 
 
 void savestates_save_immediate()
 {
-	auto start_time = std::chrono::high_resolution_clock::now();
+	const auto start_time = std::chrono::high_resolution_clock::now();
     savestates_job_success = true;
 
-	auto st = generate_savestate();
+	const auto st = generate_savestate();
 
 	if (!savestates_job_success)
 	{
@@ -222,8 +221,8 @@ void savestates_save_immediate()
 		if (Config.use_summercart) save_summercart(new_sd_path.string().c_str());
 
 		std::vector<uint8_t> compressed = st;
-		auto compressor = libdeflate_alloc_compressor(6);
-		size_t final_size = libdeflate_gzip_compress(compressor, st.data(), st.size(), compressed.data(), compressed.size());
+		const auto compressor = libdeflate_alloc_compressor(6);
+		const size_t final_size = libdeflate_gzip_compress(compressor, st.data(), st.size(), compressed.data(), compressed.size());
 		libdeflate_free_compressor(compressor);
 		compressed.resize(final_size);
 
@@ -263,9 +262,9 @@ void savestates_save_immediate()
 void load_memory_from_buffer(uint8_t* p)
 {
     memread(&p, &rdram_register, sizeof(RDRAM_register));
-    if (rdram_register.rdram_device_manuf & NEW_ST_FIXED_BIT)
+    if (rdram_register.rdram_device_manuf & new_st_fixed_bit)
     {
-        rdram_register.rdram_device_manuf &= ~NEW_ST_FIXED_BIT; //remove the trick
+        rdram_register.rdram_device_manuf &= ~new_st_fixed_bit; //remove the trick
         st_skip_dma = true; //tell dma.c to skip it
     }
     memread(&p, &MI_register, sizeof(mips_register));
@@ -309,8 +308,8 @@ void load_memory_from_buffer(uint8_t* p)
     {
         uint32_t target_addr;
         memread(&p, &target_addr, 4);
-        for (int i = 0; i < 0x100000; i++)
-            invalid_code[i] = 1;
+        for (char& i : invalid_code)
+	        i = 1;
         jump_to(target_addr)
     }
 
@@ -325,7 +324,7 @@ void load_memory_from_buffer(uint8_t* p)
 /// <param name="silence_not_found_error"></param>
 void savestates_load_immediate()
 {
-	auto start_time = std::chrono::high_resolution_clock::now();
+	const auto start_time = std::chrono::high_resolution_clock::now();
 
     /*rough .st format :
     0x0 - 0xA02BB0 : memory, registers, stuff like that, known size
@@ -357,7 +356,7 @@ void savestates_load_immediate()
 	std::vector<uint8_t> decompressed_buf = auto_decompress(st_buf);
 	if(decompressed_buf.empty())
 	{
-		MessageBox(mainHWND, "Failed to decompress savestate", nullptr, MB_ICONERROR);
+		MessageBox(main_hwnd, "Failed to decompress savestate", nullptr, MB_ICONERROR);
 		savestates_job_success = false;
 		return;
 	}
@@ -370,9 +369,9 @@ void savestates_load_immediate()
 	char md5[33] = {0};
     memread(&ptr, &md5, 32);
 
-	if (memcmp(md5, rom_md5, 32)) {
+	if (memcmp(md5, rom_md5, 32) != 0) {
 
-		MessageBox(mainHWND, std::format("The savestate was created on a rom with CRC {}, but is being loaded on a rom with CRC {}.", md5, rom_md5).c_str(), nullptr, MB_ICONWARNING);
+		MessageBox(main_hwnd, std::format("The savestate was created on a rom with CRC {}, but is being loaded on a rom with CRC {}.", md5, rom_md5).c_str(), nullptr, MB_ICONWARNING);
 
 		if (!Config.is_state_independent_state_loading_allowed) {
 			savestates_job_success = false;
@@ -411,7 +410,7 @@ void savestates_load_immediate()
 	    unsigned long movie_input_data_size = 0;
 	    memread(&ptr, &movie_input_data_size, sizeof(movie_input_data_size));
 
-	    auto movie_input_data = (BUTTONS*)malloc(movie_input_data_size * sizeof(BUTTONS));
+	    const auto movie_input_data = (BUTTONS*)malloc(movie_input_data_size * sizeof(BUTTONS));
 	    memread(&ptr, movie_input_data, movie_input_data_size * sizeof(BUTTONS));
 
     	// rerecording: we overwrite the current input buffer with the st's one, and adjust the current sample
@@ -422,11 +421,11 @@ void savestates_load_immediate()
     }
     else
     {
-	    if (VCR_isActive())
+	    if (vcr_is_active())
 	    {
 		    if (!Config.is_state_independent_state_loading_allowed)
 		    {
-		    	MessageBox(mainHWND, "Can't load a non-movie snapshot while a movie is active", nullptr, MB_ICONERROR);
+		    	MessageBox(main_hwnd, "Can't load a non-movie snapshot while a movie is active", nullptr, MB_ICONERROR);
 			    savestates_job_success = false;
 			    return;
 		    }
@@ -441,7 +440,7 @@ void savestates_load_immediate()
     load_memory_from_buffer(first_block);
     main_dispatcher_invoke(AtLoadStateLuaCallback);
 	statusbar_post_text(std::format("Loaded {}", new_st_path.filename().string()));
-failedLoad:
+failedLoad: // can this just be deleted?
     extern bool ignore;
     //legacy .st fix, makes BEQ instruction ignore jump, because .st writes new address explictly.
     //This should cause issues anyway but libultra seems to be flexible (this means there's a chance it fails).
@@ -464,14 +463,14 @@ failedLoad:
 	printf("Savestate loading took %dms\n", static_cast<int>((std::chrono::high_resolution_clock::now() - start_time).count() / 1'000'000));
 }
 
-void savestates_do(std::filesystem::path path, e_st_job job)
+void savestates_do(const std::filesystem::path& path, const e_st_job job)
 {
 	st_path = path;
 	savestates_job = job;
 	st_medium = e_st_medium::path;
 }
 
-void savestates_do(size_t slot, e_st_job job)
+void savestates_do(const size_t slot, const e_st_job job)
 {
 	st_slot = slot;
 	savestates_job = job;

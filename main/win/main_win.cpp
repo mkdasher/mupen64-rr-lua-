@@ -17,8 +17,6 @@
 
 
 #include "main_win.h"
-
-#include <cmath>
 #include <commctrl.h>
 #include <cstdlib>
 #include <deque>
@@ -57,9 +55,9 @@ bool ffup = false;
 
 
 #ifdef _MSC_VER
-#define snprintf	_snprintf
-#define strcasecmp	stricmp
-#define strncasecmp	strnicmp
+#define SNPRINTF	_snprintf
+#define STRCASECMP	stricmp
+#define STRNCASECMP	strnicmp
 #endif
 
 
@@ -71,15 +69,14 @@ HANDLE sound_thread_handle;
 static BOOL FullScreenMode = 0;
 
 HANDLE loading_handle[4];
-HANDLE EmuThreadHandle;
+HANDLE emu_thread_handle;
 HWND hwnd_plug;
 UINT update_screen_timer;
 
-static DWORD WINAPI ThreadFunc(LPVOID lpParam);
-DWORD WINAPI close_rom(LPVOID lpParam);
-constexpr char g_szClassName[] = "myWindowClass";
+static DWORD WINAPI thread_func(LPVOID lp_param);
+constexpr char g_sz_class_name[] = "myWindowClass";
 char rom_path[MAX_PATH] = {0};
-char LastSelectedRom[_MAX_PATH];
+char last_selected_rom[_MAX_PATH];
 bool scheduled_restart = false;
 BOOL really_restart_mode = 0;
 BOOL clear_sram_on_restart_mode = 0;
@@ -87,30 +84,31 @@ BOOL continue_vcr_on_restart_mode = 0;
 BOOL just_restarted_flag = 0;
 int frame_count = 1;
 long long total_vi = 0;
-static BOOL AutoPause = 0;
-static BOOL MenuPaused = 0;
-static HWND hStaticHandle; //Handle for static place
-char TempMessage[MAX_PATH];
+static BOOL auto_pause = 0;
+static BOOL menu_paused = 0;
+[[maybe_unused]] static HWND h_static_handle; //Handle for static place
+char temp_message[MAX_PATH];
 int emu_launched; //int emu_emulating;
 int emu_paused;
-HWND mainHWND;
+HWND main_hwnd;
 HINSTANCE app_instance;
 BOOL fast_forward = 0;
-BOOL ignoreErrorEmulation = FALSE;
+BOOL ignore_error_emulation = FALSE;
 char statusmsg[800];
 
-char correctedPath[260];
-#define INCOMPATIBLE_PLUGINS_AMOUNT 1 // this is so bad
-const char pluginBlacklist[INCOMPATIBLE_PLUGINS_AMOUNT][256] = {
+char corrected_path[260];
+constexpr auto incompatible_plugins_amount = 1;// this is so bad;
+
+
+constexpr char plugin_blacklist[incompatible_plugins_amount][256] = {
 	"Azimer\'s Audio v0.7"
 };
 
-TCHAR CoreNames[3][30] = {
+TCHAR core_names[3][30] = {
 	TEXT("Interpreter"), TEXT("Dynamic Recompiler"), TEXT("Pure Interpreter")
 };
 
-std::string app_path = "";
-
+std::string app_path;
 
 /**
  * \brief List of lua environment map keys running before emulation stopped
@@ -121,7 +119,7 @@ std::deque<std::function<void()>> dispatcher_queue;
 
 void main_dispatcher_invoke(const std::function<void()>& func) {
 	dispatcher_queue.push_back(func);
-	SendMessage(mainHWND, WM_EXECUTE_DISPATCHER, 0, 0);
+	SendMessage(main_hwnd, WM_EXECUTE_DISPATCHER, 0, 0);
 }
 
 void main_dispatcher_process()
@@ -132,9 +130,9 @@ void main_dispatcher_process()
 	}
 }
 
-void ClearButtons()
+void clear_buttons()
 {
-	BUTTONS zero = {0};
+	constexpr BUTTONS zero = {0};
 	for (int i = 0; i < 4; i++)
 	{
 		setKeys(i, zero);
@@ -154,11 +152,11 @@ std::string get_app_full_path()
 	return ret;
 }
 
-void set_is_movie_loop_enabled(bool value)
+void set_is_movie_loop_enabled(const bool value)
 {
 	Config.is_movie_loop_enabled = value;
 
-	CheckMenuItem(GetMenu(mainHWND), ID_LOOP_MOVIE,
+	CheckMenuItem(GetMenu(main_hwnd), ID_LOOP_MOVIE,
 				  MF_BYCOMMAND | (Config.is_movie_loop_enabled
 									  ? MFS_CHECKED
 									  : MFS_UNCHECKED));
@@ -169,7 +167,7 @@ void set_is_movie_loop_enabled(bool value)
 								 : "Movies stop after ending");
 }
 
-static void gui_ChangeWindow()
+static void gui_change_window()
 {
 	if (FullScreenMode)
 	{
@@ -184,9 +182,9 @@ static void gui_ChangeWindow()
 	statusbar_set_visibility(!FullScreenMode);
 }
 
-void resumeEmu(BOOL quiet)
+void resume_emu(const BOOL quiet)
 {
-	BOOL wasPaused = emu_paused;
+	const BOOL was_paused = emu_paused;
 	if (emu_launched)
 	{
 		emu_paused = 0;
@@ -197,17 +195,17 @@ void resumeEmu(BOOL quiet)
 
 	toolbar_on_emu_state_changed(emu_launched, 1);
 
-	if (emu_paused != wasPaused && !quiet)
-		CheckMenuItem(GetMenu(mainHWND), EMU_PAUSE,
+	if (emu_paused != was_paused && !quiet)
+		CheckMenuItem(GetMenu(main_hwnd), EMU_PAUSE,
 		              MF_BYCOMMAND | (emu_paused
 			                              ? MFS_CHECKED
 			                              : MFS_UNCHECKED));
 }
 
 
-void pauseEmu(BOOL quiet)
+void pause_emu(const BOOL quiet)
 {
-	BOOL wasPaused = emu_paused;
+	const BOOL was_paused = emu_paused;
 	if (emu_launched)
 	{
 		vcr_update_statusbar();
@@ -219,41 +217,41 @@ void pauseEmu(BOOL quiet)
 			statusbar_post_text("Emulation paused");
 	} else
 	{
-		CheckMenuItem(GetMenu(mainHWND), EMU_PAUSE,
+		CheckMenuItem(GetMenu(main_hwnd), EMU_PAUSE,
 		              MF_BYCOMMAND | MFS_UNCHECKED);
 	}
 
 	toolbar_on_emu_state_changed(emu_launched, 0);
 
-	if (emu_paused != wasPaused && !MenuPaused)
-		CheckMenuItem(GetMenu(mainHWND), EMU_PAUSE,
+	if (emu_paused != was_paused && !menu_paused)
+		CheckMenuItem(GetMenu(main_hwnd), EMU_PAUSE,
 		              MF_BYCOMMAND | (emu_paused
 			                              ? MFS_CHECKED
 			                              : MFS_UNCHECKED));
 }
 
-DWORD WINAPI start_rom(LPVOID lpParam)
+DWORD WINAPI start_rom(const LPVOID lp_param)
 {
 	// maybe make no access violations, probably can be just
 	// replaced with rom_path instead of rom_path_local
-	char* rom_path_local = {};
-	if (lpParam != nullptr) {
-		rom_path_local = (char*)lpParam;
+	const char* rom_path_local;
+	if (lp_param != nullptr) {
+		rom_path_local = (char*)lp_param;
 	} else {
 		rom_path_local = rom_path;
 	}
-	auto start_time = std::chrono::high_resolution_clock::now();
+	const auto start_time = std::chrono::high_resolution_clock::now();
 
 	// Kill any roms that are still running
 	if (emu_launched) {
-		WaitForSingleObject(CreateThread(NULL, 0, close_rom, NULL, 0, &close_rom_id), 10'000);
+		WaitForSingleObject(CreateThread(nullptr, 0, close_rom, nullptr, 0, &close_rom_id), 10'000);
 	}
 
 	// TODO: keep plugins loaded and only unload and reload them when they actually change
 	printf("Loading plugins\n");
 	if (!load_plugins())
 	{
-		MessageBox(mainHWND, "Invalid plugins selected", nullptr,
+		MessageBox(main_hwnd, "Invalid plugins selected", nullptr,
 		   MB_ICONERROR | MB_OK);
 		return 0;
 	}
@@ -261,27 +259,27 @@ DWORD WINAPI start_rom(LPVOID lpParam)
 	// valid rom is required to start emulation
 	if (rom_read(rom_path_local))
 	{
-		MessageBox(mainHWND, "Failed to open ROM", "Error",
+		MessageBox(main_hwnd, "Failed to open ROM", "Error",
 				   MB_ICONERROR | MB_OK);
 		unload_plugins();
 		return 0;
 	}
 	// at this point, we're set to begin emulating and can't backtrack
 	// disallow window resizing
-	LONG style = GetWindowLong(mainHWND, GWL_STYLE);
-	SetWindowLong(mainHWND, GWL_STYLE,
+	const LONG style = GetWindowLong(main_hwnd, GWL_STYLE);
+	SetWindowLong(main_hwnd, GWL_STYLE,
 				  style & ~(WS_THICKFRAME | WS_MAXIMIZEBOX));
 	// TODO: investigate wtf this is
-	strcpy(LastSelectedRom, rom_path_local);
+	strcpy(last_selected_rom, rom_path_local);
 
 	// notify ui of emu state change
 	main_recent_roms_add(rom_path_local);
 	rombrowser_set_visibility(0);
 	statusbar_set_mode(statusbar_mode::emulating);
-	EnableEmulationMenuItems(TRUE);
+	enable_emulation_menu_items(TRUE);
 	timer_init();
 	if (m_task == e_task::idle) {
-		SetWindowText(mainHWND, std::format("{} - {}", std::string(MUPEN_VERSION), std::string((char*)ROM_HEADER.nom)).c_str());
+		SetWindowText(main_hwnd, std::format("{} - {}", std::string(mupen_version), std::string((char*)ROM_HEADER.nom)).c_str());
 	}
 
 	auto gfx_thread = std::thread(load_gfx, video_plugin->handle);
@@ -295,29 +293,29 @@ DWORD WINAPI start_rom(LPVOID lpParam)
 	rsp_thread.join();
 
 	printf("start_rom entry %dms\n", static_cast<int>((std::chrono::high_resolution_clock::now() - start_time).count() / 1'000'000));
-	EmuThreadHandle = CreateThread(NULL, 0, ThreadFunc, NULL, 0, &emu_id);
+	emu_thread_handle = CreateThread(nullptr, 0, thread_func, nullptr, 0, &emu_id);
 
 	return 1;
 }
 
 static int shut_window = 0;
 
-DWORD WINAPI close_rom(LPVOID lpParam)
+DWORD WINAPI close_rom(LPVOID)
 {
 	//printf("gen interrupt: %lld ns/vi", (total_vi/frame_count));
 	if (emu_launched) {
 
 		if (emu_paused) {
-			MenuPaused = FALSE;
-			resumeEmu(FALSE);
+			menu_paused = FALSE;
+			resume_emu(FALSE);
 		}
 
-		if (VCR_isCapturing() && !continue_vcr_on_restart_mode) {
+		if (vcr_is_capturing() && !continue_vcr_on_restart_mode) {
 			// we need to stop capture before closing rom because rombrowser might show up in recording otherwise lol
 			if (vcr_stop_capture() != 0)
-				MessageBox(NULL, "Couldn't stop capturing", "VCR", MB_OK);
+				MessageBox(nullptr, "Couldn't stop capturing", "VCR", MB_OK);
 			else {
-				SetWindowPos(mainHWND, HWND_TOP, 0, 0, 0, 0,
+				SetWindowPos(main_hwnd, HWND_TOP, 0, 0, 0, 0,
 							 SWP_NOMOVE | SWP_NOSIZE);
 				statusbar_post_text("Stopped AVI capture");
 			}
@@ -335,9 +333,8 @@ DWORD WINAPI close_rom(LPVOID lpParam)
 		stop_it();
 		main_dispatcher_invoke(stop_all_scripts);
 		stop = 1;
-		DWORD result = WaitForSingleObject(EmuThreadHandle, 10'000);
-		if (result == WAIT_TIMEOUT) {
-			MessageBox(mainHWND, "Emu thread didn't exit in time", NULL,
+		if (const DWORD result = WaitForSingleObject(emu_thread_handle, 10'000); result == WAIT_TIMEOUT) {
+			MessageBox(main_hwnd, "Emu thread didn't exit in time", nullptr,
 					   MB_ICONERROR | MB_OK);
 		}
 
@@ -345,31 +342,31 @@ DWORD WINAPI close_rom(LPVOID lpParam)
 		emu_paused = 1;
 
 
-		rom = NULL;
+		rom = nullptr;
 		free(rom);
 
 		free_memory();
 
-		EnableEmulationMenuItems(FALSE);
+		enable_emulation_menu_items(FALSE);
 		rombrowser_set_visibility(!really_restart_mode);
 		toolbar_on_emu_state_changed(0, 0);
 
 		if (m_task == e_task::idle) {
-			SetWindowText(mainHWND, MUPEN_VERSION);
+			SetWindowText(main_hwnd, mupen_version);
 			// TODO: look into why this is done
 			statusbar_post_text(" ", 1);
 		}
 
 		if (shut_window) {
-			SendMessage(mainHWND, WM_CLOSE, 0, 0);
+			SendMessage(main_hwnd, WM_CLOSE, 0, 0);
 			return 0;
 		}
 
 		statusbar_set_mode(statusbar_mode::rombrowser);
 		statusbar_post_text("Emulation stopped");
 
-		SetWindowLong(mainHWND, GWL_STYLE,
-					  GetWindowLong(mainHWND, GWL_STYLE) | WS_THICKFRAME);
+		SetWindowLong(main_hwnd, GWL_STYLE,
+					  GetWindowLong(main_hwnd, GWL_STYLE) | WS_THICKFRAME);
 
 		if (really_restart_mode) {
 			if (clear_sram_on_restart_mode) {
@@ -382,11 +379,11 @@ DWORD WINAPI close_rom(LPVOID lpParam)
 				just_restarted_flag = TRUE;
 
 			main_dispatcher_invoke([] {
-				strcpy(rom_path, LastSelectedRom);
-				CreateThread(NULL, 0, start_rom, rom_path, 0, &start_rom_id);
+				strcpy(rom_path, last_selected_rom);
+				CreateThread(nullptr, 0, start_rom, rom_path, 0, &start_rom_id);
 				//if (!start_rom(nullptr)) {
 					//close_rom(NULL);
-					//MessageBox(mainHWND, "Failed to open ROM", NULL,
+					//MessageBox(main_hwnd, "Failed to open ROM", NULL,
 							//   MB_ICONERROR | MB_OK);
 				//}
 			});
@@ -399,7 +396,7 @@ DWORD WINAPI close_rom(LPVOID lpParam)
 	ExitThread(0);
 }
 
-void resetEmu()
+void reset_emu()
 {
 	// why is it so damned difficult to reset the game?
 	// right now it's hacked to exit to the GUI then re-load the ROM,
@@ -409,21 +406,21 @@ void resetEmu()
 	{
 		frame_advancing = false;
 		really_restart_mode = TRUE;
-		MenuPaused = FALSE;
-		CreateThread(NULL, 0, close_rom, NULL, 0, &close_rom_id);
+		menu_paused = FALSE;
+		CreateThread(nullptr, 0, close_rom, nullptr, 0, &close_rom_id);
 	}
 }
 
-int pauseAtFrame = -1;
+int pause_at_frame = -1;
 
 /// <summary>
 /// Helper function because this is repeated multiple times
 /// </summary>
-void SetStatusPlaybackStarted()
+void set_status_playback_started()
 {
-	HMENU hMenu = GetMenu(mainHWND);
-	EnableMenuItem(hMenu, ID_STOP_RECORD, MF_GRAYED);
-	EnableMenuItem(hMenu, ID_STOP_PLAYBACK, MF_ENABLED);
+	const HMENU h_menu = GetMenu(main_hwnd);
+	EnableMenuItem(h_menu, ID_STOP_RECORD, MF_GRAYED);
+	EnableMenuItem(h_menu, ID_STOP_PLAYBACK, MF_ENABLED);
 
 	if (!emu_paused || !emu_launched)
 		statusbar_post_text("Playback started");
@@ -431,24 +428,22 @@ void SetStatusPlaybackStarted()
 		statusbar_post_text("Playback started while paused");
 }
 
-LRESULT CALLBACK PlayMovieProc(HWND hwnd, UINT Message, WPARAM wParam,
-                               LPARAM lParam)
+LRESULT CALLBACK play_movie_proc(const HWND hwnd, const UINT message, const WPARAM w_param, LPARAM)
 {
 	char tempbuf[MAX_PATH];
-
-	HWND descriptionDialog;
-	HWND authorDialog;
-	static char path_buffer[_MAX_PATH];
-	switch (Message)
+	HWND description_dialog;
+	HWND author_dialog;
+	[[maybe_unused]] static char path_buffer[_MAX_PATH];
+	switch (message)
 	{
 	case WM_INITDIALOG:
-		descriptionDialog = GetDlgItem(hwnd, IDC_INI_DESCRIPTION);
-		authorDialog = GetDlgItem(hwnd, IDC_INI_AUTHOR);
+		description_dialog = GetDlgItem(hwnd, IDC_INI_DESCRIPTION);
+		author_dialog = GetDlgItem(hwnd, IDC_INI_AUTHOR);
 		SetDlgItemInt(hwnd, IDC_PAUSEAT_FIELD, 0, FALSE);
 
-		SendMessage(descriptionDialog, EM_SETLIMITTEXT,
-		            MOVIE_DESCRIPTION_DATA_SIZE, 0);
-		SendMessage(authorDialog, EM_SETLIMITTEXT, MOVIE_AUTHOR_DATA_SIZE, 0);
+		SendMessage(description_dialog, EM_SETLIMITTEXT,
+		            movie_description_data_size, 0);
+		SendMessage(author_dialog, EM_SETLIMITTEXT, movie_author_data_size, 0);
 
 		sprintf(tempbuf, "%s (%s)", (char*)ROM_HEADER.nom, country_code_to_country_name(ROM_HEADER.Country_code).c_str());
 		strcat(tempbuf, ".m64");
@@ -469,44 +464,45 @@ LRESULT CALLBACK PlayMovieProc(HWND hwnd, UINT Message, WPARAM wParam,
 					   audio_plugin->name.c_str());
 		SetDlgItemText(hwnd, IDC_MOVIE_RSP_TEXT2,
 					   rsp_plugin->name.c_str());
+		// TODO: do with for loop
 
-		strcpy(tempbuf, Controls[0].Present ? "Present" : "Disconnected");
-		if (Controls[0].Present && Controls[0].Plugin ==
+		strcpy(tempbuf, controls[0].Present ? "Present" : "Disconnected");
+		if (controls[0].Present && controls[0].Plugin ==
 			controller_extension::mempak)
 			strcat(tempbuf, " with mempak");
-		if (Controls[0].Present && Controls[0].Plugin ==
+		if (controls[0].Present && controls[0].Plugin ==
 			controller_extension::rumblepak)
 			strcat(tempbuf, " with rumble");
 		SetDlgItemText(hwnd, IDC_MOVIE_CONTROLLER1_TEXT2, tempbuf);
 
-		strcpy(tempbuf, Controls[1].Present ? "Present" : "Disconnected");
-		if (Controls[1].Present && Controls[1].Plugin ==
+		strcpy(tempbuf, controls[1].Present ? "Present" : "Disconnected");
+		if (controls[1].Present && controls[1].Plugin ==
 			controller_extension::mempak)
 			strcat(tempbuf, " with mempak");
-		if (Controls[1].Present && Controls[1].Plugin ==
+		if (controls[1].Present && controls[1].Plugin ==
 			controller_extension::rumblepak)
 			strcat(tempbuf, " with rumble pak");
 		SetDlgItemText(hwnd, IDC_MOVIE_CONTROLLER2_TEXT2, tempbuf);
 
-		strcpy(tempbuf, Controls[2].Present ? "Present" : "Disconnected");
-		if (Controls[2].Present && Controls[2].Plugin ==
+		strcpy(tempbuf, controls[2].Present ? "Present" : "Disconnected");
+		if (controls[2].Present && controls[2].Plugin ==
 			controller_extension::mempak)
 			strcat(tempbuf, " with mempak");
-		if (Controls[2].Present && Controls[2].Plugin ==
+		if (controls[2].Present && controls[2].Plugin ==
 			controller_extension::rumblepak)
 			strcat(tempbuf, " with rumble pak");
 		SetDlgItemText(hwnd, IDC_MOVIE_CONTROLLER3_TEXT2, tempbuf);
 
-		strcpy(tempbuf, Controls[3].Present ? "Present" : "Disconnected");
-		if (Controls[3].Present && Controls[3].Plugin ==
+		strcpy(tempbuf, controls[3].Present ? "Present" : "Disconnected");
+		if (controls[3].Present && controls[3].Plugin ==
 			controller_extension::mempak)
 			strcat(tempbuf, " with mempak");
-		if (Controls[3].Present && Controls[3].Plugin ==
+		if (controls[3].Present && controls[3].Plugin ==
 			controller_extension::rumblepak)
 			strcat(tempbuf, " with rumble pak");
 		SetDlgItemText(hwnd, IDC_MOVIE_CONTROLLER4_TEXT2, tempbuf);
 
-		CheckDlgButton(hwnd, IDC_MOVIE_READONLY, VCR_getReadOnly());
+		CheckDlgButton(hwnd, IDC_MOVIE_READONLY, vcr_get_read_only());
 		SetFocus(GetDlgItem(hwnd, IDC_INI_MOVIEFILE));
 		goto refresh;
 	// better than making it a macro or zillion-argument function
@@ -515,7 +511,7 @@ LRESULT CALLBACK PlayMovieProc(HWND hwnd, UINT Message, WPARAM wParam,
 		EndDialog(hwnd, IDOK);
 		break;
 	case WM_COMMAND:
-		switch (LOWORD(wParam))
+		switch (LOWORD(w_param))
 		{
 		case IDC_OK:
 		case IDOK:
@@ -524,23 +520,22 @@ LRESULT CALLBACK PlayMovieProc(HWND hwnd, UINT Message, WPARAM wParam,
 
 				{
 					BOOL success;
-					const unsigned int frame = GetDlgItemInt(
-						hwnd, IDC_PAUSEAT_FIELD, &success, TRUE);
-					if (success && frame > 0)
-						pauseAtFrame = frame;
+					if (const unsigned int frame = GetDlgItemInt(
+						hwnd, IDC_PAUSEAT_FIELD, &success, TRUE); success && frame > 0)
+						pause_at_frame = (int)frame;
 					else
-						pauseAtFrame = -1;
+						pause_at_frame = -1;
 				}
 
 				GetDlgItemText(hwnd, IDC_INI_MOVIEFILE, tempbuf, MAX_PATH);
 
-				VCR_setReadOnly(
+				vcr_set_read_only(
 					(BOOL)IsDlgButtonChecked(hwnd, IDC_MOVIE_READONLY));
 
-				int result = vcr_start_playback(tempbuf, false);
+				vcr_start_playback(tempbuf, false);
 
-				SetStatusPlaybackStarted();
-				resumeEmu(TRUE);
+				set_status_playback_started();
+				resume_emu(TRUE);
 				EndDialog(hwnd, IDOK);
 			}
 			break;
@@ -551,7 +546,7 @@ LRESULT CALLBACK PlayMovieProc(HWND hwnd, UINT Message, WPARAM wParam,
 		case IDC_MOVIE_BROWSE:
 			{
 				const auto path = show_persistent_open_dialog("o_movie", hwnd, L"*.m64;*.rec");
-				if (path.size() == 0)
+				if (path.empty())
 				{
 					break;
 				}
@@ -573,8 +568,7 @@ refresh:
 
 	GetDlgItemText(hwnd, IDC_INI_MOVIEFILE, tempbuf, MAX_PATH);
 	t_movie_header hdr = {0};
-	auto buf = read_file_buffer(tempbuf);
-	if(!vcr_parse_header(buf, &hdr))
+	if(auto buf = read_file_buffer(tempbuf); !vcr_parse_header(buf, &hdr))
 	{
 		return FALSE;
 	}
@@ -595,15 +589,15 @@ refresh:
 		).c_str());
 	}
 
-	if (hdr.startFlags & MOVIE_START_FROM_SNAPSHOT)
+	if (hdr.start_flags & movie_start_from_snapshot)
 	{
 		SetDlgItemText(hwnd, IDC_FROMSNAPSHOT_TEXT, "Savestate");
 	}
-	if (hdr.startFlags & MOVIE_START_FROM_EEPROM)
+	if (hdr.start_flags & movie_start_from_eeprom)
 	{
 		SetDlgItemText(hwnd, IDC_FROMSNAPSHOT_TEXT, "EEPROM");
 	}
-	if (hdr.startFlags & MOVIE_START_FROM_NOTHING)
+	if (hdr.start_flags & movie_start_from_nothing)
 	{
 		SetDlgItemText(hwnd, IDC_FROMSNAPSHOT_TEXT, "Start");
 	}
@@ -615,26 +609,24 @@ refresh:
 	return FALSE;
 }
 
-LRESULT CALLBACK RecordMovieProc(HWND hwnd, UINT Message, WPARAM wParam,
-                                 LPARAM lParam)
+LRESULT CALLBACK record_movie_proc(const HWND hwnd, const UINT message, const WPARAM w_param, LPARAM)
 {
 	char tempbuf[MAX_PATH];
-	char tempbuf2[MAX_PATH];
 	int checked_movie_type;
-	HWND descriptionDialog;
-	HWND authorDialog;
+	HWND description_dialog;
+	HWND author_dialog;
 
-	switch (Message)
+	switch (message)
 	{
 	case WM_INITDIALOG:
 
 		checked_movie_type = Config.last_movie_type;
-		descriptionDialog = GetDlgItem(hwnd, IDC_INI_DESCRIPTION);
-		authorDialog = GetDlgItem(hwnd, IDC_INI_AUTHOR);
+		description_dialog = GetDlgItem(hwnd, IDC_INI_DESCRIPTION);
+		author_dialog = GetDlgItem(hwnd, IDC_INI_AUTHOR);
 
-		SendMessage(descriptionDialog, EM_SETLIMITTEXT,
-		            MOVIE_DESCRIPTION_DATA_SIZE, 0);
-		SendMessage(authorDialog, EM_SETLIMITTEXT, MOVIE_AUTHOR_DATA_SIZE, 0);
+		SendMessage(description_dialog, EM_SETLIMITTEXT,
+		            movie_description_data_size, 0);
+		SendMessage(author_dialog, EM_SETLIMITTEXT, movie_author_data_size, 0);
 
 		SetDlgItemText(hwnd, IDC_INI_AUTHOR, Config.last_movie_author.c_str());
 		SetDlgItemText(hwnd, IDC_INI_DESCRIPTION, "");
@@ -662,38 +654,39 @@ LRESULT CALLBACK RecordMovieProc(HWND hwnd, UINT Message, WPARAM wParam,
 		SetDlgItemText(hwnd, IDC_MOVIE_RSP_TEXT2,
 		               rsp_plugin->name.c_str());
 
-		strcpy(tempbuf, Controls[0].Present ? "Present" : "Disconnected");
-		if (Controls[0].Present && Controls[0].Plugin ==
+		//TODO: do with for loop
+		strcpy(tempbuf, controls[0].Present ? "Present" : "Disconnected");
+		if (controls[0].Present && controls[0].Plugin ==
 			controller_extension::mempak)
 			strcat(tempbuf, " with mempak");
-		if (Controls[0].Present && Controls[0].Plugin ==
+		if (controls[0].Present && controls[0].Plugin ==
 			controller_extension::rumblepak)
 			strcat(tempbuf, " with rumble");
 		SetDlgItemText(hwnd, IDC_MOVIE_CONTROLLER1_TEXT2, tempbuf);
 
-		strcpy(tempbuf, Controls[1].Present ? "Present" : "Disconnected");
-		if (Controls[1].Present && Controls[1].Plugin ==
+		strcpy(tempbuf, controls[1].Present ? "Present" : "Disconnected");
+		if (controls[1].Present && controls[1].Plugin ==
 			controller_extension::mempak)
 			strcat(tempbuf, " with mempak");
-		if (Controls[1].Present && Controls[1].Plugin ==
+		if (controls[1].Present && controls[1].Plugin ==
 			controller_extension::rumblepak)
 			strcat(tempbuf, " with rumble pak");
 		SetDlgItemText(hwnd, IDC_MOVIE_CONTROLLER2_TEXT2, tempbuf);
 
-		strcpy(tempbuf, Controls[2].Present ? "Present" : "Disconnected");
-		if (Controls[2].Present && Controls[2].Plugin ==
+		strcpy(tempbuf, controls[2].Present ? "Present" : "Disconnected");
+		if (controls[2].Present && controls[2].Plugin ==
 			controller_extension::mempak)
 			strcat(tempbuf, " with mempak");
-		if (Controls[2].Present && Controls[2].Plugin ==
+		if (controls[2].Present && controls[2].Plugin ==
 			controller_extension::rumblepak)
 			strcat(tempbuf, " with rumble pak");
 		SetDlgItemText(hwnd, IDC_MOVIE_CONTROLLER3_TEXT2, tempbuf);
 
-		strcpy(tempbuf, Controls[3].Present ? "Present" : "Disconnected");
-		if (Controls[3].Present && Controls[3].Plugin ==
+		strcpy(tempbuf, controls[3].Present ? "Present" : "Disconnected");
+		if (controls[3].Present && controls[3].Plugin ==
 			controller_extension::mempak)
 			strcat(tempbuf, " with mempak");
-		if (Controls[3].Present && Controls[3].Plugin ==
+		if (controls[3].Present && controls[3].Plugin ==
 			controller_extension::rumblepak)
 			strcat(tempbuf, " with rumble pak");
 		SetDlgItemText(hwnd, IDC_MOVIE_CONTROLLER4_TEXT2, tempbuf);
@@ -708,34 +701,32 @@ LRESULT CALLBACK RecordMovieProc(HWND hwnd, UINT Message, WPARAM wParam,
 		EndDialog(hwnd, IDOK);
 		break;
 	case WM_COMMAND:
-		switch (LOWORD(wParam))
+		switch (LOWORD(w_param))
 		{
 		case IDC_OK:
 		case IDOK:
 			{
 				// turn WCHAR into UTF8
-				WCHAR authorWC[MOVIE_AUTHOR_DATA_SIZE];
-				char authorUTF8[MOVIE_AUTHOR_DATA_SIZE * 4];
-				if (GetDlgItemTextW(hwnd, IDC_INI_AUTHOR, authorWC,
-				                    MOVIE_AUTHOR_DATA_SIZE))
-					WideCharToMultiByte(CP_UTF8, 0, authorWC, -1, authorUTF8,
-					                    sizeof(authorUTF8), NULL, NULL);
+				char author_utf8[movie_author_data_size * 4];
+				if (WCHAR author_wc[movie_author_data_size]; GetDlgItemTextW(hwnd, IDC_INI_AUTHOR, author_wc,
+				                                                            movie_author_data_size))
+					WideCharToMultiByte(CP_UTF8, 0, author_wc, -1, author_utf8,
+					                    sizeof(author_utf8), nullptr, nullptr);
 				else
-					GetDlgItemTextA(hwnd, IDC_INI_AUTHOR, authorUTF8,
-					                MOVIE_AUTHOR_DATA_SIZE);
+					GetDlgItemTextA(hwnd, IDC_INI_AUTHOR, author_utf8,
+					                movie_author_data_size);
 
-				Config.last_movie_author = std::string(authorUTF8);
+				Config.last_movie_author = std::string(author_utf8);
 
-				WCHAR descriptionWC[MOVIE_DESCRIPTION_DATA_SIZE];
-				char descriptionUTF8[MOVIE_DESCRIPTION_DATA_SIZE * 4];
-				if (GetDlgItemTextW(hwnd, IDC_INI_DESCRIPTION, descriptionWC,
-				                    MOVIE_DESCRIPTION_DATA_SIZE))
-					WideCharToMultiByte(CP_UTF8, 0, descriptionWC, -1,
-					                    descriptionUTF8,
-					                    sizeof(descriptionUTF8), NULL, NULL);
+				char description_utf8[movie_description_data_size * 4];
+				if (WCHAR description_wc[movie_description_data_size]; GetDlgItemTextW(hwnd, IDC_INI_DESCRIPTION, description_wc,
+				                                                                      movie_description_data_size))
+					WideCharToMultiByte(CP_UTF8, 0, description_wc, -1,
+					                    description_utf8,
+					                    sizeof(description_utf8), nullptr, nullptr);
 				else
-					GetDlgItemTextA(hwnd, IDC_INI_DESCRIPTION, descriptionUTF8,
-					                MOVIE_DESCRIPTION_DATA_SIZE);
+					GetDlgItemTextA(hwnd, IDC_INI_DESCRIPTION, description_utf8,
+					                movie_description_data_size);
 
 
 				GetDlgItemText(hwnd, IDC_INI_MOVIEFILE, tempbuf, MAX_PATH);
@@ -749,24 +740,23 @@ LRESULT CALLBACK RecordMovieProc(HWND hwnd, UINT Message, WPARAM wParam,
 						: IsDlgButtonChecked(hwnd, IDC_FROMEEPROM_RADIO)
 						? IDC_FROMEEPROM_RADIO
 						: IDC_FROMEXISTINGSNAPSHOT_RADIO;
-				unsigned short flag = checked_movie_type ==
-				                      IDC_FROMSNAPSHOT_RADIO
-					                      ? MOVIE_START_FROM_SNAPSHOT
-					                      : checked_movie_type ==
-					                      IDC_FROMSTART_RADIO
-					                      ? MOVIE_START_FROM_NOTHING
-					                      : checked_movie_type ==
-					                      IDC_FROMEEPROM_RADIO
-					                      ? MOVIE_START_FROM_EEPROM
-					                      : MOVIE_START_FROM_EXISTING_SNAPSHOT;
+				const unsigned short flag = checked_movie_type ==
+				                            IDC_FROMSNAPSHOT_RADIO
+					                            ? movie_start_from_snapshot
+					                            : checked_movie_type ==
+					                            IDC_FROMSTART_RADIO
+					                            ? movie_start_from_nothing
+					                            : checked_movie_type ==
+					                            IDC_FROMEEPROM_RADIO
+					                            ? movie_start_from_eeprom
+					                            : movie_start_from_existing_snapshot;
 				Config.last_movie_type = checked_movie_type;
 
-				bool allowClosing = true;
-				if (flag == MOVIE_START_FROM_EXISTING_SNAPSHOT)
+				if (flag == movie_start_from_existing_snapshot)
 				{
 					// The default directory we open the file dialog window in is the
 					// parent directory of the last savestate that the user saved or loaded
-					std::string path = wstring_to_string(show_persistent_open_dialog("o_movie_existing_snapshot", hwnd, L"*.st;*.savestate"));
+					const std::string path = wstring_to_string(show_persistent_open_dialog("o_movie_existing_snapshot", hwnd, L"*.st;*.savestate"));
 
 					if (path.empty())
 					{
@@ -776,12 +766,13 @@ LRESULT CALLBACK RecordMovieProc(HWND hwnd, UINT Message, WPARAM wParam,
 					st_path = path;
 					st_medium = e_st_medium::path;
 
-					std::string movie_path = strip_extension(path) + ".m64";
+					const std::string movie_path = strip_extension(path) + ".m64"; // shadows variable outer scope
 
 					strcpy(tempbuf, movie_path.c_str());
 
 					if (std::filesystem::exists(movie_path))
 					{
+						char tempbuf2[MAX_PATH];
 						sprintf(tempbuf2,
 						        "\"%s\" already exists. Are you sure want to overwrite this movie?",
 						        tempbuf);
@@ -790,18 +781,15 @@ LRESULT CALLBACK RecordMovieProc(HWND hwnd, UINT Message, WPARAM wParam,
 							break;
 					}
 				}
+				vcr_start_record(tempbuf, flag);
 
-				if (allowClosing)
-				{
-					vcr_start_record(tempbuf, flag);
+				const HMENU h_menu = GetMenu(main_hwnd);
+				EnableMenuItem(h_menu, ID_STOP_RECORD, MF_ENABLED);
+				EnableMenuItem(h_menu, ID_STOP_PLAYBACK, MF_GRAYED);
+				statusbar_post_text("Recording replay");
 
-					HMENU hMenu = GetMenu(mainHWND);
-					EnableMenuItem(hMenu, ID_STOP_RECORD, MF_ENABLED);
-					EnableMenuItem(hMenu, ID_STOP_PLAYBACK, MF_GRAYED);
-					statusbar_post_text("Recording replay");
-
-					EndDialog(hwnd, IDOK);
-				}
+				EndDialog(hwnd, IDOK);
+				
 			}
 			break;
 		case IDC_CANCEL:
@@ -810,9 +798,9 @@ LRESULT CALLBACK RecordMovieProc(HWND hwnd, UINT Message, WPARAM wParam,
 			break;
 		case IDC_MOVIE_BROWSE:
 			{
-				auto path = show_persistent_save_dialog("s_movie", hwnd, L"*.m64;*.rec");
+				const auto path = show_persistent_save_dialog("s_movie", hwnd, L"*.m64;*.rec");
 
-				if (path.size() == 0)
+				if (path.empty())
 				{
 					break;
 				}
@@ -855,122 +843,121 @@ LRESULT CALLBACK RecordMovieProc(HWND hwnd, UINT Message, WPARAM wParam,
 	return FALSE;
 }
 
-void OpenMoviePlaybackDialog()
+void open_movie_playback_dialog()
 {
-	BOOL wasPaused = emu_paused && !MenuPaused;
-	MenuPaused = FALSE;
+	const BOOL was_paused = emu_paused && !menu_paused;
+	menu_paused = FALSE;
 	if (emu_launched && !emu_paused)
-		pauseEmu(FALSE);
+		pause_emu(FALSE);
 
 	DialogBox(GetModuleHandle(NULL),
-	          MAKEINTRESOURCE(IDD_MOVIE_PLAYBACK_DIALOG), mainHWND,
-	          (DLGPROC)PlayMovieProc);
+	          MAKEINTRESOURCE(IDD_MOVIE_PLAYBACK_DIALOG), main_hwnd,
+	          (DLGPROC)play_movie_proc);
 
-	if (emu_launched && emu_paused && !wasPaused)
-		resumeEmu(FALSE);
+	if (emu_launched && emu_paused && !was_paused)
+		resume_emu(FALSE);
 }
 
-void OpenMovieRecordDialog()
+void open_movie_record_dialog()
 {
-	BOOL wasPaused = emu_paused && !MenuPaused;
-	MenuPaused = FALSE;
+	const BOOL was_paused = emu_paused && !menu_paused;
+	menu_paused = FALSE;
 	if (emu_launched && !emu_paused)
-		pauseEmu(FALSE);
+		pause_emu(FALSE);
 
 	DialogBox(GetModuleHandle(NULL),
-	          MAKEINTRESOURCE(IDD_MOVIE_RECORD_DIALOG), mainHWND,
-	          (DLGPROC)RecordMovieProc);
+	          MAKEINTRESOURCE(IDD_MOVIE_RECORD_DIALOG), main_hwnd,
+	          (DLGPROC)record_movie_proc);
 
-	if (emu_launched && emu_paused && !wasPaused)
-		resumeEmu(FALSE);
+	if (emu_launched && emu_paused && !was_paused)
+		resume_emu(FALSE);
 }
 
 
 
-void EnableEmulationMenuItems(BOOL emulationRunning)
+void enable_emulation_menu_items(const BOOL emulation_running)
 {
-	HMENU hMenu = GetMenu(mainHWND);
+	const HMENU h_menu = GetMenu(main_hwnd);
 
-	if (emulationRunning)
+	if (emulation_running)
 	{
-		EnableMenuItem(hMenu, EMU_STOP, MF_ENABLED);
-		EnableMenuItem(hMenu, EMU_PAUSE, MF_ENABLED);
-		EnableMenuItem(hMenu, EMU_FRAMEADVANCE, MF_ENABLED);
-		EnableMenuItem(hMenu, ID_LOAD_LATEST, MF_ENABLED);
-		EnableMenuItem(hMenu, EMU_PLAY, MF_ENABLED);
-		EnableMenuItem(hMenu, FULL_SCREEN, MF_ENABLED);
-		EnableMenuItem(hMenu, STATE_SAVE, MF_ENABLED);
-		EnableMenuItem(hMenu, STATE_SAVEAS, MF_ENABLED);
-		EnableMenuItem(hMenu, STATE_RESTORE, MF_ENABLED);
-		EnableMenuItem(hMenu, STATE_LOAD, MF_ENABLED);
-		EnableMenuItem(hMenu, GENERATE_BITMAP, MF_ENABLED);
-		EnableMenuItem(hMenu, EMU_RESET, MF_ENABLED);
-		EnableMenuItem(hMenu, REFRESH_ROM_BROWSER, MF_GRAYED);
-		EnableMenuItem(hMenu, ID_RESTART_MOVIE, MF_ENABLED);
-		EnableMenuItem(hMenu, ID_AUDIT_ROMS, MF_GRAYED);
-		EnableMenuItem(hMenu, ID_FFMPEG_START, MF_DISABLED);
-		EnableMenuItem(hMenu, IDC_GUI_TOOLBAR, MF_DISABLED);
-		EnableMenuItem(hMenu, IDC_GUI_STATUSBAR, MF_DISABLED);
+		EnableMenuItem(h_menu, EMU_STOP, MF_ENABLED);
+		EnableMenuItem(h_menu, EMU_PAUSE, MF_ENABLED);
+		EnableMenuItem(h_menu, EMU_FRAMEADVANCE, MF_ENABLED);
+		EnableMenuItem(h_menu, ID_LOAD_LATEST, MF_ENABLED);
+		EnableMenuItem(h_menu, EMU_PLAY, MF_ENABLED);
+		EnableMenuItem(h_menu, FULL_SCREEN, MF_ENABLED);
+		EnableMenuItem(h_menu, STATE_SAVE, MF_ENABLED);
+		EnableMenuItem(h_menu, STATE_SAVEAS, MF_ENABLED);
+		EnableMenuItem(h_menu, STATE_RESTORE, MF_ENABLED);
+		EnableMenuItem(h_menu, STATE_LOAD, MF_ENABLED);
+		EnableMenuItem(h_menu, GENERATE_BITMAP, MF_ENABLED);
+		EnableMenuItem(h_menu, EMU_RESET, MF_ENABLED);
+		EnableMenuItem(h_menu, REFRESH_ROM_BROWSER, MF_GRAYED);
+		EnableMenuItem(h_menu, ID_RESTART_MOVIE, MF_ENABLED);
+		EnableMenuItem(h_menu, ID_AUDIT_ROMS, MF_GRAYED);
+		EnableMenuItem(h_menu, ID_FFMPEG_START, MF_DISABLED);
+		EnableMenuItem(h_menu, IDC_GUI_TOOLBAR, MF_DISABLED);
+		EnableMenuItem(h_menu, IDC_GUI_STATUSBAR, MF_DISABLED);
 
 		if (dynacore)
-			EnableMenuItem(hMenu, ID_TRACELOG, MF_DISABLED);
+			EnableMenuItem(h_menu, ID_TRACELOG, MF_DISABLED);
 		else
-			EnableMenuItem(hMenu, ID_TRACELOG, MF_ENABLED);
+			EnableMenuItem(h_menu, ID_TRACELOG, MF_ENABLED);
 
 		if (!continue_vcr_on_restart_mode)
 		{
-			EnableMenuItem(hMenu, ID_START_RECORD, MF_ENABLED);
-			EnableMenuItem(hMenu, ID_STOP_RECORD,
-			               VCR_isRecording() ? MF_ENABLED : MF_GRAYED);
-			EnableMenuItem(hMenu, ID_START_PLAYBACK, MF_ENABLED);
-			EnableMenuItem(hMenu, ID_STOP_PLAYBACK,
-			               (VCR_isRestarting() || VCR_isPlaying())
+			EnableMenuItem(h_menu, ID_START_RECORD, MF_ENABLED);
+			EnableMenuItem(h_menu, ID_STOP_RECORD,
+			               vcr_is_recording() ? MF_ENABLED : MF_GRAYED);
+			EnableMenuItem(h_menu, ID_START_PLAYBACK, MF_ENABLED);
+			EnableMenuItem(h_menu, ID_STOP_PLAYBACK,
+			               (vcr_is_restarting() || vcr_is_playing())
 				               ? MF_ENABLED
 				               : MF_GRAYED);
-			EnableMenuItem(hMenu, ID_START_CAPTURE, MF_ENABLED);
-			EnableMenuItem(hMenu, ID_START_CAPTURE_PRESET, MF_ENABLED);
-			EnableMenuItem(hMenu, ID_END_CAPTURE,
-			               VCR_isCapturing() ? MF_ENABLED : MF_GRAYED);
+			EnableMenuItem(h_menu, ID_START_CAPTURE, MF_ENABLED);
+			EnableMenuItem(h_menu, ID_START_CAPTURE_PRESET, MF_ENABLED);
+			EnableMenuItem(h_menu, ID_END_CAPTURE,
+			               vcr_is_capturing() ? MF_ENABLED : MF_GRAYED);
 		}
 
 		toolbar_on_emu_state_changed(1, 1);
 	} else
 	{
-		EnableMenuItem(hMenu, EMU_STOP, MF_GRAYED);
-		EnableMenuItem(hMenu, IDLOAD, MF_ENABLED);
-		EnableMenuItem(hMenu, EMU_PAUSE, MF_GRAYED);
-		EnableMenuItem(hMenu, EMU_FRAMEADVANCE, MF_GRAYED);
-		EnableMenuItem(hMenu, ID_LOAD_LATEST, MF_GRAYED);
-		EnableMenuItem(hMenu, EMU_PLAY, MF_GRAYED);
-		EnableMenuItem(hMenu, FULL_SCREEN, MF_GRAYED);
-		EnableMenuItem(hMenu, STATE_SAVE, MF_GRAYED);
-		EnableMenuItem(hMenu, STATE_SAVEAS, MF_GRAYED);
-		EnableMenuItem(hMenu, STATE_RESTORE, MF_GRAYED);
-		EnableMenuItem(hMenu, STATE_LOAD, MF_GRAYED);
-		EnableMenuItem(hMenu, GENERATE_BITMAP, MF_GRAYED);
-		EnableMenuItem(hMenu, EMU_RESET, MF_GRAYED);
-		EnableMenuItem(hMenu, REFRESH_ROM_BROWSER, MF_ENABLED);
-		EnableMenuItem(hMenu, ID_RESTART_MOVIE, MF_GRAYED);
-		EnableMenuItem(hMenu, ID_TRACELOG, MF_DISABLED);
-		EnableMenuItem(hMenu, ID_AUDIT_ROMS, MF_ENABLED);
-		EnableMenuItem(hMenu, ID_FFMPEG_START, MF_GRAYED);
-		EnableMenuItem(hMenu, IDC_GUI_TOOLBAR, MF_ENABLED);
-		EnableMenuItem(hMenu, IDC_GUI_STATUSBAR, MF_ENABLED);
+		EnableMenuItem(h_menu, EMU_STOP, MF_GRAYED);
+		EnableMenuItem(h_menu, IDLOAD, MF_ENABLED);
+		EnableMenuItem(h_menu, EMU_PAUSE, MF_GRAYED);
+		EnableMenuItem(h_menu, EMU_FRAMEADVANCE, MF_GRAYED);
+		EnableMenuItem(h_menu, ID_LOAD_LATEST, MF_GRAYED);
+		EnableMenuItem(h_menu, EMU_PLAY, MF_GRAYED);
+		EnableMenuItem(h_menu, FULL_SCREEN, MF_GRAYED);
+		EnableMenuItem(h_menu, STATE_SAVE, MF_GRAYED);
+		EnableMenuItem(h_menu, STATE_SAVEAS, MF_GRAYED);
+		EnableMenuItem(h_menu, STATE_RESTORE, MF_GRAYED);
+		EnableMenuItem(h_menu, STATE_LOAD, MF_GRAYED);
+		EnableMenuItem(h_menu, GENERATE_BITMAP, MF_GRAYED);
+		EnableMenuItem(h_menu, EMU_RESET, MF_GRAYED);
+		EnableMenuItem(h_menu, REFRESH_ROM_BROWSER, MF_ENABLED);
+		EnableMenuItem(h_menu, ID_RESTART_MOVIE, MF_GRAYED);
+		EnableMenuItem(h_menu, ID_TRACELOG, MF_DISABLED);
+		EnableMenuItem(h_menu, ID_AUDIT_ROMS, MF_ENABLED);
+		EnableMenuItem(h_menu, ID_FFMPEG_START, MF_GRAYED);
+		EnableMenuItem(h_menu, IDC_GUI_TOOLBAR, MF_ENABLED);
+		EnableMenuItem(h_menu, IDC_GUI_STATUSBAR, MF_ENABLED);
 
 		if (!continue_vcr_on_restart_mode)
 		{
-			EnableMenuItem(hMenu, ID_START_RECORD, MF_GRAYED);
-			EnableMenuItem(hMenu, ID_STOP_RECORD, MF_GRAYED);
-			EnableMenuItem(hMenu, ID_START_PLAYBACK, MF_GRAYED);
-			EnableMenuItem(hMenu, ID_STOP_PLAYBACK, MF_GRAYED);
-			EnableMenuItem(hMenu, ID_START_CAPTURE, MF_GRAYED);
-			EnableMenuItem(hMenu, ID_START_CAPTURE_PRESET, MF_GRAYED);
-			EnableMenuItem(hMenu, ID_END_CAPTURE, MF_GRAYED);
-			LONG winstyle;
-			winstyle = GetWindowLong(mainHWND, GWL_STYLE);
+			EnableMenuItem(h_menu, ID_START_RECORD, MF_GRAYED);
+			EnableMenuItem(h_menu, ID_STOP_RECORD, MF_GRAYED);
+			EnableMenuItem(h_menu, ID_START_PLAYBACK, MF_GRAYED);
+			EnableMenuItem(h_menu, ID_STOP_PLAYBACK, MF_GRAYED);
+			EnableMenuItem(h_menu, ID_START_CAPTURE, MF_GRAYED);
+			EnableMenuItem(h_menu, ID_START_CAPTURE_PRESET, MF_GRAYED);
+			EnableMenuItem(h_menu, ID_END_CAPTURE, MF_GRAYED);
+			LONG winstyle = GetWindowLong(main_hwnd, GWL_STYLE);
 			winstyle |= WS_MAXIMIZEBOX;
-			SetWindowLong(mainHWND, GWL_STYLE, winstyle);
-			SetWindowPos(mainHWND, HWND_NOTOPMOST, 0, 0, 0, 0,
+			SetWindowLong(main_hwnd, GWL_STYLE, winstyle);
+			SetWindowPos(main_hwnd, HWND_NOTOPMOST, 0, 0, 0, 0,
 			             SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
 			//Set on top
 		}
@@ -978,23 +965,23 @@ void EnableEmulationMenuItems(BOOL emulationRunning)
 	}
 
 	if (Config.is_toolbar_enabled) CheckMenuItem(
-		hMenu, IDC_GUI_TOOLBAR, MF_BYCOMMAND | MF_CHECKED);
-	else CheckMenuItem(hMenu, IDC_GUI_TOOLBAR, MF_BYCOMMAND | MF_UNCHECKED);
+		h_menu, IDC_GUI_TOOLBAR, MF_BYCOMMAND | MF_CHECKED);
+	else CheckMenuItem(h_menu, IDC_GUI_TOOLBAR, MF_BYCOMMAND | MF_UNCHECKED);
 	if (Config.is_statusbar_enabled) CheckMenuItem(
-		hMenu, IDC_GUI_STATUSBAR, MF_BYCOMMAND | MF_CHECKED);
-	else CheckMenuItem(hMenu, IDC_GUI_STATUSBAR, MF_BYCOMMAND | MF_UNCHECKED);
+		h_menu, IDC_GUI_STATUSBAR, MF_BYCOMMAND | MF_CHECKED);
+	else CheckMenuItem(h_menu, IDC_GUI_STATUSBAR, MF_BYCOMMAND | MF_UNCHECKED);
 	if (Config.is_movie_loop_enabled) CheckMenuItem(
-		hMenu, ID_LOOP_MOVIE, MF_BYCOMMAND | MF_CHECKED);
-	else CheckMenuItem(hMenu, ID_LOOP_MOVIE, MF_BYCOMMAND | MF_UNCHECKED);
+		h_menu, ID_LOOP_MOVIE, MF_BYCOMMAND | MF_CHECKED);
+	else CheckMenuItem(h_menu, ID_LOOP_MOVIE, MF_BYCOMMAND | MF_UNCHECKED);
 	if (Config.is_recent_movie_paths_frozen) CheckMenuItem(
-		hMenu, ID_RECENTMOVIES_FREEZE, MF_BYCOMMAND | MF_CHECKED);
+		h_menu, ID_RECENTMOVIES_FREEZE, MF_BYCOMMAND | MF_CHECKED);
 	if (Config.is_recent_scripts_frozen) CheckMenuItem(
-		hMenu, ID_LUA_RECENT_FREEZE, MF_BYCOMMAND | MF_CHECKED);
+		h_menu, ID_LUA_RECENT_FREEZE, MF_BYCOMMAND | MF_CHECKED);
 	if (Config.is_recent_rom_paths_frozen) CheckMenuItem(
-		hMenu, ID_RECENTROMS_FREEZE, MF_BYCOMMAND | MF_CHECKED);
+		h_menu, ID_RECENTROMS_FREEZE, MF_BYCOMMAND | MF_CHECKED);
 }
 
-static DWORD WINAPI SoundThread(LPVOID lpParam)
+static DWORD WINAPI sound_thread(LPVOID)
 {
 	while (emu_launched)
 	{
@@ -1003,9 +990,9 @@ static DWORD WINAPI SoundThread(LPVOID lpParam)
 	ExitThread(0);
 }
 
-static DWORD WINAPI ThreadFunc(LPVOID lpParam)
+static DWORD WINAPI thread_func(LPVOID)
 {
-	auto start_time = std::chrono::high_resolution_clock::now();
+	const auto start_time = std::chrono::high_resolution_clock::now();
 	init_memory();
 	romOpen_gfx();
 	romOpen_input();
@@ -1016,8 +1003,8 @@ static DWORD WINAPI ThreadFunc(LPVOID lpParam)
 	emu_paused = 0;
 	emu_launched = 1;
 
-	sound_thread_handle = CreateThread(NULL, 0, SoundThread, NULL, 0,
-				                         &audio_thread_id);
+	sound_thread_handle = CreateThread(nullptr, 0, sound_thread, nullptr, 0,
+	                                   &audio_thread_id);
 	printf("Emu thread: Emulation started....\n");
 
 	// start movies, st and lua scripts
@@ -1035,14 +1022,14 @@ static DWORD WINAPI ThreadFunc(LPVOID lpParam)
 	}).detach();
 
 	AtResetLuaCallback();
-	if (pauseAtFrame == 0 && VCR_isStartingAndJustRestarted())
+	if (pause_at_frame == 0 && vcr_is_starting_and_just_restarted())
 	{
 		while (emu_paused)
 		{
 			Sleep(10);
 		}
-		pauseEmu(FALSE);
-		pauseAtFrame = -1;
+		pause_emu(FALSE);
+		pause_at_frame = -1;
 	}
 	main_dispatcher_invoke([]
 	{
@@ -1077,9 +1064,9 @@ static DWORD WINAPI ThreadFunc(LPVOID lpParam)
 	ExitThread(0);
 }
 
-void main_recent_roms_build(int32_t reset)
+void main_recent_roms_build(const int32_t reset)
 {
-	HMENU h_menu = GetMenu(mainHWND);
+	const HMENU h_menu = GetMenu(main_hwnd);
 	for (size_t i = 0; i < Config.recent_rom_paths.size(); i++)
 	{
 		if (Config.recent_rom_paths[i].empty())
@@ -1131,12 +1118,11 @@ void main_recent_roms_add(const std::string& path)
 	main_recent_roms_build();
 }
 
-int32_t main_recent_roms_run(uint16_t menu_item_id)
+int32_t main_recent_roms_run(const uint16_t menu_item_id)
 {
-	const int index = menu_item_id - ID_RECENTROMS_FIRST;
-	if (index >= 0 && index < Config.recent_rom_paths.size()) {
+	if (const int index = menu_item_id - ID_RECENTROMS_FIRST; index >= 0 && index < (int)Config.recent_rom_paths.size()) {
 		strcpy(rom_path, Config.recent_rom_paths[index].c_str());
-		CreateThread(NULL, 0, start_rom, rom_path, 0, &start_rom_id);
+		CreateThread(nullptr, 0, start_rom, rom_path, 0, &start_rom_id);
 			return 	1;
 	}
 	return 0;
@@ -1144,7 +1130,7 @@ int32_t main_recent_roms_run(uint16_t menu_item_id)
 
 bool is_frame_skipped()
 {
-	if (!fast_forward || VCR_isCapturing())
+	if (!fast_forward || vcr_is_capturing())
 	{
 		return false;
 	}
@@ -1166,24 +1152,24 @@ bool is_frame_skipped()
 
 void reset_titlebar()
 {
-	SetWindowText(mainHWND, (std::string(MUPEN_VERSION) + " - " + std::string(reinterpret_cast<char*>(ROM_HEADER.nom))).c_str());
+	SetWindowText(main_hwnd, (std::string(mupen_version) + " - " + std::string(reinterpret_cast<char*>(ROM_HEADER.nom))).c_str());
 }
 
-BOOL IsMenuItemEnabled(HMENU hMenu, UINT uId)
+BOOL is_menu_item_enabled(const HMENU h_menu, const UINT u_id)
 {
-	return !(GetMenuState(hMenu, uId, MF_BYCOMMAND) & (MF_DISABLED |
+	return !(GetMenuState(h_menu, u_id, MF_BYCOMMAND) & (MF_DISABLED |
 		MF_GRAYED));
 }
 
-void ProcessToolTips(LPARAM lParam, HWND hWnd)
+void process_tool_tips(const LPARAM l_param, const HWND hwnd)
 {
-	LPTOOLTIPTEXT lpttt = (LPTOOLTIPTEXT)lParam;
+	LPTOOLTIPTEXT lpttt = (LPTOOLTIPTEXT)l_param;
 
 	lpttt->hinst = app_instance;
 
 	// Specify the resource identifier of the descriptive
 	// text for the given button.
-	HMENU hMenu = GetMenu(hWnd);
+	[[maybe_unused]] HMENU h_menu = GetMenu(hwnd);
 
 	switch (lpttt->hdr.idFrom)
 	{
@@ -1222,53 +1208,53 @@ void ProcessToolTips(LPARAM lParam, HWND hWnd)
 	}
 }
 
-DWORD WINAPI UnpauseEmuAfterMenu(LPVOID lpParam)
+DWORD WINAPI unpause_emu_after_menu(LPVOID)
 {
 	Sleep(60); // Wait for another thread to clear MenuPaused
 
-	if (emu_paused && !AutoPause && MenuPaused)
+	if (emu_paused && !auto_pause && menu_paused)
 	{
-		resumeEmu(FALSE);
+		resume_emu(FALSE);
 	}
-	MenuPaused = FALSE;
+	menu_paused = FALSE;
 	return 0;
 }
 
 
-LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM w_param, LPARAM l_param)
 {
 	char path_buffer[_MAX_PATH];
 	static PAINTSTRUCT ps;
-	HMENU hMenu = GetMenu(hwnd);
+	HMENU h_menu = GetMenu(hwnd);
 
-	LuaWindowMessage(hwnd, Message, wParam, lParam);
+	LuaWindowMessage(hwnd, message, w_param, l_param);
 
-	switch (Message)
+	switch (message)
 	{
 	case WM_EXECUTE_DISPATCHER:
 		main_dispatcher_process();
 		break;
 	case WM_DROPFILES:
 		{
-			HDROP h_file = (HDROP)wParam;
+			auto h_file = (HDROP)w_param;
 			char fname[MAX_PATH] = {0};
 			DragQueryFile(h_file, 0, fname, sizeof(fname));
 			LocalFree(h_file);
 
 			std::filesystem::path path = fname;
-			std::string extension = to_lower(path.extension().string());
 
-			if (extension == ".n64" || extension == ".z64" || extension == ".v64" || extension == ".rom")
+			if (std::string extension = to_lower(path.extension().string());
+				extension == ".n64" || extension == ".z64" || extension == ".v64" || extension == ".rom")
 			{
 				strcpy(rom_path, fname);
-				CreateThread(NULL, 0, start_rom, nullptr, 0, &start_rom_id);
+				CreateThread(nullptr, 0, start_rom, nullptr, 0, &start_rom_id);
 			} else if (extension == ".m64")
 			{
 				if (!emu_launched) break;
-				if (!VCR_getReadOnly()) VCR_toggleReadOnly();
+				if (!vcr_get_read_only()) vcr_toggle_read_only();
 
 				vcr_start_playback(fname, false);
-				SetStatusPlaybackStarted();
+				set_status_playback_started();
 			}else if (extension == ".st" || extension == ".savestate")
 			{
 				if (!emu_launched) break;
@@ -1285,7 +1271,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			BOOL hit = FALSE;
 			if (!fast_forward)
 			{
-				if ((int)wParam == Config.fast_forward_hotkey.key)
+				if ((int)w_param == Config.fast_forward_hotkey.key)
 				// fast-forward on
 				{
 					if (((GetKeyState(VK_SHIFT) & 0x8000) ? 1 : 0) == Config.
@@ -1302,7 +1288,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			}
 			for (const t_hotkey* hotkey : hotkeys)
 			{
-				if ((int)wParam == hotkey->key)
+				if ((int)w_param == hotkey->key)
 				{
 					if (((GetKeyState(VK_SHIFT) & 0x8000) ? 1 : 0) == hotkey->
 						shift
@@ -1312,40 +1298,40 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 						alt)
 					{
 						// printf("sent %s - %d\n", hotkey->identifier.c_str(), hotkey->command);
-						SendMessage(mainHWND, WM_COMMAND, hotkey->command, 0);
+						SendMessage(main_hwnd, WM_COMMAND, hotkey->command, 0);
 						hit = TRUE;
 					}
 				}
 			}
 
 			if (emu_launched)
-				keyDown(wParam, lParam);
+				keyDown(w_param, l_param);
 			if (!hit)
-				return DefWindowProc(hwnd, Message, wParam, lParam);
+				return DefWindowProc(hwnd, message, w_param, l_param);
 		}
 		break;
 	case WM_SYSKEYUP:
 	case WM_KEYUP:
-		if ((int)wParam == Config.fast_forward_hotkey.key) // fast-forward off
+		if ((int)w_param == Config.fast_forward_hotkey.key) // fast-forward off
 		{
 			fast_forward = 0;
 			ffup = true; //fuck it, timers.c is too weird
 		}
 		if (emu_launched)
-			keyUp(wParam, lParam);
-		return DefWindowProc(hwnd, Message, wParam, lParam);
+			keyUp(w_param, l_param);
+		return DefWindowProc(hwnd, message, w_param, l_param);
 	case WM_NOTIFY:
 		{
-			LPNMHDR l_header = (LPNMHDR)lParam;
+			auto l_header = (LPNMHDR)l_param;
 
-			if (wParam == IDC_ROMLIST)
+			if (w_param == IDC_ROMLIST)
 			{
-				rombrowser_notify(lParam);
+				rombrowser_notify(l_param);
 			}
 			switch ((l_header)->code)
 			{
 			case TTN_NEEDTEXT:
-				ProcessToolTips(lParam, hwnd);
+				process_tool_tips(l_param, hwnd);
 				break;
 			}
 			return 0;
@@ -1354,10 +1340,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		{
 			if (emu_launched && !FullScreenMode)
 			{
-				moveScreen((int)wParam, lParam);
+				moveScreen((int)w_param, l_param);
 			}
 			RECT rect = {0};
-			GetWindowRect(mainHWND, &rect);
+			GetWindowRect(main_hwnd, &rect);
 			Config.window_x = rect.left;
 			Config.window_y = rect.top;
 			Config.window_width = rect.right - rect.left;
@@ -1374,23 +1360,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			rombrowser_update_size();
 			break;
 		}
-	case WM_USER + 17: SetFocus(mainHWND);
+	case WM_USER + 17: SetFocus(main_hwnd);
 		break;
 	case WM_CREATE:
-		GetModuleFileName(NULL, path_buffer, sizeof(path_buffer));
-		update_screen_timer = SetTimer(hwnd, NULL, (uint32_t)(1000 / get_primary_monitor_refresh_rate()), NULL);
+		GetModuleFileName(nullptr, path_buffer, sizeof(path_buffer));
+		update_screen_timer = SetTimer(hwnd, NULL, (uint32_t)(1000 / get_primary_monitor_refresh_rate()), nullptr);
 		commandline_start_rom();
 		return TRUE;
 	case WM_DESTROY:
 		save_config();
-		KillTimer(mainHWND, update_screen_timer);
+		KillTimer(main_hwnd, update_screen_timer);
 		Gdiplus::GdiplusShutdown(gdiPlusToken);
 		PostQuitMessage(0);
 		break;
 	case WM_CLOSE:
 		if (confirm_user_exit())
 		{
-			DestroyWindow(mainHWND);
+			DestroyWindow(main_hwnd);
 			break;
 		}
 		return 0;
@@ -1408,48 +1394,48 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		return 0;
 	case WM_GETMINMAXINFO:
 		{
-			LPMINMAXINFO lpMMI = (LPMINMAXINFO)lParam;
-			lpMMI->ptMinTrackSize.x = MIN_WINDOW_W;
-			lpMMI->ptMinTrackSize.y = MIN_WINDOW_H;
+			auto lp_mmi = (LPMINMAXINFO)l_param;
+			lp_mmi->ptMinTrackSize.x = MIN_WINDOW_W;
+			lp_mmi->ptMinTrackSize.y = MIN_WINDOW_H;
 			// this might break small res with gfx plugin!!!
 		}
 		break;
 	case WM_ENTERMENULOOP:
-		AutoPause = emu_paused;
+		auto_pause = emu_paused;
 		if (!emu_paused)
 		{
-			MenuPaused = TRUE;
-			pauseEmu(FALSE);
+			menu_paused = TRUE;
+			pause_emu(FALSE);
 		}
 		break;
 
 	case WM_EXITMENULOOP:
-		CreateThread(NULL, 0, UnpauseEmuAfterMenu, NULL, 0, NULL);
+		CreateThread(nullptr, 0, unpause_emu_after_menu, nullptr, 0, nullptr);
 		break;
 	case WM_ACTIVATE:
 		UpdateWindow(hwnd);
 
-		switch (LOWORD(wParam))
+		switch (LOWORD(w_param))
 		{
 		case WA_ACTIVE:
 		case WA_CLICKACTIVE:
-			if (Config.is_unfocused_pause_enabled && emu_paused && !AutoPause)
+			if (Config.is_unfocused_pause_enabled && emu_paused && !auto_pause)
 			{
-				resumeEmu(FALSE);
-				AutoPause = emu_paused;
+				resume_emu(FALSE);
+				auto_pause = emu_paused;
 			}
 			break;
 
 		case WA_INACTIVE:
-			AutoPause = emu_paused && !MenuPaused;
+			auto_pause = emu_paused && !menu_paused;
 			if (Config.is_unfocused_pause_enabled && !emu_paused
 				/*(&& minimize*/ && !FullScreenMode)
 			{
-				MenuPaused = FALSE;
-				pauseEmu(FALSE);
-			} else if (Config.is_unfocused_pause_enabled && MenuPaused)
+				menu_paused = FALSE;
+				pause_emu(FALSE);
+			} else if (Config.is_unfocused_pause_enabled && menu_paused)
 			{
-				MenuPaused = FALSE;
+				menu_paused = FALSE;
 			}
 			break;
 		default:
@@ -1458,7 +1444,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		break;
 	case WM_COMMAND:
 		{
-			switch (LOWORD(wParam))
+			switch (LOWORD(w_param))
 			{
 			case ID_MENU_LUASCRIPT_NEW:
 				{
@@ -1466,7 +1452,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				}
 				break;
 			case ID_LUA_RECENT_FREEZE:
-				CheckMenuItem(hMenu, ID_LUA_RECENT_FREEZE,
+				CheckMenuItem(h_menu, ID_LUA_RECENT_FREEZE,
 				              (Config.is_recent_scripts_frozen ^= 1)
 					              ? MF_CHECKED
 					              : MF_UNCHECKED);
@@ -1491,13 +1477,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				}
 				break;
 			case EMU_STOP:
-				MenuPaused = FALSE;
+				menu_paused = FALSE;
 				if (!confirm_user_exit())
 					break;
 				if (emu_launched)
 				{
 					//close_rom(&Id);
-					CreateThread(NULL, 0, close_rom, (LPVOID)1, 0, &close_rom_id);
+					CreateThread(nullptr, 0, close_rom, (LPVOID)1, 0, &close_rom_id);
 
 				}
 				break;
@@ -1506,54 +1492,54 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				{
 					if (!emu_paused)
 					{
-						pauseEmu(VCR_isActive());
-					} else if (MenuPaused)
+						pause_emu(vcr_is_active());
+					} else if (menu_paused)
 					{
-						MenuPaused = FALSE;
-						CheckMenuItem(GetMenu(mainHWND), EMU_PAUSE,
+						menu_paused = FALSE;
+						CheckMenuItem(GetMenu(main_hwnd), EMU_PAUSE,
 						              MF_BYCOMMAND | MFS_CHECKED);
 					} else
 					{
-						resumeEmu(VCR_isActive());
+						resume_emu(vcr_is_active());
 					}
 					break;
 				}
 
 			case EMU_FRAMEADVANCE:
 				{
-					MenuPaused = FALSE;
+					menu_paused = FALSE;
 					frame_advancing = 1;
 					vis_per_second = 0;
 					// prevent old VI value from showing error if running at super fast speeds
-					resumeEmu(TRUE); // maybe multithreading unsafe
+					resume_emu(TRUE); // maybe multithreading unsafe
 				}
 				break;
 
 			case EMU_VCRTOGGLEREADONLY:
-				VCR_toggleReadOnly();
+				vcr_toggle_read_only();
 				break;
 
 			case ID_LOOP_MOVIE:
 				set_is_movie_loop_enabled(!Config.is_movie_loop_enabled);
 				break;
 			case ID_RESTART_MOVIE:
-				if (VCR_isPlaying())
+				if (vcr_is_playing())
 				{
-					VCR_setReadOnly(TRUE);
+					vcr_set_read_only(TRUE);
 					vcr_start_playback(Config.recent_movie_paths[0], false);
-					SetStatusPlaybackStarted();
+					set_status_playback_started();
 				}
 				break;
 			case ID_REPLAY_LATEST:
 				if (!emu_launched)
 					break;
 				// Overwrite prevention? Path sanity check (Leave to internal handling)?
-				VCR_setReadOnly(TRUE);
+				vcr_set_read_only(TRUE);
 				vcr_start_playback(Config.recent_movie_paths[0], false);
-				SetStatusPlaybackStarted();
+				set_status_playback_started();
 				break;
 			case ID_RECENTMOVIES_FREEZE:
-				CheckMenuItem(hMenu, ID_RECENTMOVIES_FREEZE,
+				CheckMenuItem(h_menu, ID_RECENTMOVIES_FREEZE,
 				              (Config.is_recent_movie_paths_frozen ^= 1)
 					              ? MF_CHECKED
 					              : MF_UNCHECKED);
@@ -1566,7 +1552,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				{
 					if (emu_paused)
 					{
-						resumeEmu(FALSE);
+						resume_emu(FALSE);
 					}
 				} else
 				{
@@ -1578,39 +1564,39 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			case EMU_RESET:
 				if (!Config.is_reset_recording_enabled && confirm_user_exit())
 					break;
-				if (VCR_isRecording() && Config.is_reset_recording_enabled)
+				if (vcr_is_recording() && Config.is_reset_recording_enabled)
 				{
 					scheduled_restart = true;
 					continue_vcr_on_restart_mode = true;
 					statusbar_post_text("Writing restart to movie");
 					break;
 				}
-				resetEmu();
+				reset_emu();
 				break;
 
 			case ID_LOAD_CONFIG:
 				{
-					BOOL wasPaused = emu_paused && !MenuPaused;
-					MenuPaused = FALSE;
+					BOOL was_paused = emu_paused && !menu_paused;
+					menu_paused = FALSE;
 					if (emu_launched && !emu_paused)
 					{
-						pauseEmu(FALSE);
+						pause_emu(FALSE);
 					}
 					configdialog_show();
-					if (emu_launched && emu_paused && !wasPaused)
+					if (emu_launched && emu_paused && !was_paused)
 					{
-						resumeEmu(FALSE);
+						resume_emu(FALSE);
 					}
 				}
 				break;
 			case ID_HELP_ABOUT:
 				{
-					BOOL wasMenuPaused = MenuPaused;
-					MenuPaused = FALSE;
+					BOOL was_menu_paused = menu_paused;
+					menu_paused = FALSE;
 					configdialog_about();
-					if (wasMenuPaused)
+					if (was_menu_paused)
 					{
-						resumeEmu(TRUE);
+						resume_emu(TRUE);
 					}
 				}
 				break;
@@ -1629,65 +1615,64 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				break;
 			case ID_RAMSTART:
 				{
-					BOOL wasMenuPaused = MenuPaused;
-					MenuPaused = FALSE;
+					BOOL was_menu_paused = menu_paused;
+					menu_paused = FALSE;
 
-					pauseEmu(TRUE);
+					pause_emu(TRUE);
 
 					char ram_start[20] = {0};
 					sprintf(ram_start, "0x%p", static_cast<void*>(rdram));
 
 					char proc_name[MAX_PATH] = {0};
-					GetModuleFileName(NULL, proc_name, MAX_PATH);
-					_splitpath(proc_name, 0, 0, proc_name, 0);
+					GetModuleFileName(nullptr, proc_name, MAX_PATH);
+					_splitpath(proc_name, nullptr, nullptr, proc_name, nullptr);
 
 					char stroop_c[1024] = {0};
 					sprintf(stroop_c,
-					        "<Emulator name=\"Mupen 5.0 RR\" processName=\"%s\" ramStart=\"%s\" endianness=\"little\"/>",
+					        R"(<Emulator name="Mupen 5.0 RR" processName="%s" ramStart="%s" endianness="little"/>)",
 					        proc_name, ram_start);
 
 					const auto stroop_str = std::string(stroop_c);
-					if (MessageBoxA(mainHWND,
+					if (MessageBoxA(main_hwnd,
 					                "Do you want to copy the generated STROOP config line to your clipboard?",
 					                "STROOP",
 					                MB_ICONINFORMATION | MB_TASKMODAL |
 					                MB_YESNO) == IDYES)
 					{
-						copy_to_clipboard(mainHWND, stroop_str);
+						copy_to_clipboard(main_hwnd, stroop_str);
 					}
-					if (wasMenuPaused)
+					if (was_menu_paused)
 					{
-						resumeEmu(TRUE);
+						resume_emu(TRUE);
 					}
 					break;
 				}
 			case IDLOAD:
 				{
-					BOOL wasMenuPaused = MenuPaused;
-					MenuPaused = FALSE;
+					BOOL was_menu_paused = menu_paused;
+					menu_paused = FALSE;
 
-					const auto path = show_persistent_open_dialog("o_rom", mainHWND, L"*.n64;*.z64;*.v64;*.rom;*.bin;*.zip;*.usa;*.eur;*.jap");
-
-					if (!path.empty())
+					if (const auto path = show_persistent_open_dialog("o_rom", main_hwnd,
+						L"*.n64;*.z64;*.v64;*.rom;*.bin;*.zip;*.usa;*.eur;*.jap"); !path.empty())
 					{
 						strcpy(rom_path, wstring_to_string(path).c_str());
 						CreateThread(nullptr, 0, start_rom, nullptr, NULL, &start_rom_id);
 					}
 
-					if (wasMenuPaused)
+					if (was_menu_paused)
 					{
-						resumeEmu(TRUE);
+						resume_emu(TRUE);
 					}
 				}
 				break;
 			case ID_EMULATOR_EXIT:
-				DestroyWindow(mainHWND);
+				DestroyWindow(main_hwnd);
 				break;
 			case FULL_SCREEN:
-				if (emu_launched && !VCR_isCapturing())
+				if (emu_launched && !vcr_is_capturing())
 				{
 					FullScreenMode = 1 - FullScreenMode;
-					gui_ChangeWindow();
+					gui_change_window();
 				}
 				break;
 			case REFRESH_ROM_BROWSER:
@@ -1701,8 +1686,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				break;
 			case STATE_SAVEAS:
 				{
-					BOOL wasMenuPaused = MenuPaused;
-					MenuPaused = FALSE;
+					BOOL was_menu_paused = menu_paused;
+					menu_paused = FALSE;
 
 					auto path = show_persistent_save_dialog("s_savestate", hwnd, L"*.st;*.savestate");
 					if (path.empty())
@@ -1712,9 +1697,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 					savestates_do(path, e_st_job::save);
 
-					if (wasMenuPaused)
+					if (was_menu_paused)
 					{
-						resumeEmu(TRUE);
+						resume_emu(TRUE);
 					}
 				}
 				break;
@@ -1723,11 +1708,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				break;
 			case STATE_LOAD:
 				{
-					BOOL wasMenuPaused = MenuPaused;
-					MenuPaused = FALSE;
+					BOOL wasMenuPaused = menu_paused;
+					menu_paused = FALSE;
 
 					auto path = show_persistent_open_dialog("o_state", hwnd, L"*.st;*.savestate;*.st0;*.st1;*.st2;*.st3;*.st4;*.st5;*.st6;*.st7;*.st8;*.st9,*.st10");
-					if (path.size() == 0)
+					if (path.empty())
 					{
 						break;
 					}
@@ -1736,56 +1721,55 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 					if (wasMenuPaused)
 					{
-						resumeEmu(TRUE);
+						resume_emu(TRUE);
 					}
 				}
 				break;
 			case ID_START_RECORD:
 				if (emu_launched)
-					OpenMovieRecordDialog();
+					open_movie_record_dialog();
 				break;
 			case ID_STOP_RECORD:
-				if (VCR_isRecording())
+				if (vcr_is_recording())
 				{
 					vcr_stop_record();
-					ClearButtons();
-					EnableMenuItem(hMenu, ID_STOP_RECORD, MF_GRAYED);
-					EnableMenuItem(hMenu, ID_START_RECORD, MF_ENABLED);
+					clear_buttons();
+					EnableMenuItem(h_menu, ID_STOP_RECORD, MF_GRAYED);
+					EnableMenuItem(h_menu, ID_START_RECORD, MF_ENABLED);
 					statusbar_post_text("Recording stopped");
 				}
 				break;
 			case ID_START_PLAYBACK:
 				if (emu_launched)
-					OpenMoviePlaybackDialog();
+					open_movie_playback_dialog();
 
 				break;
 			case ID_STOP_PLAYBACK:
-				if (VCR_isPlaying())
+				if (vcr_is_playing())
 				{
 					vcr_stop_playback(true);
-					ClearButtons();
-					EnableMenuItem(hMenu, ID_STOP_PLAYBACK, MF_GRAYED);
-					EnableMenuItem(hMenu, ID_START_PLAYBACK, MF_ENABLED);
+					clear_buttons();
+					EnableMenuItem(h_menu, ID_STOP_PLAYBACK, MF_GRAYED);
+					EnableMenuItem(h_menu, ID_START_PLAYBACK, MF_ENABLED);
 					statusbar_post_text("Playback stopped");
 				}
 				break;
 
 			case ID_FFMPEG_START:
 				{
-					auto err = VCR_StartFFmpegCapture(
+					if (auto err = vcr_start_ffmpeg_capture(
 						"ffmpeg_out.mp4",
-						"-pixel_format yuv420p -loglevel debug -y");
-					if (err == INIT_SUCCESS)
+						"-pixel_format yuv420p -loglevel debug -y"); err == INIT_SUCCESS)
 					{
-						//SetWindowPos(mainHWND, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);  //Set on top avichg
-						EnableMenuItem(hMenu, ID_START_CAPTURE, MF_GRAYED);
-						EnableMenuItem(hMenu, ID_START_CAPTURE_PRESET,
+						//SetWindowPos(main_hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);  //Set on top avichg
+						EnableMenuItem(h_menu, ID_START_CAPTURE, MF_GRAYED);
+						EnableMenuItem(h_menu, ID_START_CAPTURE_PRESET,
 						               MF_GRAYED);
-						EnableMenuItem(hMenu, ID_FFMPEG_START, MF_GRAYED);
-						EnableMenuItem(hMenu, ID_END_CAPTURE, MF_ENABLED);
-						EnableMenuItem(hMenu, FULL_SCREEN, MF_GRAYED);
+						EnableMenuItem(h_menu, ID_FFMPEG_START, MF_GRAYED);
+						EnableMenuItem(h_menu, ID_END_CAPTURE, MF_ENABLED);
+						EnableMenuItem(h_menu, FULL_SCREEN, MF_GRAYED);
 						statusbar_post_text("Recording AVI with FFmpeg");
-						EnableEmulationMenuItems(TRUE);
+						enable_emulation_menu_items(TRUE);
 					} else
 						printf("Start capture error: %d\n", err);
 					break;
@@ -1795,49 +1779,48 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			case ID_START_CAPTURE:
 				if (emu_launched)
 				{
-					BOOL wasPaused = emu_paused && !MenuPaused;
-					MenuPaused = FALSE;
+					BOOL was_paused = emu_paused && !menu_paused;
+					menu_paused = FALSE;
 					if (emu_launched && !emu_paused)
-						pauseEmu(FALSE);
+						pause_emu(FALSE);
 
-					auto path = show_persistent_save_dialog("s_capture", hwnd, L"*.avi");
-					if (path.size() == 0)
+					if (auto path = show_persistent_save_dialog("s_capture", hwnd, L"*.avi"); path.empty())
 					{
 						break;
 					}
 
 					// pass false to startCapture when "last preset" option was choosen
-					if (vcr_start_capture(wstring_to_string(path).c_str(), LOWORD(wParam) == ID_START_CAPTURE) < 0)
+					if constexpr (false) //vcr_start_capture(wstring_to_string(path).c_str(), LOWORD(w_param) == ID_START_CAPTURE) < 0) what is this
 					{
-						MessageBox(NULL, "Couldn't start capturing.", "VCR", MB_OK);
+						MessageBox(nullptr, "Couldn't start capturing.", "VCR", MB_OK);
 					} else
 					{
-						EnableMenuItem(hMenu, ID_START_CAPTURE, MF_GRAYED);
-						EnableMenuItem(hMenu, ID_START_CAPTURE_PRESET,
+						EnableMenuItem(h_menu, ID_START_CAPTURE, MF_GRAYED);
+						EnableMenuItem(h_menu, ID_START_CAPTURE_PRESET,
 						               MF_GRAYED);
-						EnableMenuItem(hMenu, ID_FFMPEG_START, MF_GRAYED);
-						EnableMenuItem(hMenu, ID_END_CAPTURE, MF_ENABLED);
-						EnableMenuItem(hMenu, FULL_SCREEN, MF_GRAYED);
+						EnableMenuItem(h_menu, ID_FFMPEG_START, MF_GRAYED);
+						EnableMenuItem(h_menu, ID_END_CAPTURE, MF_ENABLED);
+						EnableMenuItem(h_menu, FULL_SCREEN, MF_GRAYED);
 						statusbar_post_text("Recording AVI");
-						EnableEmulationMenuItems(TRUE);
+						enable_emulation_menu_items(TRUE);
 					}
 
-					if (emu_launched && emu_paused && !wasPaused)
-						resumeEmu(FALSE);
+					if (emu_launched && emu_paused && !was_paused)
+						resume_emu(FALSE);
 				}
 
 				break;
 			case ID_END_CAPTURE:
 				if (vcr_stop_capture() < 0)
-					MessageBox(NULL, "Couldn't stop capturing.", "VCR", MB_OK);
+					MessageBox(nullptr, "Couldn't stop capturing.", "VCR", MB_OK);
 				else
 				{
-					SetWindowPos(mainHWND, HWND_TOP, 0, 0, 0, 0,
+					SetWindowPos(main_hwnd, HWND_TOP, 0, 0, 0, 0,
 					             SWP_NOMOVE | SWP_NOSIZE);
-					EnableMenuItem(hMenu, ID_END_CAPTURE, MF_GRAYED);
-					EnableMenuItem(hMenu, ID_START_CAPTURE, MF_ENABLED);
-					EnableMenuItem(hMenu, ID_FFMPEG_START, MF_ENABLED);
-					EnableMenuItem(hMenu, ID_START_CAPTURE_PRESET, MF_ENABLED);
+					EnableMenuItem(h_menu, ID_END_CAPTURE, MF_GRAYED);
+					EnableMenuItem(h_menu, ID_START_CAPTURE, MF_ENABLED);
+					EnableMenuItem(h_menu, ID_FFMPEG_START, MF_ENABLED);
+					EnableMenuItem(h_menu, ID_START_CAPTURE_PRESET, MF_ENABLED);
 					statusbar_post_text("Capture stopped");
 				}
 				break;
@@ -1857,7 +1840,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				main_recent_roms_build(1);
 				break;
 			case ID_RECENTROMS_FREEZE:
-				CheckMenuItem(hMenu, ID_RECENTROMS_FREEZE,
+				CheckMenuItem(h_menu, ID_RECENTROMS_FREEZE,
 							  (Config.is_recent_rom_paths_frozen ^= 1)
 								  ? MF_CHECKED
 								  : MF_UNCHECKED);
@@ -1869,13 +1852,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				Config.is_toolbar_enabled ^= true;
 				toolbar_set_visibility(Config.is_toolbar_enabled);
 				CheckMenuItem(
-					hMenu, IDC_GUI_TOOLBAR, MF_BYCOMMAND | (Config.is_toolbar_enabled ? MF_CHECKED : MF_UNCHECKED));
+					h_menu, IDC_GUI_TOOLBAR, MF_BYCOMMAND | (Config.is_toolbar_enabled ? MF_CHECKED : MF_UNCHECKED));
 				break;
 			case IDC_GUI_STATUSBAR:
 				Config.is_statusbar_enabled ^= true;
 				statusbar_set_visibility(Config.is_statusbar_enabled);
 				CheckMenuItem(
-					hMenu, IDC_GUI_STATUSBAR, MF_BYCOMMAND | (Config.is_statusbar_enabled ? MF_CHECKED : MF_UNCHECKED));
+					h_menu, IDC_GUI_STATUSBAR, MF_BYCOMMAND | (Config.is_statusbar_enabled ? MF_CHECKED : MF_UNCHECKED));
 				break;
 			case IDC_INCREASE_MODIFIER:
 				if (Config.fps_modifier < 50)
@@ -1908,92 +1891,92 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				timer_init();
 				break;
 			default:
-				if (LOWORD(wParam) >= ID_CURRENTSAVE_1 && LOWORD(wParam)
+				if (LOWORD(w_param) >= ID_CURRENTSAVE_1 && LOWORD(w_param)
 					<= ID_CURRENTSAVE_10)
 				{
-					auto slot = LOWORD(wParam) - ID_CURRENTSAVE_1;
+					auto slot = LOWORD(w_param) - ID_CURRENTSAVE_1;
 					st_slot = slot;
 
 					// set checked state for only the currently selected save
 					for (int i = ID_CURRENTSAVE_1; i < ID_CURRENTSAVE_10; ++i)
 					{
-						CheckMenuItem(hMenu, i, MF_UNCHECKED);
+						CheckMenuItem(h_menu, i, MF_UNCHECKED);
 					}
-					CheckMenuItem(hMenu, LOWORD(wParam), MF_CHECKED);
+					CheckMenuItem(h_menu, LOWORD(w_param), MF_CHECKED);
 
-				} else if (LOWORD(wParam) >= ID_SAVE_1 && LOWORD(wParam) <=
+				} else if (LOWORD(w_param) >= ID_SAVE_1 && LOWORD(w_param) <=
 					ID_SAVE_10)
 				{
-					auto slot = LOWORD(wParam) - ID_SAVE_1;
+					auto slot = LOWORD(w_param) - ID_SAVE_1;
 					// if emu is paused and no console state is changing, we can safely perform st op instantly
 					savestates_do(slot, e_st_job::save);
-				} else if (LOWORD(wParam) >= ID_LOAD_1 && LOWORD(wParam) <=
+				} else if (LOWORD(w_param) >= ID_LOAD_1 && LOWORD(w_param) <=
 					ID_LOAD_10)
 				{
-					auto slot = LOWORD(wParam) - ID_LOAD_1;
+					auto slot = LOWORD(w_param) - ID_LOAD_1;
 					savestates_do(slot, e_st_job::load);
-				} else if (LOWORD(wParam) >= ID_RECENTROMS_FIRST &&
-					LOWORD(wParam) < (ID_RECENTROMS_FIRST + Config.
+				} else if (LOWORD(w_param) >= ID_RECENTROMS_FIRST &&
+					LOWORD(w_param) < (ID_RECENTROMS_FIRST + Config.
 						recent_rom_paths.size()))
 				{
-					main_recent_roms_run(LOWORD(wParam));
-				} else if (LOWORD(wParam) >= ID_RECENTMOVIES_FIRST &&
-					LOWORD(wParam) < (ID_RECENTMOVIES_FIRST + Config.
+					main_recent_roms_run(LOWORD(w_param));
+				} else if (LOWORD(w_param) >= ID_RECENTMOVIES_FIRST &&
+					LOWORD(w_param) < (ID_RECENTMOVIES_FIRST + Config.
 						recent_movie_paths.size()))
 				{
-					if (vcr_recent_movies_play(LOWORD(wParam)) != SUCCESS)
+					if (vcr_recent_movies_play(LOWORD(w_param)) != success)
 					{
 						statusbar_post_text("Couldn't load movie");
 						break;
 					}
 					// should probably make this code from the ID_REPLAY_LATEST case into a function on its own
 					// because now it's used here too
-					EnableMenuItem(hMenu, ID_STOP_RECORD, MF_GRAYED);
-					EnableMenuItem(hMenu, ID_STOP_PLAYBACK, MF_ENABLED);
+					EnableMenuItem(h_menu, ID_STOP_RECORD, MF_GRAYED);
+					EnableMenuItem(h_menu, ID_STOP_PLAYBACK, MF_ENABLED);
 
 					if (!emu_paused || !emu_launched)
 						statusbar_post_text("Playback started");
 					else
 						statusbar_post_text("Playback started while paused");
-				} else if (LOWORD(wParam) >= ID_LUA_RECENT && LOWORD(wParam) < (
+				} else if (LOWORD(w_param) >= ID_LUA_RECENT && LOWORD(w_param) < (
 					ID_LUA_RECENT + Config.recent_lua_script_paths.size()))
 				{
 					printf("run recent script\n");
-					lua_recent_scripts_run(LOWORD(wParam));
+					lua_recent_scripts_run(LOWORD(w_param));
 				}
 				break;
 			}
 		}
 		break;
 	default:
-		return DefWindowProc(hwnd, Message, wParam, lParam);
+		return DefWindowProc(hwnd, message, w_param, l_param);
 	}
 
 	return TRUE;
 }
 
 // kaboom
-LONG WINAPI ExceptionReleaseTarget(_EXCEPTION_POINTERS* ExceptionInfo)
+LONG WINAPI exception_release_target(_EXCEPTION_POINTERS* exception_info)
 {
 	// generate crash log
 
-	char crashLog[1024 * 4] = {0};
-	CrashHelper::GenerateLog(ExceptionInfo, crashLog);
+	char crash_log[1024 * 4] = {0};
+	CrashHelper::GenerateLog(exception_info, crash_log);
 
 	FILE* f = fopen("crash.log", "w+");
-	fwrite(crashLog, sizeof(crashLog), 1, f);
+	fwrite(crash_log, sizeof(crash_log), 1, f);
 	fclose(f);
 
-	bool is_continuable = !(ExceptionInfo->ExceptionRecord->ExceptionFlags &
+	const bool is_continuable = !(exception_info->ExceptionRecord->ExceptionFlags &
 		EXCEPTION_NONCONTINUABLE);
 
 	int result = 0;
 
 	if (is_continuable) {
-		TaskDialog(mainHWND, app_instance, L"Error",
+		TaskDialog(main_hwnd, app_instance, L"Error",
 			L"An error has occured", L"A crash log has been automatically generated. You can choose to continue program execution.", TDCBF_RETRY_BUTTON | TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, &result);
 	} else {
-		TaskDialog(mainHWND, app_instance, L"Error",
+		TaskDialog(main_hwnd, app_instance, L"Error",
 			L"An error has occured", L"A crash log has been automatically generated. The program will now exit.", TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, &result);
 	}
 
@@ -2005,27 +1988,27 @@ LONG WINAPI ExceptionReleaseTarget(_EXCEPTION_POINTERS* ExceptionInfo)
 
 
 int WINAPI WinMain(
-	HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+	const HINSTANCE h_instance, HINSTANCE /*h_prev_instance*/, LPSTR /*lp_cmd_line*/, const int nShowCmd)
 {
 #ifdef _DEBUG
 	AllocConsole();
-	FILE* f = 0;
+	FILE* f = nullptr;
 	freopen_s(&f, "CONIN$", "r", stdin);
 	freopen_s(&f, "CONOUT$", "w", stdout);
 	freopen_s(&f, "CONOUT$", "w", stderr);
 #endif
 
 	app_path = get_app_full_path();
-	app_instance = hInstance;
+	app_instance = h_instance;
 
 	commandline_set();
 
 	// ensure folders exist!
-	CreateDirectory((app_path + "save").c_str(), NULL);
-	CreateDirectory((app_path + "Mempaks").c_str(), NULL);
-	CreateDirectory((app_path + "Lang").c_str(), NULL);
-	CreateDirectory((app_path + "ScreenShots").c_str(), NULL);
-	CreateDirectory((app_path + "plugin").c_str(), NULL);
+	CreateDirectory((app_path + "save").c_str(), nullptr);
+	CreateDirectory((app_path + "Mempaks").c_str(), nullptr);
+	CreateDirectory((app_path + "Lang").c_str(), nullptr);
+	CreateDirectory((app_path + "ScreenShots").c_str(), nullptr);
+	CreateDirectory((app_path + "plugin").c_str(), nullptr);
 
 	emu_launched = 0;
 	emu_paused = 1;
@@ -2033,34 +2016,33 @@ int WINAPI WinMain(
 	load_config();
 
 	WNDCLASSEX wc = {0};
-	HWND hwnd;
 	MSG msg;
 
 	wc.cbSize = sizeof(WNDCLASSEX);
-	wc.hInstance = hInstance;
+	wc.hInstance = h_instance;
 	wc.hIcon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_M64ICONBIG));
 	wc.hIconSm = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_M64ICONSMALL));
-	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wc.lpszClassName = g_szClassName;
+	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+	wc.lpszClassName = g_sz_class_name;
 	wc.lpfnWndProc = WndProc;
 	wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
 	wc.lpszMenuName = MAKEINTRESOURCE(IDR_MYMENU);
 
 	RegisterClassEx(&wc);
 
-	HACCEL accelerators = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_ACCEL));
+	const HACCEL accelerators = LoadAccelerators(h_instance, MAKEINTRESOURCE(IDR_ACCEL));
 
-	hwnd = CreateWindowEx(
+	const HWND hwnd = CreateWindowEx(
 		0,
-		g_szClassName,
-		MUPEN_VERSION,
+		g_sz_class_name,
+		mupen_version,
 		WS_OVERLAPPEDWINDOW | WS_EX_COMPOSITED,
 		Config.window_x, Config.window_y, Config.window_width,
 		Config.window_height,
-		NULL, NULL, hInstance, NULL);
+		nullptr, nullptr, h_instance, nullptr);
 
-	mainHWND = hwnd;
-	ShowWindow(hwnd, nCmdShow);
+	main_hwnd = hwnd;
+	ShowWindow(hwnd, nShowCmd);
 
 	// This fixes offscreen recording issue
 	SetWindowLong(hwnd, GWL_EXSTYLE, WS_EX_ACCEPTFILES);
@@ -2079,10 +2061,10 @@ int WINAPI WinMain(
 	lua_recent_scripts_build();
 	main_recent_roms_build();
 
-	EnableEmulationMenuItems(0);
+	enable_emulation_menu_items(0);
 
 	//warning, this is ignored when debugger is attached (like visual studio)
-	SetUnhandledExceptionFilter(ExceptionReleaseTarget);
+	SetUnhandledExceptionFilter(exception_release_target);
 
 	// raise noncontinuable exception (impossible to recover from it)
 	//RaiseException(EXCEPTION_ACCESS_VIOLATION, EXCEPTION_NONCONTINUABLE, NULL, NULL);
@@ -2090,15 +2072,15 @@ int WINAPI WinMain(
 	// raise continuable exception
 	//RaiseException(EXCEPTION_ACCESS_VIOLATION, 0, NULL, NULL);
 
-	while (GetMessage(&msg, NULL, 0, 0) > 0)
+	while (GetMessage(&msg, nullptr, 0, 0) > 0)
 	{
-		if (!TranslateAccelerator(mainHWND, accelerators, &msg))
+		if (!TranslateAccelerator(main_hwnd, accelerators, &msg))
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
 
-		for (t_hotkey* hotkey : hotkeys)
+		for (const t_hotkey* hotkey : hotkeys)
 		{
 			// modifier-only checks, cannot be obtained through windows messaging...
 			if (!hotkey->key && (hotkey->shift || hotkey->ctrl || hotkey->alt))

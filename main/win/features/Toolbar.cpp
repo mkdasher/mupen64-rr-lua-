@@ -1,22 +1,18 @@
-﻿#include "Toolbar.hpp"
-
+#include "Toolbar.hpp"
 #include <Windows.h>
 #include <commctrl.h>
-
 #include "plugin.hpp"
-#include "rom.h"
 #include "RomBrowser.hpp"
 #include "vcr.h"
 #include "../Config.hpp"
 #include "../main_win.h"
 #include "../../winproject/resource.h"
-#include "helpers/io_helpers.h"
 
 HWND toolbar_hwnd;
 
 void toolbar_create()
 {
-	const TBBUTTON tb_buttons[] =
+	constexpr TBBUTTON tb_buttons[] =
 	{
 		{
 			0, IDLOAD, TBSTATE_ENABLED, TBSTYLE_BUTTON | TBSTYLE_AUTOSIZE,
@@ -47,7 +43,7 @@ void toolbar_create()
 	};
 
 	constexpr auto tb_buttons_count = sizeof(tb_buttons) / sizeof(TBBUTTON);
-	toolbar_hwnd = CreateToolbarEx(mainHWND,
+	toolbar_hwnd = CreateToolbarEx(main_hwnd,
 	                               WS_CHILD | WS_VISIBLE | TBSTYLE_TOOLTIPS,
 	                               IDC_TOOLBAR, 10, app_instance, IDB_TOOLBAR,
 	                               tb_buttons,
@@ -56,7 +52,7 @@ void toolbar_create()
 	                               sizeof(TBBUTTON));
 
 	if (toolbar_hwnd == nullptr)
-		MessageBox(mainHWND, "Could not create tool bar.", "Error",
+		MessageBox(main_hwnd, "Could not create tool bar.", "Error",
 		           MB_OK | MB_ICONERROR);
 
 	if (emu_launched)
@@ -76,7 +72,7 @@ void toolbar_create()
 	}
 }
 
-void toolbar_set_visibility(int32_t is_visible)
+void toolbar_set_visibility(const int32_t is_visible)
 {
 	if (toolbar_hwnd)
 	{
@@ -92,7 +88,7 @@ void toolbar_set_visibility(int32_t is_visible)
 	rombrowser_update_size();
 }
 
-void toolbar_on_emu_state_changed(int32_t is_running, int32_t is_resumed)
+void toolbar_on_emu_state_changed(const int32_t is_running, const int32_t is_resumed)
 {
 	if (!toolbar_hwnd) return;
 
@@ -101,7 +97,7 @@ void toolbar_on_emu_state_changed(int32_t is_running, int32_t is_resumed)
 		SendMessage(toolbar_hwnd, TB_ENABLEBUTTON, EMU_PLAY, TRUE);
 		SendMessage(toolbar_hwnd, TB_ENABLEBUTTON, EMU_STOP, TRUE);
 		SendMessage(toolbar_hwnd, TB_ENABLEBUTTON, EMU_PAUSE, TRUE);
-		SendMessage(toolbar_hwnd, TB_ENABLEBUTTON, FULL_SCREEN, !VCR_isCapturing());
+		SendMessage(toolbar_hwnd, TB_ENABLEBUTTON, FULL_SCREEN, !vcr_is_capturing());
 		SendMessage(toolbar_hwnd, TB_CHECKBUTTON, EMU_PAUSE, !is_resumed);
 		SendMessage(toolbar_hwnd, TB_CHECKBUTTON, EMU_PLAY, is_resumed);
 	} else

@@ -9,7 +9,7 @@
 #define FFMPEG_BENCHMARK
 #endif
 
-const std::string defaultOptions = "out.mp4";
+const std::string default_options = "out.mp4";
 
 //format signed 16 bit samples little endian
 //rate taken from m_audioFreq
@@ -23,8 +23,8 @@ const std::string defaultOptions = "out.mp4";
 const char baseOptions[] = videoOptions "-i \\\\.\\pipe\\mupenvideo"
 	audioOptions "-i \\\\.\\pipe\\mupenaudio ";
 
-void InitReadScreenFFmpeg(const t_window_info& info);
-void FFMpegCleanup();
+void init_read_screen_ffmpeg(const t_window_info& info);
+void ffmpeg_cleanup();
 
 enum initErrors
 {
@@ -50,7 +50,7 @@ public:
 	/// <param name="cmdOptions">additional ffmpeg options (compression, output name, effects and shit)</param>
 	FFmpegManager(unsigned videoX, unsigned videoY, unsigned framerate,
 	              unsigned audiorate,
-	              std::string cmdOptions = defaultOptions);
+	              std::string cmdOptions = default_options);
 
 	~FFmpegManager();
 

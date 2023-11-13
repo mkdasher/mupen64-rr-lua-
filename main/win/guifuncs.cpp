@@ -37,12 +37,12 @@ bool confirm_user_exit()
     if (!continue_vcr_on_restart_mode)
     {
 	    std::string final_message;
-        if (VCR_isRecording())
+        if (vcr_is_recording())
         {
             final_message.append("Movie recording ");
             warnings++;
         }
-        if (VCR_isCapturing())
+        if (vcr_is_capturing())
         {
             if (warnings > 0) { final_message.append(","); }
             final_message.append(" AVI capture ");
@@ -55,7 +55,7 @@ bool confirm_user_exit()
             warnings++;
         }
         final_message.append("is running. Are you sure you want to stop emulation?");
-        if (warnings > 0) res = MessageBox(mainHWND, final_message.c_str(), "Stop emulation?",
+        if (warnings > 0) res = MessageBox(main_hwnd, final_message.c_str(), "Stop emulation?",
                                            MB_YESNO | MB_ICONWARNING);
     }
 
@@ -67,7 +67,7 @@ void internal_warnsavestate(const char* messageCaption, const char* message, boo
     if (!Config.is_savestate_warning_enabled) return;
 
     if (modal)
-        MessageBox(mainHWND, message, messageCaption, MB_ICONERROR);
+        MessageBox(main_hwnd, message, messageCaption, MB_ICONERROR);
     else
         statusbar_post_text(std::string(messageCaption) + " - " + std::string(message));
 }

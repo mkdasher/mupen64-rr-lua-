@@ -40,10 +40,10 @@
 
 #include "win/features/Statusbar.hpp"
 
-extern HWND mainHWND;
+extern HWND main_hwnd;
 extern HINSTANCE app_instance;
 
-CONTROL Controls[4];
+CONTROL controls[4];
 
 GFX_INFO dummy_gfx_info;
 AUDIO_INFO dummy_audio_info;
@@ -76,78 +76,77 @@ static void __cdecl dummy_void()
 {
 }
 
-static BOOL __cdecl dummy_initiateGFX(GFX_INFO Gfx_Info) { return TRUE; }
+static BOOL __cdecl dummy_initiate_gfx(GFX_INFO /*gfx_info*/) { return TRUE; }
 
-static BOOL __cdecl dummy_initiateAudio(AUDIO_INFO Audio_Info)
+static BOOL __cdecl dummy_initiate_audio(AUDIO_INFO /*audio_info*/)
 {
 	return TRUE;
 }
 
-static void __cdecl dummy_initiateControllers(CONTROL_INFO Control_Info)
+static void __cdecl dummy_initiate_controllers(CONTROL_INFO /*control_info*/)
 {
 }
 
-static void __cdecl dummy_aiDacrateChanged(int SystemType)
+static void __cdecl dummy_ai_dacrate_changed(int /*system_type*/)
 {
 }
 
-static DWORD __cdecl dummy_aiReadLength() { return 0; }
+static DWORD __cdecl dummy_ai_read_length() { return 0; }
 
-static void __cdecl dummy_aiUpdate(BOOL)
+static void __cdecl dummy_ai_update(BOOL)
 {
 }
 
-static void __cdecl dummy_controllerCommand(int Control, BYTE* Command)
+static void __cdecl dummy_controller_command(int /*control*/, BYTE* /*command*/)
 {
 }
 
-static void __cdecl dummy_getKeys(int Control, BUTTONS* Keys)
+static void __cdecl dummy_get_keys(int /*control*/, BUTTONS* /*keys*/)
 {
 }
 
-static void __cdecl dummy_setKeys(int Control, BUTTONS Keys)
+static void __cdecl dummy_set_keys(int /*control*/, BUTTONS /*keys*/)
 {
 }
 
-static void __cdecl dummy_readController(int Control, BYTE* Command)
+static void __cdecl dummy_read_controller(int /*control*/, BYTE* /*command*/)
 {
 }
 
-static void __cdecl dummy_keyDown(WPARAM wParam, LPARAM lParam)
+static void __cdecl dummy_key_down(WPARAM, LPARAM)
 {
 }
 
-static void __cdecl dummy_keyUp(WPARAM wParam, LPARAM lParam)
+static void __cdecl dummy_key_up(WPARAM, LPARAM)
 {
 }
 
 static unsigned long dummy;
 
-static void __cdecl dummy_initiateRSP(RSP_INFO Rsp_Info,
-									  DWORD* CycleCount)
+static void __cdecl dummy_initiate_rsp(RSP_INFO /*rsp_info*/, DWORD* /*cycle_count*/)
 {
 };
 
-static void __cdecl dummy_fBRead(DWORD addr)
+static void __cdecl dummy_f_b_read(DWORD /*addr*/)
 {
 };
 
-static void __cdecl dummy_fBWrite(DWORD addr, DWORD size)
+static void __cdecl dummy_f_b_write(DWORD /*addr*/, DWORD /*size*/)
 {
 };
 
-static void __cdecl dummy_fBGetFrameBufferInfo(void* p)
+static void __cdecl dummy_f_b_get_frame_buffer_info(void* p)
 {
 };
 
-void (__cdecl*getDllInfo)(PLUGIN_INFO* PluginInfo);
-void (__cdecl*dllConfig)(HWND hParent);
-void (__cdecl*dllTest)(HWND hParent);
-void (__cdecl*dllAbout)(HWND hParent);
+void (__cdecl*getDllInfo)(PLUGIN_INFO* plugin_info);
+void (__cdecl*dllConfig)(HWND h_parent);
+void (__cdecl*dllTest)(HWND h_parent);
+void (__cdecl*dllAbout)(HWND h_parent);
 
 void (__cdecl*changeWindow)() = dummy_void;
 void (__cdecl*closeDLL_gfx)() = dummy_void;
-BOOL (__cdecl*initiateGFX)(GFX_INFO Gfx_Info) = dummy_initiateGFX;
+BOOL (__cdecl*initiateGFX)(GFX_INFO gfx_info) = dummy_initiate_gfx;
 void (__cdecl*processDList)() = dummy_void;
 void (__cdecl*processRDPList)() = dummy_void;
 void (__cdecl*romClosed_gfx)() = dummy_void;
@@ -159,58 +158,58 @@ void (__cdecl*viWidthChanged)() = dummy_void;
 void (__cdecl*readScreen)(void** dest, long* width, long* height) = nullptr;
 void (__cdecl*DllCrtFree)(void* block);
 
-void (__cdecl*aiDacrateChanged)(int SystemType) = dummy_aiDacrateChanged;
+void (__cdecl*aiDacrateChanged)(int system_type) = dummy_ai_dacrate_changed;
 void (__cdecl*aiLenChanged)() = dummy_void;
-DWORD (__cdecl*aiReadLength)() = dummy_aiReadLength;
+DWORD (__cdecl*aiReadLength)() = dummy_ai_read_length;
 //void (__cdecl*aiUpdate)(BOOL Wait) = dummy_aiUpdate;
 void (__cdecl*closeDLL_audio)() = dummy_void;
-BOOL (__cdecl*initiateAudio)(AUDIO_INFO Audio_Info) = dummy_initiateAudio;
+BOOL (__cdecl*initiateAudio)(AUDIO_INFO audio_info) = dummy_initiate_audio;
 void (__cdecl*processAList)() = dummy_void;
 void (__cdecl*romClosed_audio)() = dummy_void;
 void (__cdecl*romOpen_audio)() = dummy_void;
 
 void (__cdecl*closeDLL_input)() = dummy_void;
-void (__cdecl*controllerCommand)(int Control, BYTE* Command) =
-	dummy_controllerCommand;
-void (__cdecl*getKeys)(int Control, BUTTONS* Keys) = dummy_getKeys;
-void (__cdecl*setKeys)(int Control, BUTTONS Keys) = dummy_setKeys;
-void (__cdecl*initiateControllers)(CONTROL_INFO ControlInfo) =
-	dummy_initiateControllers;
-void (__cdecl*readController)(int Control, BYTE* Command) =
-	dummy_readController;
+void (__cdecl*controllerCommand)(int control, BYTE* command) =
+	dummy_controller_command;
+void (__cdecl*getKeys)(int control, BUTTONS* keys) = dummy_get_keys;
+void (__cdecl*setKeys)(int control, BUTTONS keys) = dummy_set_keys;
+void (__cdecl*initiateControllers)(CONTROL_INFO control_info) =
+	dummy_initiate_controllers;
+void (__cdecl*readController)(int control, BYTE* command) =
+	dummy_read_controller;
 void (__cdecl*romClosed_input)() = dummy_void;
 void (__cdecl*romOpen_input)() = dummy_void;
-void (__cdecl*keyDown)(WPARAM wParam, LPARAM lParam) = dummy_keyDown;
-void (__cdecl*keyUp)(WPARAM wParam, LPARAM lParam) = dummy_keyUp;
+void (__cdecl*keyDown)(WPARAM w_param, LPARAM l_param) = dummy_key_down;
+void (__cdecl*keyUp)(WPARAM w_param, LPARAM l_param) = dummy_key_up;
 
 void (__cdecl*closeDLL_RSP)() = dummy_void;
-DWORD (__cdecl*doRspCycles)(DWORD Cycles) = dummy_doRspCycles;
-void (__cdecl*initiateRSP)(RSP_INFO Rsp_Info, DWORD* CycleCount) =
-	dummy_initiateRSP;
+DWORD (__cdecl*doRspCycles)(DWORD cycles) = dummy_doRspCycles;
+void (__cdecl*initiateRSP)(RSP_INFO rsp_info, DWORD* cycle_count) =
+	dummy_initiate_rsp;
 void (__cdecl*romClosed_RSP)() = dummy_void;
 
-void (__cdecl*fBRead)(DWORD addr) = dummy_fBRead;
-void (__cdecl*fBWrite)(DWORD addr, DWORD size) = dummy_fBWrite;
-void (__cdecl*fBGetFrameBufferInfo)(void* p) = dummy_fBGetFrameBufferInfo;
+void (__cdecl*fBRead)(DWORD addr) = dummy_f_b_read;
+void (__cdecl*fBWrite)(DWORD addr, DWORD size) = dummy_f_b_write;
+void (__cdecl*fBGetFrameBufferInfo)(void* p) = dummy_f_b_get_frame_buffer_info;
 
 void (__cdecl*moveScreen)(int xpos, int ypos);
 void (__cdecl*CaptureScreen)(char* Directory);
-void (__cdecl*old_initiateControllers)(HWND hMainWindow, CONTROL Controls[4]);
-void (__cdecl*aiUpdate)(BOOL Wait);
+void (__cdecl*old_initiateControllers)(HWND h_main_window, CONTROL controls[4]);
+void (__cdecl*aiUpdate)(BOOL wait);
 
 
-void load_gfx(HMODULE handle)
+void load_gfx(const HMODULE handle)
 {
 	if (handle)
 	{
 		changeWindow = (void(__cdecl*)())GetProcAddress(
 			handle, "ChangeWindow");
 		closeDLL_gfx = (void(__cdecl*)())GetProcAddress(handle, "CloseDLL");
-		dllAbout = (void(__cdecl*)(HWND hParent))GetProcAddress(
+		dllAbout = (void(__cdecl*)(HWND h_parent))GetProcAddress(
 			handle, "DllAbout");
-		dllConfig = (void(__cdecl*)(HWND hParent))GetProcAddress(
+		dllConfig = (void(__cdecl*)(HWND h_parent))GetProcAddress(
 			handle, "DllConfig");
-		dllTest = (void(__cdecl*)(HWND hParent))GetProcAddress(
+		dllTest = (void(__cdecl*)(HWND h_parent))GetProcAddress(
 			handle, "DllTest");
 		initiateGFX = (BOOL(__cdecl*)(GFX_INFO Gfx_Info))GetProcAddress(
 			handle, "InitiateGFX");
@@ -266,7 +265,7 @@ void load_gfx(HMODULE handle)
 
 		if (changeWindow == nullptr) changeWindow = dummy_void;
 		if (closeDLL_gfx == nullptr) closeDLL_gfx = dummy_void;
-		if (initiateGFX == nullptr) initiateGFX = dummy_initiateGFX;
+		if (initiateGFX == nullptr) initiateGFX = dummy_initiate_gfx;
 		if (processDList == nullptr) processDList = dummy_void;
 		if (processRDPList == nullptr) processRDPList = dummy_void;
 		if (romClosed_gfx == nullptr) romClosed_gfx = dummy_void;
@@ -282,7 +281,7 @@ void load_gfx(HMODULE handle)
 			moveScreen = (void(__cdecl*)(int, int))
 				dummy_void;
 
-		gfx_info.hWnd = mainHWND;
+		gfx_info.hWnd = main_hwnd;
 		gfx_info.hStatusBar = Config.is_statusbar_enabled ? statusbar_hwnd : nullptr;
 		gfx_info.MemoryBswaped = TRUE;
 		gfx_info.HEADER = rom;
@@ -318,7 +317,7 @@ void load_gfx(HMODULE handle)
 	{
 		changeWindow = dummy_void;
 		closeDLL_gfx = dummy_void;
-		initiateGFX = dummy_initiateGFX;
+		initiateGFX = dummy_initiate_gfx;
 		processDList = dummy_void;
 		processRDPList = dummy_void;
 		romClosed_gfx = dummy_void;
@@ -330,92 +329,91 @@ void load_gfx(HMODULE handle)
 	}
 }
 
-void load_input(HMODULE handle)
+void load_input(const HMODULE handle)
 {
-	int i;
-	PLUGIN_INFO PluginInfo;
+	PLUGIN_INFO plugin_info;
 	if (handle)
 	{
-		getDllInfo = (void(__cdecl*)(PLUGIN_INFO* PluginInfo))GetProcAddress(
+		getDllInfo = (void(__cdecl*)(PLUGIN_INFO* plugin_info))GetProcAddress(
 			handle, "GetDllInfo");
-		getDllInfo(&PluginInfo);
+		getDllInfo(&plugin_info);
 
 		closeDLL_input = (void(__cdecl*)())GetProcAddress(
 			handle, "CloseDLL");
-		controllerCommand = (void(__cdecl*)(int Control, BYTE* Command))
+		controllerCommand = (void(__cdecl*)(int control, BYTE* command))
 			GetProcAddress(handle, "ControllerCommand");
-		getKeys = (void(__cdecl*)(int Control, BUTTONS* Keys))GetProcAddress(
+		getKeys = (void(__cdecl*)(int control, BUTTONS* keys))GetProcAddress(
 			handle, "GetKeys");
-		setKeys = (void(__cdecl*)(int Control, BUTTONS Keys))GetProcAddress(
+		setKeys = (void(__cdecl*)(int control, BUTTONS keys))GetProcAddress(
 			handle, "SetKeys");
-		if (PluginInfo.Version == 0x0101)
-			initiateControllers = (void(__cdecl*)(CONTROL_INFO ControlInfo))
+		if (plugin_info.Version == 0x0101)
+			initiateControllers = (void(__cdecl*)(CONTROL_INFO control_info))
 				GetProcAddress(handle, "InitiateControllers");
 		else
 			old_initiateControllers = (void(__cdecl*)(
-				HWND hMainWindow, CONTROL Controls[4]))GetProcAddress(
+				HWND h_main_window, CONTROL controls[4]))GetProcAddress(
 				handle, "InitiateControllers");
-		readController = (void(__cdecl*)(int Control, BYTE* Command))
+		readController = (void(__cdecl*)(int control, BYTE* command))
 			GetProcAddress(handle, "ReadController");
 		romClosed_input = (void(__cdecl*)())GetProcAddress(
 			handle, "RomClosed");
 		romOpen_input = (void(__cdecl*)())GetProcAddress(
 			handle, "RomOpen");
-		keyDown = (void(__cdecl*)(WPARAM wParam, LPARAM lParam))GetProcAddress(
+		keyDown = (void(__cdecl*)(WPARAM w_param, LPARAM l_param))GetProcAddress(
 			handle, "WM_KeyDown");
-		keyUp = (void(__cdecl*)(WPARAM wParam, LPARAM lParam))GetProcAddress(
+		keyUp = (void(__cdecl*)(WPARAM w_param, LPARAM l_param))GetProcAddress(
 			handle, "WM_KeyUp");
 
 		if (closeDLL_input == nullptr) closeDLL_input = dummy_void;
 		if (controllerCommand == nullptr)
 			controllerCommand =
-				dummy_controllerCommand;
-		if (getKeys == nullptr) getKeys = dummy_getKeys;
-		if (setKeys == nullptr) setKeys = dummy_setKeys;
+				dummy_controller_command;
+		if (getKeys == nullptr) getKeys = dummy_get_keys;
+		if (setKeys == nullptr) setKeys = dummy_set_keys;
 		if (initiateControllers == nullptr)
 			initiateControllers =
-				dummy_initiateControllers;
-		if (readController == nullptr) readController = dummy_readController;
+				dummy_initiate_controllers;
+		if (readController == nullptr) readController = dummy_read_controller;
 		if (romClosed_input == nullptr) romClosed_input = dummy_void;
 		if (romOpen_input == nullptr) romOpen_input = dummy_void;
-		if (keyDown == nullptr) keyDown = dummy_keyDown;
-		if (keyUp == nullptr) keyUp = dummy_keyUp;
+		if (keyDown == nullptr) keyDown = dummy_key_down;
+		if (keyUp == nullptr) keyUp = dummy_key_up;
 
-		control_info.hMainWindow = mainHWND;
+		control_info.h_main_window = main_hwnd;
 		control_info.hinst = app_instance;
 		control_info.MemoryBswaped = TRUE;
 		control_info.HEADER = rom;
-		control_info.Controls = Controls;
-		for (i = 0; i < 4; i++)
+		control_info.Controls = controls;
+		for (auto& [Present, RawData, Plugin] : controls)
 		{
-			Controls[i].Present = FALSE;
-			Controls[i].RawData = FALSE;
-			Controls[i].Plugin = controller_extension::none;
+			Present = FALSE;
+			RawData = FALSE;
+			Plugin = controller_extension::none;
 		}
-		if (PluginInfo.Version == 0x0101)
+		if (plugin_info.Version == 0x0101)
 		{
 			initiateControllers(control_info);
 		} else
 		{
-			old_initiateControllers(mainHWND, Controls);
+			old_initiateControllers(main_hwnd, controls);
 		}
 	} else
 	{
 		closeDLL_input = dummy_void;
-		controllerCommand = dummy_controllerCommand;
-		getKeys = dummy_getKeys;
-		setKeys = dummy_setKeys;
-		initiateControllers = dummy_initiateControllers;
-		readController = dummy_readController;
+		controllerCommand = dummy_controller_command;
+		getKeys = dummy_get_keys;
+		setKeys = dummy_set_keys;
+		initiateControllers = dummy_initiate_controllers;
+		readController = dummy_read_controller;
 		romClosed_input = dummy_void;
 		romOpen_input = dummy_void;
-		keyDown = dummy_keyDown;
-		keyUp = dummy_keyUp;
+		keyDown = dummy_key_down;
+		keyUp = dummy_key_up;
 	}
 }
 
 
-void load_audio(HMODULE handle)
+void load_audio(const HMODULE handle)
 {
 	if (handle)
 	{
@@ -439,17 +437,17 @@ void load_audio(HMODULE handle)
 			handle, "AiUpdate");
 		auto a = GetLastError();
 
-		if (aiDacrateChanged == nullptr) aiDacrateChanged = dummy_aiDacrateChanged;
+		if (aiDacrateChanged == nullptr) aiDacrateChanged = dummy_ai_dacrate_changed;
 		if (aiLenChanged == nullptr) aiLenChanged = dummy_void;
-		if (aiReadLength == nullptr) aiReadLength = dummy_aiReadLength;
-		if (aiUpdate == nullptr) aiUpdate = dummy_aiUpdate;
+		if (aiReadLength == nullptr) aiReadLength = dummy_ai_read_length;
+		if (aiUpdate == nullptr) aiUpdate = dummy_ai_update;
 		if (closeDLL_audio == nullptr) closeDLL_audio = dummy_void;
-		if (initiateAudio == nullptr) initiateAudio = dummy_initiateAudio;
+		if (initiateAudio == nullptr) initiateAudio = dummy_initiate_audio;
 		if (processAList == nullptr) processAList = dummy_void;
 		if (romClosed_audio == nullptr) romClosed_audio = dummy_void;
 		if (romOpen_audio == nullptr) romOpen_audio = dummy_void;
 
-		audio_info.hwnd = mainHWND;
+		audio_info.hwnd = main_hwnd;
 		audio_info.hinst = app_instance;
 		audio_info.MemoryBswaped = TRUE;
 		audio_info.HEADER = rom;
@@ -471,17 +469,17 @@ void load_audio(HMODULE handle)
 		initiateAudio(audio_info);
 	} else
 	{
-		aiDacrateChanged = dummy_aiDacrateChanged;
+		aiDacrateChanged = dummy_ai_dacrate_changed;
 		aiLenChanged = dummy_void;
-		aiReadLength = dummy_aiReadLength;
+		aiReadLength = dummy_ai_read_length;
 		closeDLL_audio = dummy_void;
-		initiateAudio = dummy_initiateAudio;
+		initiateAudio = dummy_initiate_audio;
 		processAList = dummy_void;
 		romClosed_audio = dummy_void;
 		romOpen_audio = dummy_void;
 	}
 }
-void load_rsp(HMODULE handle)
+void load_rsp(const HMODULE handle)
 {
 	int i = 4;
 	if (handle)
@@ -497,7 +495,7 @@ void load_rsp(HMODULE handle)
 
 		if (closeDLL_RSP == nullptr) closeDLL_RSP = dummy_void;
 		if (doRspCycles == nullptr) doRspCycles = dummy_doRspCycles;
-		if (initiateRSP == nullptr) initiateRSP = dummy_initiateRSP;
+		if (initiateRSP == nullptr) initiateRSP = dummy_initiate_rsp;
 		if (romClosed_RSP == nullptr) romClosed_RSP = dummy_void;
 
 		rsp_info.MemoryBswaped = TRUE;
@@ -532,7 +530,7 @@ void load_rsp(HMODULE handle)
 	{
 		closeDLL_RSP = dummy_void;
 		doRspCycles = dummy_doRspCycles;
-		initiateRSP = dummy_initiateRSP;
+		initiateRSP = dummy_initiate_rsp;
 		romClosed_RSP = dummy_void;
 	}
 }
@@ -626,12 +624,12 @@ void plugin_config(t_plugin* plugin)
 				plugin->handle, "InitiateGFX");
 			if (!initiateGFX(dummy_gfx_info))
 			{
-				MessageBox(mainHWND, "Failed to initiate gfx plugin.", nullptr,
+				MessageBox(main_hwnd, "Failed to initiate gfx plugin.", nullptr,
 				           MB_ICONERROR);
 			}
 		}
 
-		dllConfig = (void(__cdecl*)(HWND hParent))GetProcAddress(
+		dllConfig = (void(__cdecl*)(HWND h_parent))GetProcAddress(
 			plugin->handle, "DllConfig");
 		if (dllConfig) dllConfig(hwnd_plug);
 
@@ -649,12 +647,12 @@ void plugin_config(t_plugin* plugin)
 				plugin->handle, "InitiateAudio");
 			if (!initiateAudio(dummy_audio_info))
 			{
-				MessageBox(mainHWND, "Failed to initiate audio plugin.", nullptr,
+				MessageBox(main_hwnd, "Failed to initiate audio plugin.", nullptr,
 						   MB_ICONERROR);
 			}
 		}
 
-		dllConfig = (void(__cdecl*)(HWND hParent))GetProcAddress(
+		dllConfig = (void(__cdecl*)(HWND h_parent))GetProcAddress(
 			plugin->handle, "DllConfig");
 		if (dllConfig) dllConfig(hwnd_plug);
 		if (!emu_launched)
@@ -675,13 +673,13 @@ void plugin_config(t_plugin* plugin)
 			} else
 			{
 				old_initiateControllers = (void(__cdecl*)(
-					HWND hMainWindow, CONTROL Controls[4]))GetProcAddress(
+					HWND h_main_window, CONTROL Controls[4]))GetProcAddress(
 					plugin->handle, "InitiateControllers");
-				old_initiateControllers(mainHWND, Controls);
+				old_initiateControllers(main_hwnd, controls);
 			}
 		}
 
-		dllConfig = (void(__cdecl*)(HWND hParent))GetProcAddress(
+		dllConfig = (void(__cdecl*)(HWND h_parent))GetProcAddress(
 			plugin->handle, "DllConfig");
 		if (dllConfig) dllConfig(hwnd_plug);
 
@@ -702,7 +700,7 @@ void plugin_config(t_plugin* plugin)
 			initiateRSP(dummy_rsp_info, (DWORD*)&i);
 		}
 
-		dllConfig = (void(__cdecl*)(HWND hParent))GetProcAddress(
+		dllConfig = (void(__cdecl*)(HWND h_parent))GetProcAddress(
 			plugin->handle, "DllConfig");
 		if (dllConfig) dllConfig(hwnd_plug);
 		if (!emu_launched)
@@ -725,7 +723,7 @@ void plugin_test(t_plugin* plugin)
 		return;
 	}
 
-	dllTest = (void(__cdecl*)(HWND hParent))GetProcAddress(
+	dllTest = (void(__cdecl*)(HWND h_parent))GetProcAddress(
 		plugin->handle, "DllTest");
 	if (dllTest) dllTest(hwnd_plug);
 }
@@ -737,7 +735,7 @@ void plugin_about(t_plugin* plugin)
 		return;
 	}
 
-	dllAbout = (void(__cdecl*)(HWND hParent))GetProcAddress(
+	dllAbout = (void(__cdecl*)(HWND h_parent))GetProcAddress(
 		plugin->handle, "DllAbout");
 	if (dllAbout) dllAbout(hwnd_plug);
 }
@@ -804,7 +802,7 @@ void setup_dummy_info()
 	dummy_gfx_info.CheckInterrupts = dummy_void;
 
 	/////// AUDIO /////////////////////////
-	dummy_audio_info.hwnd = mainHWND;
+	dummy_audio_info.hwnd = main_hwnd;
 	dummy_audio_info.hinst = app_instance;
 	dummy_audio_info.MemoryBswaped = TRUE;
 	dummy_audio_info.HEADER = (BYTE*)dummy_header;
@@ -821,16 +819,16 @@ void setup_dummy_info()
 	dummy_audio_info.CheckInterrupts = dummy_void;
 
 	///// CONTROLS ///////////////////////////
-	dummy_control_info.hMainWindow = mainHWND;
+	dummy_control_info.h_main_window = main_hwnd;
 	dummy_control_info.hinst = app_instance;
 	dummy_control_info.MemoryBswaped = TRUE;
 	dummy_control_info.HEADER = (BYTE*)dummy_header;
-	dummy_control_info.Controls = Controls;
+	dummy_control_info.Controls = controls;
 	for (i = 0; i < 4; i++)
 	{
-		Controls[i].Present = FALSE;
-		Controls[i].RawData = FALSE;
-		Controls[i].Plugin = controller_extension::none;
+		controls[i].Present = FALSE;
+		controls[i].RawData = FALSE;
+		controls[i].Plugin = controller_extension::none;
 	}
 
 	//////// RSP /////////////////////////////

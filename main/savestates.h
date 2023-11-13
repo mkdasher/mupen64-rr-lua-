@@ -29,7 +29,6 @@
 #pragma once
 
 #include <filesystem>
-#include <map>
 
 enum class e_st_job
 {
@@ -100,7 +99,7 @@ void savestates_load_immediate();
  * \param job The job to set
  * \remarks The operation won't complete immediately
  */
-void savestates_do(std::filesystem::path path, e_st_job job);
+void savestates_do(const std::filesystem::path& path, e_st_job job);
 
 /**
  * \brief Executes a savestate operation

@@ -45,8 +45,8 @@
 
 extern unsigned long op;
 extern void (*interp_ops[64])(void);
-extern int m_currentVI;
-extern long m_currentSample;
+extern int m_current_vi;
+extern long m_current_sample;
 extern int fast_memory;
 void SYNC();
 void NOTCOMPILED();
@@ -74,7 +74,7 @@ t_window_procedure_params window_proc_params = {0};
 // Deletes all the variables used in LoadScreen (avoid memory leaks)
 void LoadScreenDelete()
 {
-	ReleaseDC(mainHWND, hwindowDC);
+	ReleaseDC(main_hwnd, hwindowDC);
 	DeleteDC(hsrcDC);
 
 	LoadScreenInitialized = false;
@@ -85,11 +85,11 @@ void LoadScreenInit()
 {
 	if (LoadScreenInitialized) LoadScreenDelete();
 
-	hwindowDC = GetDC(mainHWND);
+	hwindowDC = GetDC(main_hwnd);
 	// Create a handle to the main window Device Context
 	hsrcDC = CreateCompatibleDC(hwindowDC); // Create a DC to copy the screen to
 
-	get_window_info(mainHWND, windowSize);
+	get_window_info(main_hwnd, windowSize);
 	windowSize.height -= 1; // ¯\_(ツ)_/¯
 	printf("LoadScreen Size: %d x %d\n", windowSize.width, windowSize.height);
 
@@ -164,12 +164,12 @@ void LoadScreenInit()
 		EmulationLock()
 		{
 			printf("Emulation Lock\n");
-			pauseEmu(FALSE);
+			pause_emu(FALSE);
 		}
 
 		~EmulationLock()
 		{
-			resumeEmu(FALSE);
+			resume_emu(FALSE);
 			printf("Emulation Unlock\n");
 		}
 	};
@@ -210,7 +210,7 @@ void LoadScreenInit()
 	int AtPanic(lua_State* L)
 	{
 		printf("Lua panic: %s\n", lua_tostring(L, -1));
-		MessageBox(mainHWND, lua_tostring(L, -1), "Lua Panic", 0);
+		MessageBox(main_hwnd, lua_tostring(L, -1), "Lua Panic", 0);
 		return 0;
 	}
 
@@ -298,7 +298,7 @@ void LoadScreenInit()
 			return WmCommand(wnd, LOWORD(wParam), HIWORD(wParam), (HWND)lParam);
 		case WM_SIZE:
 			SizingControls(wnd, LOWORD(lParam), HIWORD(lParam));
-			if (wParam == SIZE_MINIMIZED) SetFocus(mainHWND);
+			if (wParam == SIZE_MINIMIZED) SetFocus(main_hwnd);
 			break;
 		}
 		return FALSE;
@@ -399,7 +399,7 @@ void LoadScreenInit()
 	HWND create_and_show_lua_window(int32_t sw_flags)
 	{
 		HWND hwnd = CreateDialogParam(app_instance,
-		                             MAKEINTRESOURCE(IDD_LUAWINDOW), mainHWND,
+		                             MAKEINTRESOURCE(IDD_LUAWINDOW), main_hwnd,
 		                             DialogProc,
 		                             NULL);
 		ShowWindow(hwnd, sw_flags);
@@ -459,7 +459,7 @@ void LoadScreenInit()
 			mii.cbSize = sizeof(MENUITEMINFO);
 			mii.fMask = MIIM_STRING;
 			mii.dwTypeData = (LPTSTR)"Stop &Trace Logger";
-			SetMenuItemInfo(GetMenu(mainHWND), ID_TRACELOG,
+			SetMenuItemInfo(GetMenu(main_hwnd), ID_TRACELOG,
 			                FALSE, &mii);
 		}
 	}
@@ -473,7 +473,7 @@ void LoadScreenInit()
 		mii.cbSize = sizeof(MENUITEMINFO);
 		mii.fMask = MIIM_STRING;
 		mii.dwTypeData = (LPTSTR)"Start &Trace Logger";
-		SetMenuItemInfo(GetMenu(mainHWND), ID_TRACELOG,
+		SetMenuItemInfo(GetMenu(main_hwnd), ID_TRACELOG,
 		                FALSE, &mii);
 		TraceLoggingBufFlush();
 	}
@@ -1152,8 +1152,8 @@ void LoadScreenInit()
 	{
 		LuaEnvironment* lua = GetLuaClass(L);
 		lua_pushboolean(
-			L, GetForegroundWindow() == mainHWND || GetActiveWindow() ==
-			mainHWND);
+			L, GetForegroundWindow() == main_hwnd || GetActiveWindow() ==
+			main_hwnd);
 		return 1;
 	}
 
@@ -2428,7 +2428,7 @@ int LuaD2DDrawText(lua_State* L)
 		LuaEnvironment* lua = GetLuaClass(L);
 
 		RECT rect;
-		GetClientRect(mainHWND, &rect);
+		GetClientRect(main_hwnd, &rect);
 
 		lua_newtable(L);
 		lua_pushinteger(L, rect.right - rect.left);
@@ -2443,13 +2443,13 @@ int LuaD2DDrawText(lua_State* L)
 		LuaEnvironment* lua = GetLuaClass(L);
 
 		RECT clientRect, wndRect;
-		GetWindowRect(mainHWND, &wndRect);
-		GetClientRect(mainHWND, &clientRect);
+		GetWindowRect(main_hwnd, &wndRect);
+		GetClientRect(main_hwnd, &clientRect);
 		wndRect.bottom -= wndRect.top;
 		wndRect.right -= wndRect.left;
 		int w = luaL_checkinteger(L, 1),
 		    h = luaL_checkinteger(L, 2);
-		SetWindowPos(mainHWND, 0, 0, 0,
+		SetWindowPos(main_hwnd, 0, 0, 0,
 		             w + (wndRect.right - clientRect.right),
 		             h + (wndRect.bottom - clientRect.bottom),
 		             SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE);
@@ -2687,7 +2687,7 @@ int LuaD2DDrawText(lua_State* L)
 
 	int GetVICount(lua_State* L)
 	{
-		lua_pushinteger(L, m_currentVI);
+		lua_pushinteger(L, m_current_vi);
 		return 1;
 	}
 
@@ -2710,9 +2710,9 @@ int LuaD2DDrawText(lua_State* L)
 		const char* version;
 		// 0 = name + version number
 		// 1 = version number
-		version = MUPEN_VERSION;
+		version = mupen_version;
 		if (type > 0)
-			version = {&MUPEN_VERSION[strlen("Mupen 64 ")]};
+			version = {&mupen_version[strlen("Mupen 64 ")]};
 
 
 		lua_pushstring(L, version);
@@ -2721,7 +2721,7 @@ int LuaD2DDrawText(lua_State* L)
 
 	int GetVCRReadOnly(lua_State* L)
 	{
-		lua_pushboolean(L, VCR_getReadOnly());
+		lua_pushboolean(L, vcr_get_read_only());
 		return 1;
 	}
 
@@ -2793,10 +2793,10 @@ int LuaD2DDrawText(lua_State* L)
 	{
 		if (!lua_toboolean(L, 1))
 		{
-			pauseEmu(FALSE);
+			pause_emu(FALSE);
 		} else
 		{
-			resumeEmu(TRUE);
+			resume_emu(TRUE);
 		}
 		return 0;
 	}
@@ -2834,7 +2834,7 @@ int LuaD2DDrawText(lua_State* L)
 	int PlayMovie(lua_State* L)
 	{
 		const char* fname = lua_tostring(L, 1);
-		VCR_setReadOnly(true);
+		vcr_set_read_only(true);
 		vcr_start_playback(fname, false);
 		return 0;
 	}
@@ -2847,7 +2847,7 @@ int LuaD2DDrawText(lua_State* L)
 
 	int GetMovieFilename(lua_State* L)
 	{
-		if (VCR_isStarting() || VCR_isPlaying())
+		if (vcr_is_starting() || vcr_is_playing())
 		{
 			lua_pushstring(L, movie_path.string().c_str());
 		} else
@@ -2883,10 +2883,10 @@ int LuaD2DDrawText(lua_State* L)
 
 		if (type == 0)
 		{
-			path = show_persistent_open_dialog("o_lua_api", mainHWND, filter);
+			path = show_persistent_open_dialog("o_lua_api", main_hwnd, filter);
 		} else
 		{
-			path = show_persistent_save_dialog("o_lua_api", mainHWND, filter);
+			path = show_persistent_save_dialog("o_lua_api", main_hwnd, filter);
 		}
 
 		lua_pushstring(L, wstring_to_string(path).c_str());
@@ -2903,7 +2903,7 @@ int LuaD2DDrawText(lua_State* L)
 	int StartCapture(lua_State* L)
 	{
 		const char* fname = lua_tostring(L, 1);
-		if (!VCR_isCapturing())
+		if (!vcr_is_capturing())
 			vcr_start_capture(fname, false);
 		else
 			luaL_error(
@@ -2914,7 +2914,7 @@ int LuaD2DDrawText(lua_State* L)
 
 	int StopCapture(lua_State* L)
 	{
-		if (VCR_isCapturing())
+		if (vcr_is_capturing())
 			vcr_stop_capture();
 		else
 			luaL_error(L, "Tried to end AVI capture when none was in progress");
@@ -2996,7 +2996,7 @@ int LuaD2DDrawText(lua_State* L)
 
 		POINT mouse;
 		GetCursorPos(&mouse);
-		ScreenToClient(mainHWND, &mouse);
+		ScreenToClient(main_hwnd, &mouse);
 		lua_pushinteger(L, mouse.x);
 		lua_setfield(L, -2, "xmouse");
 		lua_pushinteger(L, mouse.y);
@@ -3113,7 +3113,7 @@ int LuaD2DDrawText(lua_State* L)
 	int InputPrompt(lua_State* L)
 	{
 		DialogBoxParam(app_instance,
-		               MAKEINTRESOURCE(IDD_LUAINPUTPROMPT), mainHWND,
+		               MAKEINTRESOURCE(IDD_LUAINPUTPROMPT), main_hwnd,
 		               InputPromptProc, (LPARAM)L);
 		return 1;
 	}
@@ -4002,7 +4002,7 @@ void LuaTraceLogState()
 	if (!enableTraceLog) return;
 	EmulationLock lock;
 
-	auto path = show_persistent_save_dialog("o_tracelog", mainHWND, L"*.log");
+	auto path = show_persistent_save_dialog("o_tracelog", main_hwnd, L"*.log");
 
 	if (path.size() == 0)
 	{
@@ -4058,17 +4058,17 @@ void LuaEnvironment::create_renderer()
 	printf("Creating multi-target renderer for Lua...\n");
 
 	RECT window_rect;
-	GetClientRect(mainHWND, &window_rect);
+	GetClientRect(main_hwnd, &window_rect);
 	dc_width = window_rect.right;
 	dc_height = window_rect.bottom;
 
 	// we create a bitmap with the main window's size and point our dc to it
-	HDC main_dc = GetDC(mainHWND);
+	HDC main_dc = GetDC(main_hwnd);
 	dc = CreateCompatibleDC(main_dc);
 	HBITMAP bmp = CreateCompatibleBitmap(
 		main_dc, window_rect.right, window_rect.bottom);
 	SelectObject(dc, bmp);
-	ReleaseDC(mainHWND, main_dc);
+	ReleaseDC(main_hwnd, main_dc);
 
 	D2D1_RENDER_TARGET_PROPERTIES props =
 		D2D1::RenderTargetProperties(
@@ -4122,7 +4122,7 @@ void LuaEnvironment::destroy_renderer()
 		d2d_render_target_stack.pop();
 	}
 
-	ReleaseDC(mainHWND, dc);
+	ReleaseDC(main_hwnd, dc);
 	dc = NULL;
 	d2d_factory = NULL;
 	d2d_render_target = NULL;
@@ -4152,7 +4152,7 @@ void LuaEnvironment::post_draw()
 		d2d_render_target->EndDraw();
 	}
 
-	HDC main_dc = GetDC(mainHWND);
+	HDC main_dc = GetDC(main_hwnd);
 
 	TransparentBlt(main_dc, 0, 0, dc_width, dc_height, dc, 0, 0,
 		dc_width, dc_height, bitmap_color_mask);
@@ -4164,7 +4164,7 @@ void LuaEnvironment::post_draw()
 		DeleteObject(brush);
 	}
 
-	ReleaseDC(mainHWND, main_dc);
+	ReleaseDC(main_hwnd, main_dc);
 }
 
 void LuaEnvironment::destroy(LuaEnvironment* lua_environment) {

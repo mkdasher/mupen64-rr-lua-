@@ -119,7 +119,7 @@ static unsigned long* readdp[0xFFFF];
 static unsigned long* readdps[0xFFFF];
 
 // the frameBufferInfos
-static FrameBufferInfo frameBufferInfos[6];
+static frame_buffer_info frameBufferInfos[6];
 static char framebufferRead[0x800];
 static int firstFrameBufferSetting;
 
@@ -2663,7 +2663,7 @@ void write_ai()
     {
     case 0x4:
         ai_register.ai_len = word;
-        VCR_aiLenChanged();
+        vcr_ai_len_changed();
         switch (ROM_HEADER.Country_code & 0xFF)
         {
         case 0x44:
@@ -2729,13 +2729,13 @@ void write_ai()
             case 0x55:
             case 0x58:
             case 0x59:
-                VCR_aiDacrateChanged(system_type::pal);
+                vcr_ai_dacrate_changed(system_type::pal);
                 break;
             case 0x37:
             case 0x41:
             case 0x45:
             case 0x4a:
-                VCR_aiDacrateChanged(system_type::ntsc);
+                vcr_ai_dacrate_changed(system_type::ntsc);
                 break;
             }
         }
@@ -2759,7 +2759,7 @@ void write_aib()
         *((unsigned char*)&temp
             + ((*address_low & 3) ^ S8)) = g_byte;
         ai_register.ai_len = temp;
-        VCR_aiLenChanged();
+        vcr_ai_len_changed();
         switch (ROM_HEADER.Country_code & 0xFF)
         {
         case 0x44:
@@ -2826,13 +2826,13 @@ void write_aib()
             case 0x55:
             case 0x58:
             case 0x59:
-                VCR_aiDacrateChanged(system_type::pal);
+                vcr_ai_dacrate_changed(system_type::pal);
                 break;
             case 0x37:
             case 0x41:
             case 0x45:
             case 0x4a:
-                VCR_aiDacrateChanged(system_type::ntsc);
+                vcr_ai_dacrate_changed(system_type::ntsc);
                 break;
             }
         }
@@ -2855,7 +2855,7 @@ void write_aih()
         *((unsigned short*)((unsigned char*)&temp
             + ((*address_low & 3) ^ S16))) = hword;
         ai_register.ai_len = temp;
-        VCR_aiLenChanged();
+        vcr_ai_len_changed();
         switch (ROM_HEADER.Country_code & 0xFF)
         {
         case 0x44:
@@ -2918,13 +2918,13 @@ void write_aih()
             case 0x55:
             case 0x58:
             case 0x59:
-                VCR_aiDacrateChanged(system_type::pal);
+                vcr_ai_dacrate_changed(system_type::pal);
                 break;
             case 0x37:
             case 0x41:
             case 0x45:
             case 0x4a:
-                VCR_aiDacrateChanged(system_type::ntsc);
+                vcr_ai_dacrate_changed(system_type::ntsc);
                 break;
             }
         }
@@ -2943,7 +2943,7 @@ void write_aid()
     case 0x0:
         ai_register.ai_dram_addr = dword >> 32;
         ai_register.ai_len = dword & 0xFFFFFFFF;
-        VCR_aiLenChanged();
+        vcr_ai_len_changed();
         switch (ROM_HEADER.Country_code & 0xFF)
         {
         case 0x44:
@@ -3002,13 +3002,13 @@ void write_aid()
             case 0x55:
             case 0x58:
             case 0x59:
-                VCR_aiDacrateChanged(system_type::pal);
+                vcr_ai_dacrate_changed(system_type::pal);
                 break;
             case 0x37:
             case 0x41:
             case 0x45:
             case 0x4a:
-                VCR_aiDacrateChanged(system_type::ntsc);
+                vcr_ai_dacrate_changed(system_type::ntsc);
                 break;
             }
         }

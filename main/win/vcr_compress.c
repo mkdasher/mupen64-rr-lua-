@@ -29,7 +29,7 @@
 
 #include <Windows.h>
 #include <commctrl.h>
-#include <stdio.h>
+#include <cstdio>
 #include "../win/main_win.h"
 #include "../vcr_compress.h"
 #include "Config.hpp"
@@ -41,8 +41,6 @@
 
 
 static int avi_opened = 0;
-extern int recording;
-
 static int frame;
 static BITMAPINFOHEADER infoHeader;
 static PAVIFILE avi_file;
@@ -53,14 +51,14 @@ static AVICOMPRESSOPTIONS video_options;
 static AVICOMPRESSOPTIONS* pvideo_options[1];
 
 static int sample;
-static unsigned int AVIFileSize;
+static unsigned int avi_file_size;
 static WAVEFORMATEX sound_format;
 static AVISTREAMINFO sound_stream_header;
 static PAVISTREAM sound_stream;
 
 t_window_info vcrcomp_window_info = {0};
 
-void get_window_info(HWND hwnd, t_window_info& info)
+void get_window_info(const HWND hwnd, t_window_info& info)
 {
     RECT client_rect = {0}, statusbar_rect = {0}, toolbar_rect = {0};
 
@@ -86,21 +84,20 @@ void get_window_info(HWND hwnd, t_window_info& info)
 // "internal" readScreen, used when plugin doesn't implement it
 void __cdecl vcrcomp_internal_read_screen(void** dest, long* width, long* height)
 {
-    HDC mupendc, all = nullptr, copy; //all - screen; copy - buffer
+    HDC all = nullptr; //all - screen; copy - buffer
     POINT cli_tl{0, 0}; //mupen client x y 
-    HBITMAP bitmap, oldbitmap;
 
     if (Config.capture_delay)
     {
         Sleep(Config.capture_delay);
     }
 
-    mupendc = GetDC(mainHWND); //only client area
+    const HDC mupendc = GetDC(main_hwnd); //only client area
     if (Config.is_capture_cropped_screen_dc)
     {
         //get whole screen dc and find out where is mupen's client area
-        all = GetDC(NULL);
-        ClientToScreen(mainHWND, &cli_tl);
+        all = GetDC(nullptr);
+        ClientToScreen(main_hwnd, &cli_tl);
     }
 
     //real width and height of emulated area must be a multiple of 4, which is apparently important for avi
@@ -108,9 +105,9 @@ void __cdecl vcrcomp_internal_read_screen(void** dest, long* width, long* height
     *height = vcrcomp_window_info.height & ~3;
 
     // copy to a context in memory to speed up process
-    copy = CreateCompatibleDC(mupendc);
-    bitmap = CreateCompatibleBitmap(mupendc, *width, *height);
-    oldbitmap = (HBITMAP)SelectObject(copy, bitmap);
+    const HDC copy = CreateCompatibleDC(mupendc);
+    const HBITMAP bitmap = CreateCompatibleBitmap(mupendc, *width, *height);
+    const auto oldbitmap = (HBITMAP)SelectObject(copy, bitmap);
     
     if (copy)
     {
@@ -124,47 +121,47 @@ void __cdecl vcrcomp_internal_read_screen(void** dest, long* width, long* height
     if ((!avi_opened || !copy || !bitmap))
     {
         if (!*dest) //don't show warning, this is initialisation phase
-            MessageBox(0, "Unexpected AVI error 1", "Error", MB_ICONERROR);
-        *dest = NULL;
+            MessageBox(nullptr, "Unexpected AVI error 1", "Error", MB_ICONERROR);
+        *dest = nullptr;
         SelectObject(copy, oldbitmap); //apparently this leaks 1 pixel bitmap if not used
         if (bitmap)
             DeleteObject(bitmap);
         if (copy)
             DeleteDC(copy);
         if (mupendc)
-            ReleaseDC(mainHWND, mupendc);
+            ReleaseDC(main_hwnd, mupendc);
         if (all)
-            ReleaseDC(NULL, all);
+            ReleaseDC(nullptr, all);
         return;
     }
 
     // read the context
-    static unsigned char* buffer = NULL;
-    static unsigned int bufferSize = 0;
-    if (!buffer || bufferSize < *width * *height * 3 + 1) //if buffer doesn't exist yet or changed size somehow
+    static unsigned char* buffer = nullptr;
+    static unsigned int buffer_size = 0;
+    if (!buffer || (long)buffer_size < *width * *height * 3 + 1) //if buffer doesn't exist yet or changed size somehow
     {
         free(buffer);
-        bufferSize = *width * *height * 3 + 1;
-        buffer = (unsigned char*)malloc(bufferSize);
+        buffer_size = *width * *height * 3 + 1;
+        buffer = (unsigned char*)malloc(buffer_size);
     }
 
     if (!buffer) //failed to alloc
     {
-        MessageBox(0, "Failed to allocate memory for buffer", "Error", MB_ICONERROR);
-        *dest = NULL;
+        MessageBox(nullptr, "Failed to allocate memory for buffer", "Error", MB_ICONERROR);
+        *dest = nullptr;
         SelectObject(copy, oldbitmap);
         if (bitmap)
             DeleteObject(bitmap);
         if (copy)
             DeleteDC(copy);
         if (mupendc)
-            ReleaseDC(mainHWND, mupendc);
+            ReleaseDC(main_hwnd, mupendc);
         if (all)
-            ReleaseDC(NULL, all);
+            ReleaseDC(nullptr, all);
         return;
     }
 
-    BITMAPINFO bmpinfos;
+    BITMAPINFO bmpinfos{};
     memcpy(&bmpinfos.bmiHeader, &infoHeader, sizeof(BITMAPINFOHEADER)); //copy info from avi file init
     GetDIBits(copy, bitmap, 0, *height, buffer, &bmpinfos, DIB_RGB_COLORS);
 
@@ -175,40 +172,40 @@ void __cdecl vcrcomp_internal_read_screen(void** dest, long* width, long* height
     if (copy)
         DeleteDC(copy);
     if (mupendc)
-        ReleaseDC(mainHWND, mupendc);
+        ReleaseDC(main_hwnd, mupendc);
     if (all)
-        ReleaseDC(NULL, all);
+        ReleaseDC(nullptr, all);
 }
 
-void VCRComp_init()
+void vcr_comp_init()
 {
 }
 
 
-BOOL VCRComp_addVideoFrame(unsigned char* data)
+BOOL vcr_comp_add_video_frame(unsigned char* data)
 {
     extern int m_task;
     //if (m_task == 4 || m_task == 5) return 1; //don't record frames that are during emu loading (black frames)
-    long int TempLen;
-    BOOL ret = AVIStreamWrite(compressed_video_stream, frame++, 1, data, infoHeader.biSizeImage, AVIIF_KEYFRAME, NULL,
-                              &TempLen);
-    AVIFileSize += TempLen;
+    long int temp_len;
+    const BOOL ret = AVIStreamWrite(compressed_video_stream, frame++, 1, data, (long)infoHeader.biSizeImage, AVIIF_KEYFRAME, nullptr,
+                                    &temp_len);
+    avi_file_size += temp_len;
     return (0 == ret);
 }
 
-BOOL VCRComp_addAudioData(unsigned char* data, int len)
+BOOL vcr_comp_add_audio_data(unsigned char* data, const int len)
 {
-    BOOL ok = (0 == AVIStreamWrite(sound_stream, sample, len / sound_format.nBlockAlign, data, len, 0, NULL, NULL));
+	const BOOL ok = (0 == AVIStreamWrite(sound_stream, sample, len / sound_format.nBlockAlign, data, len, 0, nullptr, nullptr));
     sample += len / sound_format.nBlockAlign;
-    AVIFileSize += len;
+    avi_file_size += len;
     return ok;
 }
 
-bool VRComp_loadOptions()
+bool vr_comp_load_options()
 {
     SetCurrentDirectory(app_path.c_str());
     FILE* f = fopen("avi.cfg", "rb");
-    if (f == NULL) return false; //file doesn't exist
+    if (f == nullptr) return false; //file doesn't exist
 
     fseek(f, 0, SEEK_END);
     if (ftell(f) == 0) goto error; //empty file
@@ -218,9 +215,9 @@ bool VRComp_loadOptions()
     fread(pvideo_options[0], sizeof(AVICOMPRESSOPTIONS), 1, f);
 
     {
-        void* moreOptions = malloc(pvideo_options[0]->cbParms);
-        fread(moreOptions, pvideo_options[0]->cbParms, 1, f);
-        pvideo_options[0]->lpParms = moreOptions;
+        void* more_options = malloc(pvideo_options[0]->cbParms);
+        fread(more_options, pvideo_options[0]->cbParms, 1, f);
+        pvideo_options[0]->lpParms = more_options;
     }
     fclose(f);
     return true;
@@ -229,7 +226,7 @@ error:
     return false;
 }
 
-void VRComp_saveOptions()
+void vr_comp_save_options()
 {
     SetCurrentDirectory(app_path.c_str());
     FILE* f = fopen("avi.cfg", "w");
@@ -239,10 +236,10 @@ void VRComp_saveOptions()
     fclose(f);
 }
 
-void VCRComp_startFile(const char* filename, long width, long height, int fps, int New)
+void vcr_comp_start_file(const char* filename, const long width, const long height, const int fps, int New)
 {
     avi_opened = 1;
-    AVIFileSize = 0;
+    avi_file_size = 0;
     frame = 0;
     infoHeader.biSize = sizeof(BITMAPINFOHEADER);
     infoHeader.biWidth = width;
@@ -257,7 +254,7 @@ void VCRComp_startFile(const char* filename, long width, long height, int fps, i
     infoHeader.biClrImportant = 0;
 
     AVIFileInit();
-    AVIFileOpen(&avi_file, filename, OF_WRITE | OF_CREATE, NULL);
+    AVIFileOpen(&avi_file, filename, OF_WRITE | OF_CREATE, nullptr);
 
     ZeroMemory(&video_stream_header, sizeof(AVISTREAMINFO));
     video_stream_header.fccType = streamtypeVIDEO;
@@ -266,23 +263,23 @@ void VCRComp_startFile(const char* filename, long width, long height, int fps, i
     video_stream_header.dwSuggestedBufferSize = 0;
     AVIFileCreateStream(avi_file, &video_stream, &video_stream_header);
 
-    if (!New && pvideo_options[0] == NULL) //if hide dialog and options not found
+    if (!New && pvideo_options[0] == nullptr) //if hide dialog and options not found
     {
-        New = !VRComp_loadOptions(); //if failed to load defaults, ask with dialog
+        New = !vr_comp_load_options(); //if failed to load defaults, ask with dialog
     }
     if (New)
     {
         ZeroMemory(&video_options, sizeof(AVICOMPRESSOPTIONS));
         pvideo_options[0] = &video_options;
-        if(!AVISaveOptions(mainHWND, 0, 1, &video_stream, pvideo_options))
+        if(!AVISaveOptions(main_hwnd, 0, 1, &video_stream, pvideo_options))
         {
             // TODO: user cancel, roll everything back
         }
     }
-    VRComp_saveOptions();
-    AVIMakeCompressedStream(&compressed_video_stream, video_stream, pvideo_options[0], NULL);
+    vr_comp_save_options();
+    AVIMakeCompressedStream(&compressed_video_stream, video_stream, pvideo_options[0], nullptr);
     AVIStreamSetFormat(compressed_video_stream, 0, &infoHeader,
-                       infoHeader.biSize + infoHeader.biClrUsed * sizeof(RGBQUAD));
+                       (LONG)(infoHeader.biSize + infoHeader.biClrUsed * sizeof(RGBQUAD)));
 
     // sound
     sample = 0;
@@ -306,36 +303,35 @@ void VCRComp_startFile(const char* filename, long width, long height, int fps, i
 
     /*ZeroMemory(&sound_options, sizeof(AVICOMPRESSOPTIONS));
     psound_options[0] = &sound_options;
-    AVISaveOptions(mainHWND, 0, 1, &sound_stream, psound_options);
+    AVISaveOptions(main_hwnd, 0, 1, &sound_stream, psound_options);
     AVIMakeCompressedStream(&compressed_sound_stream, sound_stream, &sound_options, NULL);
     AVIStreamSetFormat(compressed_sound_stream, 0, &sound_format, sizeof(WAVEFORMATEX));*/
 }
 
-void VCRComp_finishFile(int split)
+void vcr_comp_finish_file(const int split)
 {
-    //SetWindowPos(mainHWND, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE); // why is this being set when recording is stopped...
-    AVIStreamClose(compressed_video_stream);
+    //SetWindowPos(main_hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE); // why is this being set when recording is stopped...
+    AVIStreamClose(compressed_video_stream)
     AVIStreamRelease(video_stream);
     // AVIStreamClose(compressed_video_stream);
-    AVIStreamClose(sound_stream);
+    AVIStreamClose(sound_stream)
     AVIFileClose(avi_file);
     AVIFileExit();
     if (!split)
     {
-        HMENU hMenu;
-        hMenu = GetMenu(mainHWND);
-        EnableMenuItem(hMenu, ID_END_CAPTURE, MF_GRAYED);
-        EnableMenuItem(hMenu, ID_START_CAPTURE, MF_ENABLED);
-        EnableMenuItem(hMenu, ID_START_CAPTURE_PRESET, MF_ENABLED);
-        EnableMenuItem(hMenu, FULL_SCREEN, MF_ENABLED); //Enables fullscreen menu
-        SetWindowPos(mainHWND, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE); //Remove the always on top flag
+	    const HMENU h_menu = GetMenu(main_hwnd);
+        EnableMenuItem(h_menu, ID_END_CAPTURE, MF_GRAYED);
+        EnableMenuItem(h_menu, ID_START_CAPTURE, MF_ENABLED);
+        EnableMenuItem(h_menu, ID_START_CAPTURE_PRESET, MF_ENABLED);
+        EnableMenuItem(h_menu, FULL_SCREEN, MF_ENABLED); //Enables fullscreen menu
+        SetWindowPos(main_hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE); //Remove the always on top flag
     }
 
     avi_opened = 0;
     printf("[VCR]: Finished AVI capture.\n");
 }
 
-unsigned int VCRComp_GetSize()
+unsigned int vcr_comp_get_size()
 {
-    return AVIFileSize;
+    return avi_file_size;
 }

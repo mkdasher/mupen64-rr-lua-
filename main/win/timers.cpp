@@ -16,26 +16,22 @@
 #include "../../lua/LuaConsole.h"
 
 #include <Windows.h>
-#include <stdio.h>
+#include <cstdio>
 #include <commctrl.h>
-#include "../guifuncs.h"
 #include "main_win.h"
 #include "Config.hpp"
 #include "../rom.h"
 #include "../vcr.h"
 #include "../../memory/pif.h"
-#include "../../winproject/resource.h"
-
 //c++!!!
 #include <chrono>
 #include <thread>
-#include <iostream>
 
 #include "features/Statusbar.hpp"
 
 extern bool ffup;
-extern int m_currentVI;
-extern long m_currentSample;
+extern int m_current_vi;
+extern long m_current_sample;
 
 std::chrono::duration<double, std::milli> max_vi_s_ms;
 float max_vi_s, vis_per_second, fps;
@@ -55,12 +51,12 @@ float add_value(std::deque<float>& vec, const float value, const size_t max_size
 
 	float accumulator = 0.0f;
 
-	for (auto val : vec)
+	for (const auto val : vec)
 	{
 		accumulator += val;
 	}
 
-	return accumulator / vec.size();
+	return accumulator / (float)vec.size();
 }
 
 void timer_init()
@@ -80,11 +76,9 @@ void timer_new_frame()
 {
 	static time_point last_statusbar_update_time = std::chrono::high_resolution_clock::now();
 	static time_point last_frame_time = std::chrono::high_resolution_clock::now();
-	time_point current_frame_time = std::chrono::high_resolution_clock::now();
+	const time_point current_frame_time = std::chrono::high_resolution_clock::now();
 
-	auto diff = (current_frame_time - last_frame_time) / 1'000'000.0f;
-
-	if (diff.count() > 1)
+	if (const auto diff = (current_frame_time - last_frame_time) / 1'000'000.0f; diff.count() > 1)
 	{
 		fps = add_value(fps_values, 1000.0f / diff.count());
 	}
@@ -123,42 +117,40 @@ void timer_new_vi()
 
 	// fps wont update when emu is stuck so we must check vi/s
 	// vi/s shouldn't go over 1000 in normal gameplay while holding down fast forward unless you have repeat speed at uzi speed
-	if (!ignoreErrorEmulation && emu_launched && frame_advancing && vis_per_second > 1000)
+	if (!ignore_error_emulation && emu_launched && frame_advancing && vis_per_second > 1000)
 	{
 		int result = 0;
-		TaskDialog(mainHWND, app_instance, L"Error",
+		TaskDialog(main_hwnd, app_instance, L"Error",
 			L"Unusual core state", L"An emulator core timing inaccuracy or game crash has been detected. You can choose to continue emulation.", TDCBF_RETRY_BUTTON | TDCBF_CLOSE_BUTTON, TD_ERROR_ICON, &result);
 
 		if (result == IDCLOSE) {
 			frame_advancing = false; //don't pause at next open
-			CreateThread(NULL, 0, close_rom, (LPVOID)1, 0, 0);
+			CreateThread(nullptr, 0, close_rom, (LPVOID)1, 0, nullptr);
 		}
 	}
 
-	m_currentVI++;
+	m_current_vi++;
 
-	if (VCR_isRecording())
-		VCR_setLengthVIs(m_currentVI);
+	if (vcr_is_recording())
+		vcr_set_length_v_is(m_current_vi);
 
-	if (VCR_isPlaying())
+	if (vcr_is_playing())
 	{
-		extern int pauseAtFrame;
-		if (vcr_current_sample >= pauseAtFrame && pauseAtFrame >= 0)
+		if (extern int pause_at_frame; vcr_current_sample >= pause_at_frame && pause_at_frame >= 0)
 		{
-			pauseEmu(TRUE); // maybe this is multithreading unsafe?
-			pauseAtFrame = -1; // don't pause again
+			pause_emu(TRUE); // maybe this is multithreading unsafe?
+			pause_at_frame = -1; // don't pause again
 		}
 	}
 
 	vi_counter++;
 
-	auto current_vi_time = std::chrono::high_resolution_clock::now();
-	auto vi_time_diff = current_vi_time - last_vi_time;
+	const auto current_vi_time = std::chrono::high_resolution_clock::now();
 
 
 	// if we're playing game normally with no frame advance or ff and overstepping max time between frames,
 	// we need to sleep to compensate the additional time
-	if (!fast_forward && !frame_advancing && vi_time_diff < max_vi_s_ms)
+	if (const auto vi_time_diff = current_vi_time - last_vi_time; !fast_forward && !frame_advancing && vi_time_diff < max_vi_s_ms)
 	{
 		auto sleep_time = max_vi_s_ms - vi_time_diff;
 
@@ -173,10 +165,10 @@ void timer_new_vi()
 		if (sleep_time.count() > 0 && sleep_time < std::chrono::milliseconds(700))
 		{
 			// we try to sleep for the overstepped time, but must account for sleeping inaccuracies
-			auto goal_sleep = max_vi_s_ms - vi_time_diff - last_sleep_error;
-			auto start_sleep = std::chrono::high_resolution_clock::now();
+			const auto goal_sleep = max_vi_s_ms - vi_time_diff - last_sleep_error;
+			const auto start_sleep = std::chrono::high_resolution_clock::now();
 			std::this_thread::sleep_for(goal_sleep);
-			auto end_sleep = std::chrono::high_resolution_clock::now();
+			const auto end_sleep = std::chrono::high_resolution_clock::now();
 
 			// sleeping inaccuracy is difference between actual time spent sleeping and the goal sleep
 			// this value isnt usually too large
@@ -184,7 +176,7 @@ void timer_new_vi()
 		} else
 		{
 			// sleep time is unreasonable, log it and reset related state
-			auto casted = std::chrono::duration_cast<
+			const auto casted = std::chrono::duration_cast<
 				std::chrono::milliseconds>(sleep_time).count();
 			printf("Invalid timer: %lld ms\n", casted);
 			sleep_time = sleep_time.zero();
@@ -193,8 +185,8 @@ void timer_new_vi()
 		}
 	}
 
-	auto post_sleep_vi_time_diff = (std::chrono::high_resolution_clock::now() - last_vi_time) / 1'000'000.0f;
-	if (post_sleep_vi_time_diff.count() > 1)
+	if (const auto post_sleep_vi_time_diff = (std::chrono::high_resolution_clock::now() -
+		last_vi_time) / 1'000'000.0f; post_sleep_vi_time_diff.count() > 1)
 	{
 		vis_per_second = add_value(vi_values, 1000.0f / post_sleep_vi_time_diff.count());
 	}

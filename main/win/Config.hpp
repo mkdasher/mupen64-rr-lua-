@@ -15,7 +15,7 @@ typedef struct t_hotkey
 	int32_t command;
 } t_hotkey;
 
-typedef struct _CONFIG
+typedef struct CONFIG
 {
 #pragma region Hotkeys
 	t_hotkey fast_forward_hotkey;

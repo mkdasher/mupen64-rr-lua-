@@ -15,17 +15,16 @@
 #include "helpers/io_helpers.h"
 #include "helpers/string_helpers.h"
 #include "../Config.hpp"
-#include <assert.h>
+#include <cassert>
 
-DWORD Id;
+DWORD id;
 HWND rombrowser_hwnd = nullptr;
 std::vector<t_rombrowser_entry*> rombrowser_entries;
 int32_t rombrowser_is_loading = 0;
 
-int CALLBACK rombrowser_compare(LPARAM lParam1, LPARAM lParam2, LPARAM _) {
-
-	auto first = rombrowser_entries[Config.rombrowser_sort_ascending ? lParam1 : lParam2];
-	auto second = rombrowser_entries[Config.rombrowser_sort_ascending ? lParam2 : lParam1];
+int CALLBACK rombrowser_compare(const LPARAM l_param1, const LPARAM l_param2, LPARAM _) {
+	const auto first = rombrowser_entries[Config.rombrowser_sort_ascending ? l_param1 : l_param2];
+	const auto second = rombrowser_entries[Config.rombrowser_sort_ascending ? l_param2 : l_param1];
 
 	int32_t result = 0;
 
@@ -41,7 +40,7 @@ int CALLBACK rombrowser_compare(LPARAM lParam1, LPARAM lParam2, LPARAM _) {
 			result = _strcmpi((const char*)first->path.c_str(), (const char*)second->path.c_str());
 			break;
 		case 3:
-			result = first->size - second->size;
+			result = (int32_t)(first->size - second->size);
 			break;
 		default:
 			assert(false);
@@ -66,11 +65,11 @@ void rombrowser_create()
 	assert(rombrowser_hwnd == nullptr);
 
 	RECT rcl, rtool, rstatus;
-	GetClientRect(mainHWND, &rcl);
+	GetClientRect(main_hwnd, &rcl);
 	GetWindowRect(toolbar_hwnd, &rtool);
 	GetWindowRect(statusbar_hwnd, &rstatus);
 
-	rombrowser_hwnd = CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTVIEW, NULL,
+	rombrowser_hwnd = CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTVIEW, nullptr,
 	                                 WS_TABSTOP | WS_VISIBLE | WS_CHILD |
 	                                 LVS_SINGLESEL | LVS_REPORT |
 	                                 LVS_SHOWSELALWAYS,
@@ -78,41 +77,40 @@ void rombrowser_create()
 	                                 rcl.right - rcl.left,
 	                                 rcl.bottom - rcl.top - rtool.bottom + rtool
 	                                 .top - rstatus.bottom + rstatus.top,
-	                                 mainHWND, (HMENU)IDC_ROMLIST,
+	                                 main_hwnd, (HMENU)IDC_ROMLIST,
 	                                 app_instance,
-	                                 NULL);
+	nullptr);
 
 	ListView_SetExtendedListViewStyle(rombrowser_hwnd,
 	                                  LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT |
 	                                  LVS_EX_DOUBLEBUFFER);
 
-	HIMAGELIST hSmall =
+	const HIMAGELIST h_small =
 		ImageList_Create(16, 16, ILC_COLORDDB | ILC_MASK, 11, 0);
-	HICON hIcon;
 
-	hIcon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_GERMANY));
-	ImageList_AddIcon(hSmall, hIcon);
-	hIcon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_USA));
-	ImageList_AddIcon(hSmall, hIcon);
-	hIcon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_JAPAN));
-	ImageList_AddIcon(hSmall, hIcon);
-	hIcon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_EUROPE));
-	ImageList_AddIcon(hSmall, hIcon);
-	hIcon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_AUSTRALIA));
-	ImageList_AddIcon(hSmall, hIcon);
-	hIcon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_ITALIA));
-	ImageList_AddIcon(hSmall, hIcon);
-	hIcon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_FRANCE));
-	ImageList_AddIcon(hSmall, hIcon);
-	hIcon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_SPAIN));
-	ImageList_AddIcon(hSmall, hIcon);
-	hIcon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_UNKNOWN));
-	ImageList_AddIcon(hSmall, hIcon);
-	hIcon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_DEMO));
-	ImageList_AddIcon(hSmall, hIcon);
-	hIcon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_BETA));
-	ImageList_AddIcon(hSmall, hIcon);
-	ListView_SetImageList(rombrowser_hwnd, hSmall, LVSIL_SMALL);
+	HICON h_icon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_GERMANY));
+	ImageList_AddIcon(h_small, h_icon);
+	h_icon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_USA));
+	ImageList_AddIcon(h_small, h_icon);
+	h_icon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_JAPAN));
+	ImageList_AddIcon(h_small, h_icon);
+	h_icon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_EUROPE));
+	ImageList_AddIcon(h_small, h_icon);
+	h_icon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_AUSTRALIA));
+	ImageList_AddIcon(h_small, h_icon);
+	h_icon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_ITALIA));
+	ImageList_AddIcon(h_small, h_icon);
+	h_icon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_FRANCE));
+	ImageList_AddIcon(h_small, h_icon);
+	h_icon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_SPAIN));
+	ImageList_AddIcon(h_small, h_icon);
+	h_icon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_UNKNOWN));
+	ImageList_AddIcon(h_small, h_icon);
+	h_icon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_DEMO));
+	ImageList_AddIcon(h_small, h_icon);
+	h_icon = LoadIcon(app_instance, MAKEINTRESOURCE(IDI_BETA));
+	ImageList_AddIcon(h_small, h_icon);
+	ListView_SetImageList(rombrowser_hwnd, h_small, LVSIL_SMALL);
 
 	LVCOLUMN lv_column = {0};
 	lv_column.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
@@ -121,22 +119,22 @@ void rombrowser_create()
 	lv_column.cx = Config.rombrowser_column_widths[0];
 	ListView_InsertColumn(rombrowser_hwnd, 0, &lv_column);
 
-	lv_column.pszText = (LPTSTR)"Name";
+	lv_column.pszText = const_cast<LPTSTR>("Name");
 	lv_column.cx = Config.rombrowser_column_widths[1];
 	ListView_InsertColumn(rombrowser_hwnd, 1, &lv_column);
 
-	lv_column.pszText = (LPTSTR)"Filename";
+	lv_column.pszText = const_cast<LPTSTR>("Filename");
 	lv_column.cx = Config.rombrowser_column_widths[2];
 	ListView_InsertColumn(rombrowser_hwnd, 2, &lv_column);
 
-	lv_column.pszText = (LPTSTR)"Size";
+	lv_column.pszText = const_cast<LPTSTR>("Size");
 	lv_column.cx = Config.rombrowser_column_widths[3];
 	ListView_InsertColumn(rombrowser_hwnd, 3, &lv_column);
 
 	BringWindowToTop(rombrowser_hwnd);
 }
 
-int32_t rombrowser_country_code_to_image_index(uint16_t country_code)
+int32_t rombrowser_country_code_to_image_index(const uint16_t country_code)
 {
 	switch (country_code & 0xFF)
 	{
@@ -170,7 +168,7 @@ int32_t rombrowser_country_code_to_image_index(uint16_t country_code)
 	}
 }
 
-void rombrowser_add_rom(int32_t index, t_rombrowser_entry* rombrowser_entry)
+void rombrowser_add_rom(const int32_t index, t_rombrowser_entry* rombrowser_entry)
 {
 	LV_ITEM lv_item = {0};
 
@@ -185,14 +183,14 @@ void rombrowser_add_rom(int32_t index, t_rombrowser_entry* rombrowser_entry)
 }
 void rombrowser_build_impl()
 {
-	auto start_time = std::chrono::high_resolution_clock::now();
+	const auto start_time = std::chrono::high_resolution_clock::now();
 
 	// we disable redrawing because it would repaint after every added rom otherwise,
 	// which is slow and causes flicker
 	SendMessage(rombrowser_hwnd, WM_SETREDRAW, FALSE, 0);
 
 	ListView_DeleteAllItems(rombrowser_hwnd);
-	for (auto entry : rombrowser_entries)
+	for (const auto entry : rombrowser_entries)
 	{
 		delete entry;
 	}
@@ -222,19 +220,19 @@ void rombrowser_build_impl()
 
 	std::vector<std::string> filtered_rom_paths;
 
-	std::copy_if(rom_paths.begin(), rom_paths.end(),
-	             std::back_inserter(filtered_rom_paths), [](std::string val)
-	             {
-		             char c_extension[260] = {0};
-		             _splitpath(val.c_str(), NULL, NULL, NULL, c_extension);
+	std::ranges::copy_if(rom_paths,
+	                     std::back_inserter(filtered_rom_paths), [](const std::string& val)
+	                     {
+		                     char c_extension[260] = {0};
+		                     _splitpath(val.c_str(), nullptr, nullptr, nullptr, c_extension);
 
-		             auto extension = std::string(c_extension);
-		             return is_case_insensitive_equal(extension, ".z64") ||
-			             is_case_insensitive_equal(extension, ".n64") ||
-			             is_case_insensitive_equal(
-				             extension, ".v64")
-			             || is_case_insensitive_equal(extension, ".rom");
-	             });
+		                     const auto extension = std::string(c_extension);
+		                     return is_case_insensitive_equal(extension, ".z64") ||
+			                     is_case_insensitive_equal(extension, ".n64") ||
+			                     is_case_insensitive_equal(
+				                     extension, ".v64")
+			                     || is_case_insensitive_equal(extension, ".rom");
+	                     });
 
 
 	int32_t i = 0;
@@ -243,20 +241,20 @@ void rombrowser_build_impl()
 		FILE* f = fopen(path.c_str(), "rb");
 
 		fseek(f, 0, SEEK_END);
-		uint64_t len = ftell(f);
+		const uint64_t len = ftell(f);
 		fseek(f, 0, SEEK_SET);
 
 		if (len > sizeof(t_rom_header))
 		{
-			auto header = (t_rom_header*)malloc(sizeof(t_rom_header));
+			const auto header = (t_rom_header*)malloc(sizeof(t_rom_header));
 			fread(header, sizeof(t_rom_header), 1, f);
 
 			rom_byteswap((uint8_t*)header);
 
-			auto rombrowser_entry = new t_rombrowser_entry;
+			const auto rombrowser_entry = new t_rombrowser_entry;
 			rombrowser_entry->rom_header = *header;
 			rombrowser_entry->path = path;
-			rombrowser_entry->size = len;
+			rombrowser_entry->size = (unsigned int)(len);
 
 			rombrowser_add_rom(i, rombrowser_entry);
 			free(header);
@@ -286,7 +284,7 @@ void rombrowser_build()
 	}).detach();
 }
 
-void rombrowser_set_visibility(int32_t is_visible)
+void rombrowser_set_visibility(const int32_t is_visible)
 {
 	ShowWindow(rombrowser_hwnd, is_visible ? SW_SHOW : SW_HIDE);
 }
@@ -300,11 +298,10 @@ void rombrowser_update_size()
 
 	// TODO: clean up this mess
 	RECT rc, rc_main;
-	WORD n_width, n_height;
 	int32_t y = 0;
-	GetClientRect(mainHWND, &rc_main);
-	n_width = rc_main.right - rc_main.left;
-	n_height = rc_main.bottom - rc_main.top;
+	GetClientRect(main_hwnd, &rc_main);
+	const WORD n_width = (WORD)(rc_main.right - rc_main.left);
+	WORD n_height = (WORD)(rc_main.bottom - rc_main.top);
 	if (statusbar_hwnd)
 	{
 		GetWindowRect(statusbar_hwnd, &rc);
@@ -320,13 +317,13 @@ void rombrowser_update_size()
 
 
 
-void rombrowser_notify(LPARAM lparam)
+void rombrowser_notify(const LPARAM lparam)
 {
 	switch (((LPNMHDR)lparam)->code)
 	{
 		case LVN_COLUMNCLICK:
 		{
-			auto lv = (LPNMLISTVIEW)lparam;
+			const auto lv = (LPNMLISTVIEW)lparam;
 
 			if (Config.rombrowser_sorted_column == lv->iSubItem) {
 				Config.rombrowser_sort_ascending ^= 1;
@@ -340,8 +337,8 @@ void rombrowser_notify(LPARAM lparam)
 	case LVN_GETDISPINFO:
 		{
 			NMLVDISPINFO* plvdi = (NMLVDISPINFO*)lparam;
-			t_rombrowser_entry* rombrowser_entry = rombrowser_entries[plvdi->
-				item.lParam];
+			const t_rombrowser_entry* rombrowser_entry = rombrowser_entries[plvdi->
+			                                                                item.lParam];
 			switch (plvdi->item.iSubItem)
 			{
 			case 1:
@@ -350,14 +347,14 @@ void rombrowser_notify(LPARAM lparam)
 			case 2:
 			{
 				char filename[MAX_PATH] = {0};
-				_splitpath(rombrowser_entry->path.c_str(), NULL, NULL,
-						   filename, NULL);
+				_splitpath(rombrowser_entry->path.c_str(), nullptr, nullptr,
+						   filename, nullptr);
 				strcpy(plvdi->item.pszText, filename);
 				break;
 			}
 			case 3:
 			{
-				std::string size = std::to_string(rombrowser_entry->size / (1024 * 1024)) +
+				const std::string size = std::to_string(rombrowser_entry->size / (1024 * 1024)) +
 					" MB";
 				strcpy(plvdi->item.pszText, size.c_str());
 				break;
@@ -368,10 +365,9 @@ void rombrowser_notify(LPARAM lparam)
 
 			break;
 		}
-		break;
 	case NM_DBLCLK:
 		{
-			int32_t i = ListView_GetNextItem(rombrowser_hwnd, -1, LVNI_SELECTED);
+			const auto i = ListView_GetNextItem(rombrowser_hwnd, -1, LVNI_SELECTED);
 
 			if (i == -1) break;
 
@@ -380,8 +376,9 @@ void rombrowser_notify(LPARAM lparam)
 			item.iItem = i;
 			ListView_GetItem(rombrowser_hwnd, &item);
 			strcpy(rom_path, rombrowser_entries[item.lParam]->path.c_str());
-			CreateThread(NULL, 0, start_rom, NULL, 0, &Id);
+			CreateThread(nullptr, 0, start_rom, nullptr, 0, &id);
 		}
 		break;
+	default: ;
 	}
 }
