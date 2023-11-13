@@ -115,8 +115,8 @@ enum
 	RESAMPLER_ERR_MAX_ERROR
 };
 
-struct speex_resampler_state;
-typedef struct speex_resampler_state SpeexResamplerState;
+struct SpeexResamplerState_;
+typedef struct SpeexResamplerState_ SpeexResamplerState;
 
 /** Create a new resampler with integer input and output rates.
  * @param nb_channels Number of channels to be processed
