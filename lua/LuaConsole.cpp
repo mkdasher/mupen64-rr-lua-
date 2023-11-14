@@ -3409,13 +3409,7 @@ void lua_create_and_run(const char* path, bool minimized)
 void AtUpdateScreenLuaCallback()
 {
 	for (auto& pair : hwnd_lua_map) {
-		pair.second->pre_draw();
-	}
-
-	invoke_callbacks_with_key_on_all_instances(AtUpdateScreen, REG_ATUPDATESCREEN);
-
-	for (auto& pair : hwnd_lua_map) {
-		pair.second->post_draw();
+		pair.second->draw();
 	}
 }
 
@@ -4128,25 +4122,26 @@ void LuaEnvironment::destroy_renderer()
 	d2d_render_target = NULL;
 }
 
-void LuaEnvironment::pre_draw() {
+void LuaEnvironment::draw() {
 
 	if (this == nullptr || !dc)
 	{
 		return;
 	}
+
+	// no renderer mode should only get callback and no other operations
+	if (renderer == Renderer::None) {
+		invoke_callbacks_with_key(AtUpdateScreen, REG_ATUPDATESCREEN);
+		return;
+	}
+
 	if (renderer == Renderer::Direct2D) {
 		d2d_render_target->BeginDraw();
 		d2d_render_target->SetTransform(D2D1::Matrix3x2F::Identity());
 		d2d_render_target->Clear(D2D1::ColorF(bitmap_color_mask));
 	}
 
-}
-
-void LuaEnvironment::post_draw()
-{
-	if (renderer == Renderer::None || this == nullptr || !dc) {
-		return;
-	}
+	invoke_callbacks_with_key(AtUpdateScreen, REG_ATUPDATESCREEN);
 
 	if (renderer == Renderer::Direct2D) {
 		d2d_render_target->EndDraw();
@@ -4166,6 +4161,7 @@ void LuaEnvironment::post_draw()
 
 	ReleaseDC(main_hwnd, main_dc);
 }
+
 
 void LuaEnvironment::destroy(LuaEnvironment* lua_environment) {
 	hwnd_lua_map.erase(lua_environment->hwnd);
