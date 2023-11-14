@@ -28,9 +28,7 @@
 **/
 
 
-#include <sys/stat.h>
 #include "r4300.h"
-#include "../memory/memory.h"
 #include "../main/plugin.hpp"
 #include "../r4300/recomph.h"
 
@@ -52,7 +50,7 @@ int compare_core_mode = 0;
 void display_error(const char* txt)
 {
     int i;
-    unsigned long* comp_reg2 = (unsigned long*)comp_reg;
+    auto comp_reg2 = (unsigned long*)comp_reg;
     printf("err: %s\n", txt);
     if (interpcore)
     {
@@ -121,7 +119,7 @@ void compare_core()
         {
             pipe_opened = 0;
             if (f) fclose(f);
-            f = NULL;
+            f = nullptr;
         }
         return;
     }
@@ -159,18 +157,18 @@ void compare_core()
         {
             pipe_opened = 0;
             fclose(f);
-            f = NULL;
+            f = nullptr;
             compare_core_mode = 0;
             return;
         }
         if (interpcore)
         {
-            if (memcmp(&interp_addr, comp_reg, 4))
+            if (memcmp(&interp_addr, comp_reg, 4) != 0)
                 display_error("PC");
         }
         else
         {
-            if (memcmp(&PC->addr, comp_reg, 4))
+            if (memcmp(&PC->addr, comp_reg, 4) != 0)
                 display_error("PC");
         }
         /*

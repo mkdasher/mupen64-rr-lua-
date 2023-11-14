@@ -1,5 +1,5 @@
 #include <Windows.h>
-#include <stdio.h>
+#include <cstdio>
 #include "r4300.h"
 #include "exception.h"
 #include "cop1_helpers.h"
@@ -13,7 +13,7 @@ void fail_float(const char* msg)
     char buf[200];
     sprintf(buf, "%s; PC = 0x%lx", msg, interpcore ? interp_addr : PC->addr);
     printf("%s\n", buf);
-    MessageBox(NULL, buf, "Floating Point Error", MB_OK);
+    MessageBox(nullptr, buf, "Floating Point Error", MB_OK);
 
     core_Cause = 15 << 2;
     exception_general();

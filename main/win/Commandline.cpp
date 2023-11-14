@@ -18,14 +18,10 @@
 // Slightly improved command line params parsing function to work with spaced arguments
 #include <Windows.h>
 #include "Commandline.h"
-
-#include <iostream>
-
 #include "LuaConsole.h"
 #include "main_win.h"
 #include "savestates.h"
 #include "vcr.h"
-#include "helpers/string_helpers.h"
 #include "lib/argh.h"
 
 std::string commandline_rom;
@@ -39,7 +35,7 @@ bool commandline_stop_emu_on_movie_end;
 
 void commandline_set()
 {
-	argh::parser cmdl(__argc, __argv, argh::parser::PREFER_PARAM_FOR_UNREG_OPTION);
+	const argh::parser cmdl(__argc, __argv, argh::parser::PREFER_PARAM_FOR_UNREG_OPTION);
 
 	commandline_rom = cmdl("--rom", "").str();
 	commandline_lua = cmdl("--lua", "").str();
@@ -64,7 +60,7 @@ void commandline_start_rom()
 	}
 
 	strcpy(rom_path, commandline_rom.c_str());
-	CreateThread(NULL, 0, start_rom, nullptr, 0, &start_rom_id);
+	CreateThread(nullptr, 0, start_rom, nullptr, 0, &start_rom_id);
 }
 
 void commandline_load_st()

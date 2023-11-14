@@ -1,7 +1,6 @@
 #ifndef COP1_HELPERS_H
 #define COP1_HELPERS_H
 
-#include <math.h>
 #include "macros.h"
 
 extern float largest_denormal_float;
@@ -15,7 +14,7 @@ void fail_float_convert();
 #define LARGEST_DENORMAL(x) (sizeof(x) == 4 ? largest_denormal_float : largest_denormal_double)
 
 #define CHECK_INPUT(x) \
-    do { if (Config.is_float_exception_propagation_enabled && !(fabs(x) > LARGEST_DENORMAL(x)) && x != 0) { \
+    do { if (Config.is_float_exception_propagation_enabled && !(fabs(x) > LARGEST_DENORMAL(x)) && (x) != 0) { \
         fail_float_input_arg(x); \
         return; \
     } } while (0)
@@ -30,7 +29,7 @@ void fail_float_convert();
             /* way to do it. Typically this doesn't matter, because denormals are */ \
             /* too small to cause visible console/emu divergences, but since we */ \
             /* check for them on entry to each operation this becomes important... */ \
-            x = copysign(0, x); \
+            (x) = copysign(0, x); \
         } \
     } } while (0)
 

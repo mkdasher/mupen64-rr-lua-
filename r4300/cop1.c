@@ -30,8 +30,6 @@
 #include "ops.h"
 #include "r4300.h"
 #include "macros.h"
-#include "exception.h"
-#include "../memory/memory.h"
 
 void MFC1()
 {
@@ -97,8 +95,9 @@ void CTC1()
     case 3:
         rounding_mode = FLOOR_MODE;
         break;
+default: ;
     }
-    set_rounding();
+    set_rounding()
     //if ((FCR31 >> 7) & 0x1F) printf("FPU Exception enabled : %x\n", 
     //				   (int)((FCR31 >> 7) & 0x1F));
     PC++;

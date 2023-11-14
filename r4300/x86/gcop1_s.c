@@ -27,16 +27,12 @@
  *
 **/
 
-#include <stdio.h>
 #include "../recomph.h"
 #include "assemble.h"
 #include "../r4300.h"
-#include "../ops.h"
-#include "../macros.h"
-#include "interpret.h"
 #include "gcop1_helpers.h"
 
-static void gencheck_eax_valid(int stackBase)
+static void gencheck_eax_valid(const int stack_base)
 {
     if (!Config.is_float_exception_propagation_enabled)
         return;
@@ -44,7 +40,7 @@ static void gencheck_eax_valid(int stackBase)
     mov_reg32_imm32(EBX, (unsigned long)&largest_denormal_float);
     fld_preg32_dword(EBX);
     fld_preg32_dword(EAX);
-    gencheck_float_input_valid(stackBase);
+    gencheck_float_input_valid(stack_base);
 }
 
 static void gencheck_result_valid()

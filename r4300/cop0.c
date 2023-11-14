@@ -40,7 +40,7 @@ void MFC0()
         printf("lecture de Random\n");
         stop = 1;
     default:
-        rrt32 = reg_cop0[PC->f.r.nrd];
+        rrt32 = (long)reg_cop0[PC->f.r.nrd];
         sign_extended(core_rrt);
     }
     PC++;
@@ -101,8 +101,7 @@ void MTC0()
         {
             if (core_rrt & 0x04000000)
             {
-                int i;
-                for (i = 0; i < 32; i++)
+	            for (int i = 0; i < 32; i++)
                 {
                     reg_cop1_double[i] = (double*)&reg_cop1_fgr_64[i];
                     reg_cop1_simple[i] = (float*)&reg_cop1_fgr_64[i];
