@@ -16,6 +16,7 @@
 #include "helpers/string_helpers.h"
 #include "../Config.hpp"
 #include <cassert>
+#include <thread>
 
 DWORD id;
 HWND rombrowser_hwnd = nullptr;
