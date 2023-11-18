@@ -1547,7 +1547,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM w_param, LPARAM l_param
 			case ID_REPLAY_LATEST:
 				if (!emu_launched)
 					break;
-				// Overwrite prevention? Path sanity check (Leave to internal handling)?
+				if (Config.recent_movie_paths.empty())
+					break;
 				vcr_set_read_only(TRUE);
 				vcr_start_playback(Config.recent_movie_paths[0], false);
 				set_status_playback_started();
