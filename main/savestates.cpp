@@ -180,9 +180,10 @@ std::vector<uint8_t> generate_savestate()
     vecwrite(b, &movie_active, sizeof(movie_active));
     if (movie_active)
     {
-    	unsigned long movie_inputs_size = movie_inputs.size();
+    	// We only want to save movie up to the current sample (so VCR restore knows where to pick up)
+    	unsigned long movie_inputs_size = vcr_current_sample;
     	vecwrite(b, &movie_inputs_size, sizeof(movie_inputs_size));
-    	vecwrite(b, movie_inputs.data(), movie_inputs.size() * sizeof(BUTTONS));
+    	vecwrite(b, movie_inputs.data(), movie_inputs_size * sizeof(BUTTONS));
     }
 	return b;
 }
@@ -414,10 +415,10 @@ void savestates_load_immediate()
 	    memread(&ptr, movie_input_data, movie_input_data_size * sizeof(BUTTONS));
 
     	// rerecording: we overwrite the current input buffer with the st's one, and adjust the current sample
-	    movie_inputs.resize(movie_input_data_size);
-    	memcpy(movie_inputs.data(), movie_input_data, movie_input_data_size);
-    	vcr_current_sample = movie_input_data_size;
-    	vcr_movie_header.length_samples = movie_input_data_size;
+    	std::vector<BUTTONS> inputs;
+	    inputs.resize(movie_input_data_size);
+    	memcpy(inputs.data(), movie_input_data, movie_input_data_size);
+    	vcr_restore(inputs);
     }
     else
     {

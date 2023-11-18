@@ -268,6 +268,35 @@ bool vcr_parse_header(std::vector<uint8_t>& buffer, t_movie_header* header)
 	return parse_header(buffer, header) == success;
 }
 
+bool vcr_restore(std::vector<BUTTONS>& input_buffer)
+{
+	if (vcr_is_idle())
+	{
+		return true;
+	}
+
+	vcr_current_sample = input_buffer.size();
+
+	if (vcr_get_read_only())
+	{
+		// In RO mode, we only want to rewind the input buffer pointer
+		m_task = e_task::playback;
+		return true;
+	} else
+	{
+		// In RW mode, we want to turn movie playback into a recording and overwrite the input buffer
+		// TODO: Also update titlebar?
+		movie_inputs.resize(input_buffer.size());
+		memcpy(movie_inputs.data(), input_buffer.data(), std::size(input_buffer));
+
+		m_task = e_task::recording;
+		vcr_movie_header.length_samples = movie_inputs.size();
+		enable_emulation_menu_items(TRUE);
+	}
+
+	return false;
+}
+
 void vcr_clear_save_data()
 {
 	{

@@ -350,6 +350,14 @@ inline bool is_task_recording(e_task task)
  */
 bool vcr_parse_header(std::vector<uint8_t>& buffer, t_movie_header* header);
 
+
+/**
+ * \brief Restores vcr state from an input buffer
+ * \param input_buffer A vector of inputs to overwrite the currently playing movie with
+ * \return Whether the operation succeeded
+ */
+bool vcr_restore(std::vector<BUTTONS>& input_buffer);
+
 extern char vcr_lastpath[MAX_PATH];
 extern uint64_t screen_updates;
 extern std::vector<BUTTONS> movie_inputs;
