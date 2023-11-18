@@ -30,8 +30,6 @@
 #include "features/Statusbar.hpp"
 
 extern bool ffup;
-extern int m_current_vi;
-extern long m_current_sample;
 
 std::chrono::duration<double, std::milli> max_vi_s_ms;
 float max_vi_s, vis_per_second, fps;
@@ -129,10 +127,10 @@ void timer_new_vi()
 		}
 	}
 
-	m_current_vi++;
+	vcr_current_vi++;
 
 	if (vcr_is_recording())
-		vcr_set_length_v_is(m_current_vi);
+		vcr_set_length_v_is(vcr_current_vi);
 
 	if (vcr_is_playing())
 	{

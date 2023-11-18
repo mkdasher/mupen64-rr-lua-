@@ -180,10 +180,19 @@ std::vector<uint8_t> generate_savestate()
     vecwrite(b, &movie_active, sizeof(movie_active));
     if (movie_active)
     {
-    	// We only want to save movie up to the current sample (so VCR restore knows where to pick up)
-    	unsigned long movie_inputs_size = vcr_current_sample;
-    	vecwrite(b, &movie_inputs_size, sizeof(movie_inputs_size));
-    	vecwrite(b, movie_inputs.data(), movie_inputs_size * sizeof(BUTTONS));
+    	// Layout:
+    	// t_vcr_freeze - freeze buffer
+    	// uint8_t[] - input vector
+
+    	t_vcr_freeze vcr_freeze = {
+			.input_size = sizeof(BUTTONS) * (vcr_movie_header.length_samples + 1), // ???
+    		.uid = vcr_movie_header.uid,
+    		.current_sample = vcr_current_sample,
+    		.current_vi = vcr_current_vi,
+    		.length_samples = vcr_movie_header.length_samples
+    	};
+    	vecwrite(b, &vcr_freeze, sizeof(vcr_freeze));
+    	vecwrite(b, movie_inputs.data(), vcr_freeze.input_size);
     }
 	return b;
 }
@@ -405,20 +414,18 @@ void savestates_load_immediate()
 
     if (is_movie)
     {
-	    // this .st is part of a movie, we need to overwrite our current movie buffer
+    	// Layout:
+    	// t_vcr_freeze - freeze buffer
+    	// uint8_t[] - input vector
 
-	    // hash matches, load and verify rest of the data
-	    unsigned long movie_input_data_size = 0;
-	    memread(&ptr, &movie_input_data_size, sizeof(movie_input_data_size));
+    	t_vcr_freeze vcr_freeze = {0};
+    	memread(&ptr, &vcr_freeze, sizeof(t_vcr_freeze));
 
-	    const auto movie_input_data = (BUTTONS*)malloc(movie_input_data_size * sizeof(BUTTONS));
-	    memread(&ptr, movie_input_data, movie_input_data_size * sizeof(BUTTONS));
-
-    	// rerecording: we overwrite the current input buffer with the st's one, and adjust the current sample
     	std::vector<BUTTONS> inputs;
-	    inputs.resize(movie_input_data_size);
-    	memcpy(inputs.data(), movie_input_data, movie_input_data_size);
-    	vcr_restore(inputs);
+    	inputs.resize(vcr_freeze.input_size / sizeof(BUTTONS));
+	    memread(&ptr, inputs.data(), std::size(inputs));
+
+    	vcr_restore(vcr_freeze, inputs);
     }
     else
     {

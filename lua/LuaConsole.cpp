@@ -45,8 +45,6 @@
 
 extern unsigned long op;
 extern void (*interp_ops[64])(void);
-extern int m_current_vi;
-extern long m_current_sample;
 extern int fast_memory;
 void SYNC();
 void NOTCOMPILED();
@@ -2687,7 +2685,7 @@ int LuaD2DDrawText(lua_State* L)
 
 	int GetVICount(lua_State* L)
 	{
-		lua_pushinteger(L, m_current_vi);
+		lua_pushinteger(L, vcr_current_vi);
 		return 1;
 	}
 

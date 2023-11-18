@@ -319,6 +319,15 @@ typedef struct
 } t_movie_header;
 #pragma pack(pop)
 
+typedef struct
+{
+	uint64_t input_size;
+	uint64_t uid;
+	uint64_t current_sample;
+	uint64_t current_vi;
+	uint64_t length_samples;
+} t_vcr_freeze;
+
 enum class e_task
 {
 	idle,
@@ -352,17 +361,19 @@ bool vcr_parse_header(std::vector<uint8_t>& buffer, t_movie_header* header);
 
 
 /**
- * \brief Restores vcr state from an input buffer
+ * \brief Restores VCR state from a savestate
+ * \param freeze The st's freeze buffer
  * \param input_buffer A vector of inputs to overwrite the currently playing movie with
  * \return Whether the operation succeeded
  */
-bool vcr_restore(std::vector<BUTTONS>& input_buffer);
+bool vcr_restore(t_vcr_freeze freeze, std::vector<BUTTONS>& input_buffer);
 
 extern char vcr_lastpath[MAX_PATH];
 extern uint64_t screen_updates;
 extern std::vector<BUTTONS> movie_inputs;
 extern std::filesystem::path movie_path;
-extern int64_t vcr_current_sample;
+extern uint64_t vcr_current_sample;
+extern uint64_t vcr_current_vi;
 extern t_movie_header vcr_movie_header;
 
 #endif // VCR_H

@@ -86,9 +86,9 @@ std::vector<BUTTONS> movie_inputs;
 t_movie_header vcr_movie_header = {0};
 static BOOL m_read_only = FALSE;
 
-int64_t vcr_current_sample = -1;
+uint64_t vcr_current_sample = -1;
 // should = length_samples when recording, and be < length_samples when playing
-int m_current_vi = -1;
+uint64_t vcr_current_vi = -1;
 
 static int m_capture = 0; // capture movie
 static int m_audio_freq = 33000; //0x30018;
@@ -268,14 +268,15 @@ bool vcr_parse_header(std::vector<uint8_t>& buffer, t_movie_header* header)
 	return parse_header(buffer, header) == success;
 }
 
-bool vcr_restore(std::vector<BUTTONS>& input_buffer)
+bool vcr_restore(t_vcr_freeze freeze, std::vector<BUTTONS>& input_buffer)
 {
 	if (vcr_is_idle())
 	{
 		return true;
 	}
 
-	vcr_current_sample = input_buffer.size();
+	vcr_current_sample = freeze.current_sample;
+	vcr_current_vi = freeze.current_vi;
 
 	if (vcr_get_read_only())
 	{
@@ -285,14 +286,16 @@ bool vcr_restore(std::vector<BUTTONS>& input_buffer)
 	} else
 	{
 		// In RW mode, we want to turn movie playback into a recording and overwrite the input buffer
-		movie_inputs.resize(input_buffer.size());
-		memcpy(movie_inputs.data(), input_buffer.data(), std::size(input_buffer));
+		movie_inputs.resize(freeze.input_size / sizeof(BUTTONS));
+		memcpy(movie_inputs.data(), input_buffer.data(), freeze.input_size);
+
+		vcr_movie_header.length_samples = freeze.current_sample;
+		vcr_movie_header.rerecord_count++;
 
 		m_task = e_task::recording;
-		vcr_movie_header.length_samples = movie_inputs.size();
-		enable_emulation_menu_items(TRUE);
 	}
 
+	enable_emulation_menu_items(TRUE);
 	return false;
 }
 
@@ -359,7 +362,7 @@ vcr_is_starting_and_just_restarted()
 	{
 		just_restarted_flag = FALSE;
 		vcr_current_sample = 0;
-		m_current_vi = 0;
+		vcr_current_vi = 0;
 		m_task = e_task::playback;
 		return TRUE;
 	}
@@ -470,7 +473,7 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 			{
 				just_restarted_flag = FALSE;
 				vcr_current_sample = 0;
-				m_current_vi = 0;
+				vcr_current_vi = 0;
 				m_task = e_task::recording;
 				*input = {0};
 				EnableMenuItem(GetMenu(main_hwnd), ID_STOP_RECORD, MF_ENABLED);
@@ -514,7 +517,7 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 			{
 				just_restarted_flag = FALSE;
 				vcr_current_sample = 0;
-				m_current_vi = 0;
+				vcr_current_vi = 0;
 				m_task = e_task::playback;
 			} else
 			{
@@ -627,7 +630,7 @@ int vcr_start_record(const std::filesystem::path& path, const uint16_t start_fla
 	vcr_movie_header.start_flags = start_flag;
 
 	vcr_current_sample = 0;
-	m_current_vi = 0;
+	vcr_current_vi = 0;
 	movie_inputs = {};
 
 	if (start_flag & movie_start_from_snapshot)
@@ -719,7 +722,7 @@ int vcr_start_playback(const std::filesystem::path& path, const bool restarting)
 
 	vcr_movie_header = {0};
 	vcr_current_sample = 0;
-	m_current_vi = 0;
+	vcr_current_vi = 0;
 	memcpy(&vcr_movie_header, buf.data(), sizeof(t_movie_header));
 
 	movie_inputs.resize(vcr_movie_header.length_samples);
@@ -1323,14 +1326,14 @@ void vcr_update_statusbar()
 
 	if (vcr_is_recording())
 	{
-		std::string text = std::format("{} ({}) ", m_current_vi, vcr_current_sample);
+		std::string text = std::format("{} ({}) ", vcr_current_vi, vcr_current_sample);
 		statusbar_post_text(text + input_string);
 		statusbar_post_text(std::format("{} rr", vcr_movie_header.rerecord_count), 1);
 	}
 
 	if (vcr_is_playing())
 	{
-		std::string text = std::format("{} / {} ({} / {}) ", m_current_vi, vcr_get_length_v_is(), vcr_current_sample, vcr_get_length_samples());
+		std::string text = std::format("{} / {} ({} / {}) ", vcr_current_vi, vcr_get_length_v_is(), vcr_current_sample, vcr_get_length_samples());
 		statusbar_post_text(text + input_string);
 	}
 
