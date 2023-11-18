@@ -285,7 +285,6 @@ bool vcr_restore(std::vector<BUTTONS>& input_buffer)
 	} else
 	{
 		// In RW mode, we want to turn movie playback into a recording and overwrite the input buffer
-		// TODO: Also update titlebar?
 		movie_inputs.resize(input_buffer.size());
 		memcpy(movie_inputs.data(), input_buffer.data(), std::size(input_buffer));
 
@@ -671,7 +670,9 @@ int vcr_stop_record()
 	enable_emulation_menu_items(TRUE);
 	statusbar_post_text("", 1);
 	statusbar_post_text("Stopped recording");
+	movie_path.clear();
 
+	update_titlebar();
 	return 0;
 }
 
@@ -753,7 +754,8 @@ int vcr_stop_playback(const bool bypass_loop_setting)
 	{
 		return restart_playback();
 	}
-	reset_titlebar();
+
+	movie_path.clear();
 
 	if (m_task == e_task::start_playback)
 	{
@@ -775,6 +777,7 @@ int vcr_stop_playback(const bool bypass_loop_setting)
 		return 0;
 	}
 
+	update_titlebar();
 	return -1;
 }
 
@@ -1252,7 +1255,7 @@ int vcr_stop_capture()
 	toolbar_set_visibility(Config.is_toolbar_enabled);
 
 	SetWindowPos(main_hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-	reset_titlebar();
+	update_titlebar();
 	SetWindowLong(main_hwnd, GWL_STYLE, GetWindowLong(main_hwnd, GWL_STYLE) | WS_MINIMIZEBOX);
 	// we remove WS_EX_LAYERED again, because dwm sucks at dealing with layered top-level windows
 	SetWindowLong(main_hwnd, GWL_EXSTYLE, GetWindowLong(main_hwnd, GWL_EXSTYLE) & ~WS_EX_LAYERED);

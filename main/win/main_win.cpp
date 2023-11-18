@@ -789,7 +789,7 @@ LRESULT CALLBACK record_movie_proc(const HWND hwnd, const UINT message, const WP
 				statusbar_post_text("Recording replay");
 
 				EndDialog(hwnd, IDOK);
-				
+
 			}
 			break;
 		case IDC_CANCEL:
@@ -979,6 +979,8 @@ void enable_emulation_menu_items(const BOOL emulation_running)
 		h_menu, ID_LUA_RECENT_FREEZE, MF_BYCOMMAND | MF_CHECKED);
 	if (Config.is_recent_rom_paths_frozen) CheckMenuItem(
 		h_menu, ID_RECENTROMS_FREEZE, MF_BYCOMMAND | MF_CHECKED);
+
+	update_titlebar();
 }
 
 static DWORD WINAPI sound_thread(LPVOID)
@@ -1150,9 +1152,21 @@ bool is_frame_skipped()
 	return screen_updates % Config.frame_skip_frequency != 0;
 }
 
-void reset_titlebar()
+void update_titlebar()
 {
-	SetWindowText(main_hwnd, (std::string(mupen_version) + " - " + std::string(reinterpret_cast<char*>(ROM_HEADER.nom))).c_str());
+	std::string text = mupen_version;
+
+	if (emu_launched)
+	{
+		text += " - " + std::string(reinterpret_cast<char*>(ROM_HEADER.nom));
+	}
+
+	if (!vcr_is_idle())
+	{
+		text += " - " + movie_path.string();
+	}
+
+	SetWindowText(main_hwnd, text.c_str());
 }
 
 BOOL is_menu_item_enabled(const HMENU h_menu, const UINT u_id)

@@ -72,4 +72,7 @@ int32_t main_recent_roms_run(uint16_t menu_item_id);
 
 extern bool is_frame_skipped();
 
-void reset_titlebar();
+/**
+ * \brief Updates the titlebar based off current state
+ */
+void update_titlebar();
