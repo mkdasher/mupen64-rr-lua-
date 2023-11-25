@@ -180,19 +180,21 @@ std::vector<uint8_t> generate_savestate()
     vecwrite(b, &movie_active, sizeof(movie_active));
     if (movie_active)
     {
-    	// Layout:
-    	// t_vcr_freeze - freeze buffer
-    	// uint8_t[] - input vector
+    	uint8_t* movie_freeze_buf = nullptr;
+    	uint32_t movie_freeze_size = 0;
 
-    	t_vcr_freeze vcr_freeze = {
-			.input_size = sizeof(BUTTONS) * (vcr_movie_header.length_samples + 1), // ???
-    		.uid = vcr_movie_header.uid,
-    		.current_sample = vcr_current_sample,
-    		.current_vi = vcr_current_vi,
-    		.length_samples = vcr_movie_header.length_samples
-    	};
-    	vecwrite(b, &vcr_freeze, sizeof(vcr_freeze));
-    	vecwrite(b, movie_inputs.data(), vcr_freeze.input_size);
+    	vcr_freeze(&movie_freeze_buf, &movie_freeze_size);
+    	if (movie_freeze_buf)
+    	{
+    		vecwrite(b, &movie_freeze_size, sizeof(movie_freeze_size));
+    		vecwrite(b, movie_freeze_buf, movie_freeze_size);
+    		free(movie_freeze_buf);
+    	}
+    	else
+    	{
+    		printf("Failed to save movie snapshot.\n");
+    		savestates_job_success = FALSE;
+    	}
     }
 	return b;
 }
@@ -414,18 +416,14 @@ void savestates_load_immediate()
 
     if (is_movie)
     {
-    	// Layout:
-    	// t_vcr_freeze - freeze buffer
-    	// uint8_t[] - input vector
+    	uint32_t movie_input_data_size = 0;
+    	memread(&ptr, &movie_input_data_size, sizeof(movie_input_data_size));
 
-    	t_vcr_freeze vcr_freeze = {0};
-    	memread(&ptr, &vcr_freeze, sizeof(t_vcr_freeze));
+    	auto local_movie_data = (uint8_t*)malloc(movie_input_data_size);
+    	memread(&ptr, local_movie_data, movie_input_data_size);
 
-    	std::vector<BUTTONS> inputs;
-    	inputs.resize(vcr_freeze.input_size / sizeof(BUTTONS));
-	    memread(&ptr, inputs.data(), std::size(inputs));
-
-    	vcr_restore(vcr_freeze, inputs);
+    	const auto status = vcr_unfreeze(local_movie_data, movie_input_data_size);
+    	free(local_movie_data);
     }
     else
     {

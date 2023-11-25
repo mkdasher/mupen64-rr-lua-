@@ -86,9 +86,9 @@ std::vector<BUTTONS> movie_inputs;
 t_movie_header vcr_movie_header = {0};
 static BOOL m_read_only = FALSE;
 
-uint64_t vcr_current_sample = -1;
+uint32_t vcr_current_sample = 0;
+int32_t vcr_current_vi = 0;
 // should = length_samples when recording, and be < length_samples when playing
-uint64_t vcr_current_vi = -1;
 
 static int m_capture = 0; // capture movie
 static int m_audio_freq = 33000; //0x30018;
@@ -268,36 +268,146 @@ bool vcr_parse_header(std::vector<uint8_t>& buffer, t_movie_header* header)
 	return parse_header(buffer, header) == success;
 }
 
-bool vcr_restore(t_vcr_freeze freeze, std::vector<BUTTONS>& input_buffer)
+
+/**
+ * \brief Writes the current movie header and inputs to the specified path
+ * \return The operation's status
+ */
+e_status vcr_write_movie(std::filesystem::path path)
+{
+	if (path.empty())
+	{
+		return e_status::not_recording;
+	}
+
+	FILE* f = fopen(path.string().c_str(), "wb");
+	fwrite(&vcr_movie_header, sizeof(t_movie_header), 1, f);
+	fwrite(movie_inputs.data(), vcr_movie_header.length_samples * sizeof(BUTTONS), 1, f);
+	fclose(f);
+
+	return e_status::ok;
+}
+
+
+e_status vcr_freeze(uint8_t** buf, uint32_t* size)
+{
+	*buf = nullptr;
+	*size = 0;
+
+	unsigned long size_needed =
+		sizeof(vcr_movie_header.uid)
+		+ sizeof(vcr_current_sample)
+		+ sizeof(vcr_current_vi)
+		+ sizeof(vcr_movie_header.length_samples)
+		+ (sizeof(BUTTONS) * (vcr_movie_header.length_samples + 1));
+
+	*buf = (uint8_t*)malloc(size_needed);
+	*size = size_needed;
+
+	auto ptr = *buf;
+
+	if (!ptr)
+	{
+		return e_status::wrong_format;
+	}
+
+	*reinterpret_cast<unsigned long*>(ptr) = vcr_movie_header.uid;
+	ptr += sizeof(vcr_movie_header.uid);
+	*reinterpret_cast<unsigned long*>(ptr) = vcr_current_sample;
+	ptr += sizeof(vcr_current_sample);
+	*reinterpret_cast<unsigned long*>(ptr) = vcr_current_vi;
+	ptr += sizeof(vcr_current_vi);
+	*reinterpret_cast<unsigned long*>(ptr) = vcr_movie_header.length_samples;
+	ptr += sizeof(vcr_movie_header.length_samples);
+
+	memcpy(ptr, movie_inputs.data(),
+	       sizeof(BUTTONS) * (vcr_movie_header.length_samples + 1));
+
+	return e_status::ok;
+}
+
+
+
+e_status vcr_unfreeze(uint8_t* buf, uint32_t size)
 {
 	if (vcr_is_idle())
 	{
-		return true;
+		return e_status::is_idle;
 	}
 
-	vcr_current_sample = freeze.current_sample;
-	vcr_current_vi = freeze.current_vi;
+	auto ptr = buf;
 
-	if (vcr_get_read_only())
-	{
-		// In RO mode, we only want to rewind the input buffer pointer
-		m_task = e_task::playback;
-		return true;
-	} else
-	{
-		// In RW mode, we want to turn movie playback into a recording and overwrite the input buffer
-		movie_inputs.resize(freeze.input_size / sizeof(BUTTONS));
-		memcpy(movie_inputs.data(), input_buffer.data(), freeze.input_size);
+	const unsigned long movie_id = *reinterpret_cast<const unsigned long*>(ptr);
+	ptr += sizeof(unsigned long);
+	const unsigned long current_sample = *reinterpret_cast<const unsigned long*>
+		(ptr);
+	ptr += sizeof(unsigned long);
+	const unsigned long current_vi = *reinterpret_cast<const unsigned long*>(
+		ptr);
+	ptr += sizeof(unsigned long);
+	const unsigned long max_sample = *reinterpret_cast<const unsigned long*>(
+		ptr);
+	ptr += sizeof(unsigned long);
 
-		vcr_movie_header.length_samples = freeze.current_sample;
+	const unsigned long space_needed = sizeof(BUTTONS) * (max_sample + 1);
+
+	if (movie_id != vcr_movie_header.uid)
+		return e_status::not_from_this_movie;
+
+	if (current_sample > max_sample)
+		return e_status::invalid_frame;
+
+	if (space_needed > size)
+		return e_status::wrong_format;
+
+	const e_task last_task = m_task;
+	if (!m_read_only)
+	{
+		// here, we are going to take the input data from the savestate
+		// and make it the input data for the current movie, then continue
+		// writing new input data at the currentFrame pointer
+		//		change_state(MOVIE_STATE_RECORD);
+		m_task = e_task::recording;
+
+		// update header with new ROM info
+		if (last_task == e_task::playback)
+			apply_rom_info(&vcr_movie_header);
+
+		vcr_current_sample = current_sample;
+		vcr_movie_header.length_samples = current_sample;
+		vcr_current_vi = current_vi;
+
 		vcr_movie_header.rerecord_count++;
 
-		m_task = e_task::recording;
+		movie_inputs.resize(space_needed / sizeof(BUTTONS));
+		memcpy(movie_inputs.data(), ptr, space_needed);
+		vcr_write_movie(movie_path);
+	} else
+	{
+		// here, we are going to keep the input data from the movie file
+		// and simply rewind to the currentFrame pointer
+		// this will cause a desync if the savestate is not in sync
+		// with the on-disk recording data, but it's easily solved
+		// by loading another savestate or playing the movie from the beginning
+
+		// and older savestate might have a currentFrame pointer past
+		// the end of the input data, so check for that here
+		if (current_sample > vcr_movie_header.length_samples)
+			return e_status::invalid_frame;
+
+		m_task = e_task::playback;
+		vcr_write_movie(movie_path);
+
+		vcr_current_sample = current_sample;
+		vcr_current_vi = current_vi;
 	}
 
 	enable_emulation_menu_items(TRUE);
-	return false;
+	update_titlebar();
+
+	return e_status::ok;
 }
+
 
 void vcr_clear_save_data()
 {
@@ -442,6 +552,7 @@ void vcr_set_length_v_is(const unsigned long val)
 extern BOOL continue_vcr_on_restart_mode;
 extern BOOL just_restarted_flag;
 
+
 void vcr_on_controller_poll(int index, BUTTONS* input)
 {
 	// if we aren't playing back a movie, our data source isn't movie
@@ -556,7 +667,6 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 			};
 		}
 
-		printf("Recording Input [%lld] (len %d): %d %d\n", vcr_current_sample, movie_inputs.size(), input->Y_AXIS, input->X_AXIS);
 		movie_inputs.push_back(*input);
 		vcr_movie_header.length_samples++;
 		vcr_current_sample++;
@@ -658,15 +768,7 @@ int vcr_stop_record()
 {
 	if (m_task != e_task::recording) return -1;
 
-	for (int i = 0; (unsigned int)i < movie_inputs.size(); ++i)
-	{
-		printf("Recorded Input [%d]: %d %d\n", i, movie_inputs[i].Y_AXIS, movie_inputs[i].X_AXIS);
-	}
-
-	FILE* f = fopen(movie_path.string().c_str(), "wb");
-	fwrite(&vcr_movie_header, sizeof(t_movie_header), 1, f);
-	fwrite(movie_inputs.data(), vcr_movie_header.length_samples * sizeof(BUTTONS), 1, f);
-	fclose(f);
+	vcr_write_movie(movie_path);
 
 	m_task = e_task::idle;
 	printf("[VCR]: Record stopped. Recorded %ld input samples\n", vcr_movie_header.length_samples);
