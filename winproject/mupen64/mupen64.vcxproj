@@ -1,5 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -11,181 +14,234 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>mupen64</ProjectName>
-    <ProjectGuid>{83B5BB38-A6A7-432B-AF4D-2AE840F5621C}</ProjectGuid>
-    <RootNamespace>mupen64</RootNamespace>
+    <ProjectGuid>{F959FCAE-D823-3357-94C2-C406964D3B68}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
+    <Platform>Win32</Platform>
+    <ProjectName>mupen64</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <CharacterSet>MultiByte</CharacterSet>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <PlatformToolset>v143</PlatformToolset>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+  <ImportGroup Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bin\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">obj\$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">mupen64.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">mupen64_debug</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</GenerateManifest>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bin\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">obj\$(Configuration)\</IntDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectName)_debug</TargetName>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <EmbedManifest>true</EmbedManifest>
-    <GenerateManifest>false</GenerateManifest>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <GenerateManifest>false</GenerateManifest>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">mupen64.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"></TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.exe</TargetExt>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</GenerateManifest>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../../lua;../zlib;../../main;../../libdeflate;../../xxhash;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32;_DEBUG;_WINDOWS;__WIN32__;X86;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>false</MinimalRebuild>
+      <AdditionalIncludeDirectories>..\..\lua;..\zlib;..\..\main;..\..\libdeflate;..\..\xxhash;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <DisableSpecificWarnings>4018;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <CompileAs>CompileAsCpp</CompileAs>
-      <UseFullPaths>false</UseFullPaths>
+      <DisableSpecificWarnings>4018;4244</DisableSpecificWarnings>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <AdditionalOptions>/FI "../main/debughook.h" %(AdditionalOptions)</AdditionalOptions>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ForcedIncludeFiles>../main/debughook.h</ForcedIncludeFiles>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <MinimalRebuild>false</MinimalRebuild>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);_DEBUG;WIN32;_WIN32;_WINDOWS;__WIN32__;X86;_CRT_SECURE_NO_WARNINGS;_MBCS;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
     </ClCompile>
-    <Link>
-      <AdditionalDependencies>Shlwapi.lib;vfw32.lib;winmm.lib;propsys.lib;Comctl32.lib;zlib-2008-x32.lib;uxtheme.lib;Msimg32.lib;Gdiplus.lib;d2d1.lib;dwrite.lib;deflate.lib;Dbghelp.lib;lua54.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <AdditionalLibraryDirectories>../zlib;../../lua;../../libdeflate;../../xxhash;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>$(OutDir)mupen64_debug.pdb</ProgramDatabaseFile>
-      <SubSystem>Windows</SubSystem>
-      <RandomizedBaseAddress>false</RandomizedBaseAddress>
-      <DataExecutionPrevention>false</DataExecutionPrevention>
-      <TargetMachine>MachineX86</TargetMachine>
-      <IgnoreSpecificDefaultLibraries>
-      </IgnoreSpecificDefaultLibraries>
-      <GenerateMapFile>true</GenerateMapFile>
-    </Link>
     <ResourceCompile>
-      <ShowProgress>true</ShowProgress>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WIN32;_WINDOWS;__WIN32__;X86;_CRT_SECURE_NO_WARNINGS;_MBCS;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\lua;..\zlib;..\..\main;..\..\libdeflate;..\..\xxhash;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>..\..\lua;..\zlib;..\..\main;..\..\libdeflate;..\..\xxhash;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>Shlwapi.lib;vfw32.lib;winmm.lib;propsys.lib;Comctl32.lib;zlib-2008-x32.lib;uxtheme.lib;Msimg32.lib;Gdiplus.lib;d2d1.lib;dwrite.lib;deflate.lib;Dbghelp.lib;lua54.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../zlib;../zlib/$(Configuration);../../lua;../../lua/$(Configuration);../../libdeflate;../../libdeflate/$(Configuration);../../xxhash;../../xxhash/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <DataExecutionPrevention>false</DataExecutionPrevention>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>bin/mupen64_debug.lib</ImportLibrary>
+      <ProgramDataBaseFile>bin/mupen64_debug.pdb</ProgramDataBaseFile>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>../zlib;../../main;../../lua;../../libdeflate;../../xxhash;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32;NDEBUG;_WINDOWS;__WIN32__;X86;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>..\..\lua;..\zlib;..\..\main;..\..\libdeflate;..\..\xxhash;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <DisableSpecificWarnings>4018;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <CompileAs>CompileAsCpp</CompileAs>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <DisableSpecificWarnings>4018;4244</DisableSpecificWarnings>
+      <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <FloatingPointModel>Strict</FloatingPointModel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
-      <Optimization>Full</Optimization>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <OmitFramePointers>true</OmitFramePointers>
-      <CallingConvention>
-      </CallingConvention>
-      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <BasicRuntimeChecks>
-      </BasicRuntimeChecks>
-      <BufferSecurityCheck>true</BufferSecurityCheck>
-      <FloatingPointModel>Strict</FloatingPointModel>
-      <EnableEnhancedInstructionSet>NoExtensions</EnableEnhancedInstructionSet>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <OmitFramePointers>true</OmitFramePointers>
+      <Optimization>Full</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);NDEBUG;WIN32;_WIN32;_WINDOWS;__WIN32__;X86;_CRT_SECURE_NO_WARNINGS;_MBCS;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
     </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;NDEBUG;_WIN32;_WINDOWS;__WIN32__;X86;_CRT_SECURE_NO_WARNINGS;_MBCS;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\lua;..\zlib;..\..\main;..\..\libdeflate;..\..\xxhash;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>..\..\lua;..\zlib;..\..\main;..\..\libdeflate;..\..\xxhash;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
     <Link>
-      <AdditionalDependencies>Shlwapi.lib;vfw32.lib;winmm.lib;propsys.lib;Comctl32.lib;zlib-2008-x32.lib;uxtheme.lib;Msimg32.lib;Gdiplus.lib;d2d1.lib;dwrite.lib;deflate.lib;Dbghelp.lib;lua54.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <AdditionalLibraryDirectories>../zlib;../../lua;../../libdeflate;../../xxhash;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Windows</SubSystem>
-      <OptimizeReferences>true</OptimizeReferences>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <AdditionalDependencies>Shlwapi.lib;vfw32.lib;winmm.lib;propsys.lib;Comctl32.lib;zlib-2008-x32.lib;uxtheme.lib;Msimg32.lib;Gdiplus.lib;d2d1.lib;dwrite.lib;deflate.lib;Dbghelp.lib;lua54.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../zlib;../zlib/$(Configuration);../../lua;../../lua/$(Configuration);../../libdeflate;../../libdeflate/$(Configuration);../../xxhash;../../xxhash/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <DataExecutionPrevention>false</DataExecutionPrevention>
-      <TargetMachine>MachineX86</TargetMachine>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>bin/.lib</ImportLibrary>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <Profile>false</Profile>
-      <GenerateMapFile>true</GenerateMapFile>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ProgramDataBaseFile>bin/.pdb</ProgramDataBaseFile>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
     </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\lua\modules\avi.h"/>
-    <ClInclude Include="..\..\lua\modules\d2d.h"/>
-    <ClInclude Include="..\..\lua\modules\emu.h"/>
-    <ClInclude Include="..\..\lua\modules\global.h"/>
-    <ClInclude Include="..\..\lua\modules\iohelper.h"/>
-    <ClInclude Include="..\..\lua\modules\joypad.h"/>
-    <ClInclude Include="..\..\lua\modules\memory.h"/>
-    <ClInclude Include="..\..\lua\modules\movie.h"/>
-    <ClInclude Include="..\..\lua\modules\savestate.h"/>
-    <ClInclude Include="..\..\lua\modules\wgui.h"/>
-    <ClInclude Include="..\..\main\helpers\collection_helpers.h" />
-    <ClInclude Include="..\..\main\helpers\math_helpers.h" />
-    <ClInclude Include="..\..\main\lib\ini.h" />
-    <ClInclude Include="..\..\main\lib\argh.h" />
+    <CustomBuild Include="CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building Custom Rule CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -S./ -B./ --check-stamp-file CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\WindowsPaths.cmake;CMake\Default.cmake;CMake\DefaultCXX.cmake;CMake\Utils.cmake;CMakeFiles\3.28.1\CMakeCCompiler.cmake;CMakeFiles\3.28.1\CMakeCXXCompiler.cmake;CMakeFiles\3.28.1\CMakeRCCompiler.cmake;CMakeFiles\3.28.1\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building Custom Rule CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -S./ -B./ --check-stamp-file CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.28\Modules\Platform\WindowsPaths.cmake;CMake\Default.cmake;CMake\DefaultCXX.cmake;CMake\Utils.cmake;CMakeFiles\3.28.1\CMakeCCompiler.cmake;CMakeFiles\3.28.1\CMakeCXXCompiler.cmake;CMakeFiles\3.28.1\CMakeRCCompiler.cmake;CMakeFiles\3.28.1\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\lua\LuaConsole.h" />
+    <ClInclude Include="..\..\lua\modules\avi.h" />
+    <ClInclude Include="..\..\lua\modules\d2d.h" />
+    <ClInclude Include="..\..\lua\modules\emu.h" />
+    <ClInclude Include="..\..\lua\modules\global.h" />
+    <ClInclude Include="..\..\lua\modules\input.h" />
+    <ClInclude Include="..\..\lua\modules\iohelper.h" />
+    <ClInclude Include="..\..\lua\modules\joypad.h" />
+    <ClInclude Include="..\..\lua\modules\memory.h" />
+    <ClInclude Include="..\..\lua\modules\movie.h" />
+    <ClInclude Include="..\..\lua\modules\savestate.h" />
+    <ClInclude Include="..\..\lua\modules\wgui.h" />
     <ClInclude Include="..\..\lua\Recent.h" />
     <ClInclude Include="..\..\main\debughook.h" />
     <ClInclude Include="..\..\main\disasm.h" />
     <ClInclude Include="..\..\main\ffmpeg_capture\ffmpeg_capture.hpp" />
     <ClInclude Include="..\..\main\guifuncs.h" />
+    <ClInclude Include="..\..\main\helpers\collection_helpers.h" />
     <ClInclude Include="..\..\main\helpers\io_helpers.h" />
+    <ClInclude Include="..\..\main\helpers\math_helpers.h" />
+    <ClInclude Include="..\..\main\helpers\string_helpers.h" />
     <ClInclude Include="..\..\main\helpers\win_helpers.h" />
+    <ClInclude Include="..\..\main\lib\argh.h" />
+    <ClInclude Include="..\..\main\lib\ini.h" />
     <ClInclude Include="..\..\main\md5.h" />
     <ClInclude Include="..\..\main\Plugin.hpp" />
     <ClInclude Include="..\..\main\rom.h" />
     <ClInclude Include="..\..\main\savestates.h" />
+    <ClInclude Include="..\..\main\speex\arch.h" />
+    <ClInclude Include="..\..\main\speex\speex_resampler.h" />
     <ClInclude Include="..\..\main\vcr.h" />
     <ClInclude Include="..\..\main\vcr_compress.h" />
     <ClInclude Include="..\..\main\vcr_resample.h" />
-    <ClInclude Include="..\..\main\speex\speex_resampler.h" />
-    <ClInclude Include="..\..\main\speex\arch.h" />
-    <ClInclude Include="..\..\main\win\features\CrashHelper.h" />
-    <ClInclude Include="..\..\main\win\features\CoreDbg.h" />
-    <ClInclude Include="..\..\main\win\features\RomBrowser.hpp" />
-    <ClInclude Include="..\..\main\win\features\Statusbar.hpp" />
-    <ClInclude Include="..\..\main\win\features\Toolbar.hpp" />
     <ClInclude Include="..\..\main\win\Commandline.h" />
     <ClInclude Include="..\..\main\win\Config.hpp" />
     <ClInclude Include="..\..\main\win\configdialog.h" />
+    <ClInclude Include="..\..\main\win\features\CoreDbg.h" />
+    <ClInclude Include="..\..\main\win\features\CrashHelper.h" />
+    <ClInclude Include="..\..\main\win\features\RomBrowser.hpp" />
+    <ClInclude Include="..\..\main\win\features\Statusbar.hpp" />
+    <ClInclude Include="..\..\main\win\features\Toolbar.hpp" />
     <ClInclude Include="..\..\main\win\main_win.h" />
     <ClInclude Include="..\..\main\win\timers.h" />
     <ClInclude Include="..\..\main\win\wrapper\PersistentPathDialog.h" />
-    <ClInclude Include="..\..\main\helpers\string_helpers.h" />
     <ClInclude Include="..\..\memory\dma.h" />
     <ClInclude Include="..\..\memory\flashram.h" />
     <ClInclude Include="..\..\memory\memory.h" />
     <ClInclude Include="..\..\memory\pif.h" />
     <ClInclude Include="..\..\memory\pif2.h" />
-    <ClInclude Include="..\..\memory\tlb.h" />
     <ClInclude Include="..\..\memory\summercart.h" />
+    <ClInclude Include="..\..\memory\tlb.h" />
     <ClInclude Include="..\..\r4300\cop1_helpers.h" />
     <ClInclude Include="..\..\r4300\exception.h" />
     <ClInclude Include="..\..\r4300\interrupt.h" />
@@ -198,257 +254,320 @@
     <ClInclude Include="..\..\r4300\x86\gcop1_helpers.h" />
     <ClInclude Include="..\..\r4300\x86\interpret.h" />
     <ClInclude Include="..\..\r4300\x86\regcache.h" />
-    <ClInclude Include="..\..\lua\LuaConsole.h" />
-    <ClInclude Include="..\resource.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\lua\modules\input.h"/>
+    <ClInclude Include="..\..\winproject\resource.h" />
+    <ClCompile Include="..\..\lua\LuaConsole.cpp" />
     <ClCompile Include="..\..\lua\Recent.cpp" />
-    <ClCompile Include="..\..\main\adler32.c">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</CompileAs>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="..\..\main\debughook.c" />
     <ClCompile Include="..\..\main\disasm.c" />
-    <ClCompile Include="..\..\main\helpers\io_helpers.cpp" />
     <ClCompile Include="..\..\main\ffmpeg_capture\manager_win.cpp" />
     <ClCompile Include="..\..\main\ffmpeg_capture\readscreen_win.cpp" />
+    <ClCompile Include="..\..\main\helpers\io_helpers.cpp" />
     <ClCompile Include="..\..\main\md5.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\main\Plugin.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\main\rom.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\main\savestates.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
-    </ClCompile>
-    <ClCompile Include="..\..\main\vcr.cpp">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
-    </ClCompile>
-    <ClCompile Include="..\..\main\vcr_resample.c">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\main\speex\speex_resampler.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
-    <ClCompile Include="..\..\main\win\features\CrashHelper.cpp" />
-    <ClCompile Include="..\..\main\win\features\CoreDbg.cpp" />
-    <ClCompile Include="..\..\main\win\features\RomBrowser.cpp" />
-    <ClCompile Include="..\..\main\win\features\Statusbar.cpp" />
-    <ClCompile Include="..\..\main\win\features\Toolbar.cpp" />
+    <ClCompile Include="..\..\main\vcr.cpp">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
+    </ClCompile>
+    <ClCompile Include="..\..\main\vcr_resample.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
+    </ClCompile>
     <ClCompile Include="..\..\main\win\Commandline.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\main\win\Config.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\main\win\configdialog.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
+    <ClCompile Include="..\..\main\win\features\CoreDbg.cpp" />
+    <ClCompile Include="..\..\main\win\features\CrashHelper.cpp" />
+    <ClCompile Include="..\..\main\win\features\rombrowser.cpp" />
+    <ClCompile Include="..\..\main\win\features\Statusbar.cpp" />
+    <ClCompile Include="..\..\main\win\features\Toolbar.cpp" />
     <ClCompile Include="..\..\main\win\guifuncs.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\main\win\main_win.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\main\win\timers.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\main\win\vcr_compress.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)win_vcr_compress</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)win_vcr_compress</ObjectFileName>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
-    <ClCompile Include="..\..\memory\dma.c" />
-    <ClCompile Include="..\..\memory\flashram.c" />
-    <ClCompile Include="..\..\memory\memory.c" />
-    <ClCompile Include="..\..\memory\pif.c" />
-    <ClCompile Include="..\..\memory\tlb.c" />
-    <ClCompile Include="..\..\memory\summercart.c" />
+    <ClCompile Include="..\..\main\win\wrapper\PersistentPathDialog.cpp" />
+    <ClCompile Include="..\..\memory\dma.cpp" />
+    <ClCompile Include="..\..\memory\flashram.cpp" />
+    <ClCompile Include="..\..\memory\memory.cpp" />
+    <ClCompile Include="..\..\memory\pif.cpp" />
+    <ClCompile Include="..\..\memory\summercart.cpp" />
+    <ClCompile Include="..\..\memory\tlb.cpp">
+      <ObjectFileName>$(IntDir)../../memory/tlb.cpp.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\r4300\bc.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\compare_core.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\cop0.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\cop1.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\cop1_d.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
-    <ClCompile Include="..\..\r4300\cop1_helpers.c" />
+    <ClCompile Include="..\..\r4300\cop1_helpers.cpp" />
     <ClCompile Include="..\..\r4300\cop1_l.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\cop1_s.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\cop1_w.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\exception.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\interrupt.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\profile.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\pure_interp.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\r4300.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\recomp.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\regimm.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\special.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\tlb.c">
+      <ObjectFileName>$(IntDir)../../r4300/tlb.c.obj</ObjectFileName>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)r4300_tlb</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)r4300_tlb</ObjectFileName>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\x86\assemble.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\x86\debug.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\x86\gbc.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\x86\gcop0.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\x86\gcop1.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\x86\gcop1_d.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
-    <ClCompile Include="..\..\r4300\x86\gcop1_helpers.c" />
+    <ClCompile Include="..\..\r4300\x86\gcop1_helpers.cpp">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
+    </ClCompile>
     <ClCompile Include="..\..\r4300\x86\gcop1_l.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\x86\gcop1_s.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\x86\gcop1_w.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\x86\gr4300.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\x86\gregimm.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\x86\gspecial.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\x86\gtlb.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\x86\regcache.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
     <ClCompile Include="..\..\r4300\x86\rjump.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ScanSourceforModuleDependencies>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+      <ScanSourceforModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ScanSourceforModuleDependencies>
     </ClCompile>
-    <ClCompile Include="..\..\lua\LuaConsole.cpp" />
-    <ClCompile Include="..\..\main\win\wrapper\PersistentPathDialog.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\rsrc.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="..\icons\austral.ico" />
-    <Image Include="..\icons\beta.ico" />
-    <Image Include="..\icons\Control.bmp" />
-    <Image Include="..\icons\demo.ico" />
-    <Image Include="..\icons\Display.bmp" />
-    <Image Include="..\icons\down_arrow.bmp" />
-    <Image Include="..\icons\europe.ico" />
-    <Image Include="..\icons\france.ico" />
-    <Image Include="..\icons\germany.ico" />
-    <Image Include="..\icons\italy.ico" />
-    <Image Include="..\icons\japan.ico" />
-    <Image Include="..\icons\logo.bmp" />
-    <Image Include="..\icons\logobw.bmp" />
-    <Image Include="..\icons\m64big.ico" />
-    <Image Include="..\icons\m64small.ico" />
-    <Image Include="..\icons\pause.bmp" />
-    <Image Include="..\icons\resume.bmp" />
-    <Image Include="..\icons\RSP.bmp" />
-    <Image Include="..\icons\Sound.bmp" />
-    <Image Include="..\icons\spain.ico" />
-    <Image Include="..\icons\toolbar.bmp" />
-    <Image Include="..\icons\unknown.ico" />
-    <Image Include="..\icons\up_arrow.bmp" />
-    <Image Include="..\icons\usa.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <Manifest Include="..\mupen64.exe.manifest" />
+    <ProjectReference Include="ZERO_CHECK.vcxproj">
+      <Project>{EE0D5637-26EA-3CD6-92D6-DC21F6B19481}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

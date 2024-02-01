@@ -1,0 +1,3 @@
+C:/Users/austi/source/repos/mupen64-rr-lua-/winproject/mupen64/CMakeFiles/mupen64.dir
+C:/Users/austi/source/repos/mupen64-rr-lua-/winproject/mupen64/CMakeFiles/ALL_BUILD.dir
+C:/Users/austi/source/repos/mupen64-rr-lua-/winproject/mupen64/CMakeFiles/ZERO_CHECK.dir

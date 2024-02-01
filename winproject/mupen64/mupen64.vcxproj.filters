@@ -1,0 +1,411 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\lua\LuaConsole.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\lua\Recent.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\debughook.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\disasm.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\ffmpeg_capture\manager_win.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\ffmpeg_capture\readscreen_win.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\helpers\io_helpers.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\md5.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\Plugin.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\rom.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\savestates.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\speex\speex_resampler.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\vcr.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\vcr_resample.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\Commandline.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\Config.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\configdialog.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\features\CoreDbg.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\features\CrashHelper.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\features\rombrowser.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\features\Statusbar.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\features\Toolbar.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\guifuncs.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\main_win.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\timers.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\vcr_compress.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\wrapper\PersistentPathDialog.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\memory\dma.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\memory\flashram.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\memory\memory.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\memory\pif.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\memory\summercart.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\memory\tlb.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\bc.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\compare_core.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\cop0.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\cop1.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\cop1_d.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\cop1_helpers.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\cop1_l.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\cop1_s.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\cop1_w.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\exception.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\interrupt.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\profile.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\pure_interp.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\r4300.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\recomp.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\regimm.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\special.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\tlb.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\x86\assemble.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\x86\debug.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\x86\gbc.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\x86\gcop0.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\x86\gcop1.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\x86\gcop1_d.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\x86\gcop1_helpers.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\x86\gcop1_l.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\x86\gcop1_s.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\x86\gcop1_w.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\x86\gr4300.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\x86\gregimm.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\x86\gspecial.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\x86\gtlb.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\x86\regcache.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\x86\rjump.c">
+      <Filter>Sources</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\lua\LuaConsole.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\lua\modules\avi.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\lua\modules\d2d.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\lua\modules\emu.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\lua\modules\global.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\lua\modules\input.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\lua\modules\iohelper.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\lua\modules\joypad.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\lua\modules\memory.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\lua\modules\movie.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\lua\modules\savestate.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\lua\modules\wgui.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\lua\Recent.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\debughook.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\disasm.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\ffmpeg_capture\ffmpeg_capture.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\guifuncs.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\helpers\collection_helpers.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\helpers\io_helpers.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\helpers\math_helpers.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\helpers\string_helpers.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\helpers\win_helpers.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\lib\argh.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\lib\ini.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\md5.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\Plugin.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\rom.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\savestates.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\speex\arch.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\speex\speex_resampler.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\vcr.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\vcr_compress.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\vcr_resample.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\Commandline.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\Config.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\configdialog.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\features\CoreDbg.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\features\CrashHelper.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\features\RomBrowser.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\features\Statusbar.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\features\Toolbar.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\main_win.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\timers.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\main\win\wrapper\PersistentPathDialog.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\memory\dma.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\memory\flashram.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\memory\memory.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\memory\pif.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\memory\pif2.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\memory\summercart.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\memory\tlb.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\cop1_helpers.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\exception.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\interrupt.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\macros.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\ops.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\r4300.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\recomp.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\recomph.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\x86\assemble.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\x86\gcop1_helpers.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\x86\interpret.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\r4300\x86\regcache.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\austi\source\repos\mupen64-rr-lua-\winproject\resource.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\austi\source\repos\mupen64-rr-lua-\winproject\mupen64\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{73A6C4D4-F6AD-3FFF-B1C7-8151EBF4D23D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sources">
+      <UniqueIdentifier>{B7012864-E73F-395E-BE1A-D585BC99BF47}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
