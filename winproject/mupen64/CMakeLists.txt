@@ -185,6 +185,7 @@ set(Headers
 source_group("Headers" FILES ${Headers})
 
 set(Sources
+    "../mupen64.exe.manifest"
     "../../lua/LuaConsole.cpp"
     "../../lua/Recent.cpp"
 #    "../../main/adler32.c"
@@ -613,3 +614,16 @@ target_link_directories(${PROJECT_NAME} PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/../../xxhash"
 )
 
+# Amend manifest to tell Windows that the application is DPI aware (needed for Windows 8.1 and up)
+IF (MSVC)
+	IF (CMAKE_MAJOR_VERSION LESS 3)
+		MESSAGE(WARNING "CMake version 3.0 or newer is required use build variable TARGET_FILE")
+	ELSE()
+		ADD_CUSTOM_COMMAND(
+			TARGET ${PROJECT_NAME}
+			POST_BUILD
+			COMMAND "mt.exe" -manifest ${CMAKE_CURRENT_SOURCE_DIR}/mupen64.exe.Manifest -updateresource:"$<TARGET_FILE:${PROJECT_NAME}>"
+			COMMENT "adding manifest otherwise commctl32.dll error" 
+			)
+	ENDIF()
+ENDIF(MSVC)
