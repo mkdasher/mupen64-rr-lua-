@@ -189,7 +189,7 @@ set(Sources
     "../../lua/Recent.cpp"
 #    "../../main/adler32.c"
     "../../main/debughook.c"
-    "../../main/disasm.c"
+    "../../main/disasm.cpp"
     "../../main/ffmpeg_capture/manager_win.cpp"
     "../../main/ffmpeg_capture/readscreen_win.cpp"
     "../../main/helpers/io_helpers.cpp"

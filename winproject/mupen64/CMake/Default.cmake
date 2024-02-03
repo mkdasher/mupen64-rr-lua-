@@ -51,7 +51,7 @@ endfunction()
 
 ################################################################################
 
-create_property_reader("TARGET_NAME")
+create_property_reader("TARGET_NAME_fix")
 create_property_reader("OUTPUT_DIRECTORY")
 
 set_config_specific_property("TARGET_NAME" "${PROPS_TARGET}")
