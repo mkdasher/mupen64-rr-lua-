@@ -5,6 +5,15 @@
 #include <string>
 #include <vector>
 
+#ifdef __WIN32__
+#define AMALLOC(alignment, size) _aligned_malloc(size, alignment)
+#define AFREE(addr) _aligned_free(addr)
+#else
+#define AMALLOC(alignment, size) std::aligned_alloc(alignment, size)
+#define AFREE(addr) std::free(addr)
+#endif
+
+
 /**
  * \brief Records the execution time of a scope
  */

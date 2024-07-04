@@ -64,7 +64,13 @@ RI_register ri_register;
 AI_register ai_register;
 DPC_register dpc_register;
 DPS_register dps_register;
-unsigned long rdram[0x800000 / 4];
+
+// NOTE: Some plugins require this alignment
+// See https://gitlab.com/parallel-launcher/parallel-n64/-/blob/master/mupen64plus-core/src/main/main.c?ref_type=heads#L111
+uint32_t rdram_pre_guardband[16 * 1024];
+__declspec(align(CORE_ALIGNMENT)) uint32_t rdram[0x800000 / 4];
+uint32_t rdram_post_guardband[16 * 1024];
+
 uint8_t sram[0x8000];
 uint8_t flashram[0x20000];
 uint8_t eeprom[0x800];

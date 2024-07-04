@@ -164,14 +164,14 @@ bool rom_load(std::filesystem::path path)
 {
 	if (rom)
 	{
-		free(rom);
+		AFREE(rom);
 		rom = nullptr;
 	}
 
 	if (rom_cache.contains(path))
 	{
 		printf("[Core] Loading cached ROM...\n");
-		rom = (unsigned char*)malloc(rom_cache[path].second);
+		rom = (unsigned char*)AMALLOC(CORE_ALIGNMENT, rom_cache[path].second);
 		memcpy(rom, rom_cache[path].first, rom_cache[path].second);
 		return true;
 	}
@@ -188,7 +188,7 @@ bool rom_load(std::filesystem::path path)
 	unsigned long taille = rom_size;
 	if (Config.use_summercart && taille < 0x4000000) taille = 0x4000000;
 
-	rom = (unsigned char*)malloc(taille);
+	rom = (unsigned char*)AMALLOC(CORE_ALIGNMENT, taille);
 	memcpy(rom, decompressed_rom.data(), rom_size);
 
 	uint8_t tmp;
@@ -253,7 +253,7 @@ bool rom_load(std::filesystem::path path)
 	if (rom_cache.size() < Config.rom_cache_size)
 	{
 		printf("[Core] Putting ROM in cache... (%d/%d full)\n", rom_cache.size(), Config.rom_cache_size);
-		auto data = (uint8_t*)malloc(taille);
+		auto data = (uint8_t*)AMALLOC(CORE_ALIGNMENT, taille);
 		memcpy(data, rom, taille);
 		rom_cache[path] = std::make_pair(data, taille);
 	}
