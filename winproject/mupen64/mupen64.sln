@@ -1,6 +1,11 @@
-﻿Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual C++ Express 2017
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.34929.205
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mupen64", "mupen64.vcxproj", "{83B5BB38-A6A7-432B-AF4D-2AE840F5621C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core", "..\..\Core\Core.vcxproj", "{A57AC225-C4D6-434E-84C3-BAC0A9F9E9C1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -12,8 +17,15 @@ Global
 		{83B5BB38-A6A7-432B-AF4D-2AE840F5621C}.Debug|Win32.Build.0 = Debug|Win32
 		{83B5BB38-A6A7-432B-AF4D-2AE840F5621C}.Release|Win32.ActiveCfg = Release|Win32
 		{83B5BB38-A6A7-432B-AF4D-2AE840F5621C}.Release|Win32.Build.0 = Release|Win32
+		{A57AC225-C4D6-434E-84C3-BAC0A9F9E9C1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A57AC225-C4D6-434E-84C3-BAC0A9F9E9C1}.Debug|Win32.Build.0 = Debug|Win32
+		{A57AC225-C4D6-434E-84C3-BAC0A9F9E9C1}.Release|Win32.ActiveCfg = Release|Win32
+		{A57AC225-C4D6-434E-84C3-BAC0A9F9E9C1}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BF765346-EB9D-493A-BD03-739C9CBEDB46}
 	EndGlobalSection
 EndGlobal

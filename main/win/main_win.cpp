@@ -27,6 +27,7 @@
 #include <commctrl.h>
 #include <Shlwapi.h>
 #include <gdiplus.h>
+#include <Core.h>
 
 #include "Commandline.h"
 #include <shared/Config.hpp>
@@ -1339,6 +1340,8 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 #ifdef _DEBUG
 	open_console();
 #endif
+
+	core_test();
 
 	Messenger::init();
 
