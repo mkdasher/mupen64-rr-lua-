@@ -88,9 +88,15 @@ target_link_libraries(core PRIVATE
     ${CMAKE_SOURCE_DIR}/lib/lua/lua54.lib
 )
 
+target_link_options(core PRIVATE 
+    /SUBSYSTEM:WINDOWS
+    /MACHINE:x86
+    /NXCOMPAT:NO
+)
+
 # FIXME: Make this into a platform conditional
-# set_property(SOURCE r4300\tlb.cpp APPEND_STRING PROPERTY COMPILE_OPTIONS "-o r4300_tlb.o")
 set_property(SOURCE r4300\tlb.cpp APPEND_STRING PROPERTY COMPILE_OPTIONS "/Fo r4300_tlb.o")
 
 target_include_directories(core PUBLIC ${CMAKE_SOURCE_DIR})
 target_include_directories(core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_definitions(core PRIVATE WIN32=1 _WIN32=1 _WINDOWS=1 __WIN32__=1 X86=1 _CRT_SECURE_NO_WARNINGS=1)

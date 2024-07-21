@@ -94,9 +94,11 @@ set_target_properties(view PROPERTIES
     OUTPUT_NAME "mupen64"
     SUFFIX ".exe"
 )
-add_link_options(
+
+target_link_options(view PRIVATE 
     /SUBSYSTEM:WINDOWS
     /MACHINE:x86
+    /NXCOMPAT:NO
 )
 
 set(MAIN_PROJECT_NAME "Mupen64")
