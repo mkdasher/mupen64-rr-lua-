@@ -1,9 +1,9 @@
 #include "shared/services/FrontendService.h"
 
 extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-#include <lualib.h>
+#include <lib/lua/include/lua.h>
+#include <lib/lua/include/lauxlib.h>
+#include <lib/lua/include/lualib.h>
 }
 #include <Windows.h>
 

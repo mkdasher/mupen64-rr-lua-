@@ -34,7 +34,7 @@
 #include "interrupt.h"
 #include "../memory/memory.h"
 
-#include <zlib.h>
+#include <lib/zlib/zlib.h>
 
 uLong ZEXPORT adler32(uLong adler, const Bytef* buf, uInt len);
 

@@ -10,7 +10,7 @@
 #include <map>
 #include <list>
 #include <filesystem>
-#include "../../winproject/resource.h"
+#include <view/gui/resource.h>
 #include <view/gui/main_win.h>
 #include <shared/Config.hpp>
 #include <core/memory/memory.h>

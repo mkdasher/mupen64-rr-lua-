@@ -28,7 +28,7 @@
 **/
 
 #include "savestates.h"
-#include <libdeflate.h>
+#include <lib/libdeflate/libdeflate.h>
 #include <stdlib.h>
 #include <string>
 #include <shared/Config.hpp>

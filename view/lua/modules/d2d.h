@@ -1,12 +1,12 @@
 #pragma once
 extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-#include <lualib.h>
+#include <lib/lua/include/lua.h>
+#include <lib/lua/include/lauxlib.h>
+#include <lib/lua/include/lualib.h>
 }
 #include <Windows.h>
 #include <assert.h>
-#include <xxh64.h>
+#include <lib/xxhash/xxh64.h>
 
 namespace LuaCore::D2D
 {

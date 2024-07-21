@@ -189,8 +189,8 @@ INITIATECONTROLLERS initiateControllers = dummy_initiateControllers;
 READCONTROLLER readController = dummy_readController;
 ROMCLOSED_INPUT romClosed_input = dummy_void;
 ROMOPEN_INPUT romOpen_input = dummy_void;
-KEYDOWN keyDown = dummy_keyDown;
-KEYUP keyUp = dummy_keyUp;
+KEYDOWN keyDown = reinterpret_cast<KEYDOWN>(dummy_keyDown);
+KEYUP keyUp = reinterpret_cast<KEYUP>(dummy_keyUp);
 
 CLOSEDLL_RSP closeDLL_RSP = dummy_void;
 DORSPCYCLES doRspCycles = dummy_doRspCycles;
@@ -311,8 +311,8 @@ void load_input(uint16_t version, HMODULE handle)
 	FUNC(readController, READCONTROLLER, dummy_readController, "ReadController");
 	FUNC(romClosed_input, ROMCLOSED_INPUT, dummy_void, "RomClosed");
 	FUNC(romOpen_input, ROMOPEN_INPUT, dummy_void, "RomOpen");
-	FUNC(keyDown, KEYDOWN, dummy_keyDown, "WM_KeyDown");
-	FUNC(keyUp, KEYUP, dummy_keyUp, "WM_KeyUp");
+	FUNC(keyDown, KEYDOWN, reinterpret_cast<KEYDOWN>(dummy_keyDown), "WM_KeyDown");
+	FUNC(keyUp, KEYUP, reinterpret_cast<KEYUP>(dummy_keyUp), "WM_KeyUp");
 
 	control_info.hMainWindow = FrontendService::get_main_window_handle();
 	control_info.hinst = FrontendService::get_app_instance_handle();

@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <span>
 #include <vector>
-#include <libdeflate.h>
+#include <lib/libdeflate/libdeflate.h>
 
 /**
  * \brief Writes data to a vector at its tail end based on its size, expanding it as needed

@@ -27,7 +27,14 @@ If any issues arise or you need help, join the [discord server](https://discord.
 Cutting-edge features with potential instability are available for download as a zipped binary under the latest commit's artifact. 
 
 # Compiling
-Open the [solution](https://github.com/mkdasher/mupen64-rr-lua-/blob/dev/winproject/mupen64/mupen64_2017.sln) with your IDE of choice (VS20XX and Rider are recommended) and build the solution.
+
+Dependencies: CMake, Visual Studio 2022
+
+Open a command prompt and navigate to the repository's `out/` folder.
+
+Then, run `cmake -DCMAKE_GENERATOR_PLATFORM=Win32 .. && msbuild ALL_BUILD.vcxproj /p:Configuration=Release`.
+
+The output is in `out/view/Release/mupen64.exe`
 
 # Structure
 

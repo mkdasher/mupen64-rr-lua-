@@ -4,7 +4,7 @@
 #include <Windows.h>
 #include <Windowsx.h>
 
-#include "../../winproject/resource.h"
+#include <view/gui/resource.h>
 #include <view/gui/main_win.h>
 
 #include <view/lua/LuaConsole.h>

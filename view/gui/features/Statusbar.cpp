@@ -8,7 +8,7 @@
 #include <core/r4300/r4300.h>
 #include <core/r4300/vcr.h>
 #include "RomBrowser.hpp"
-#include "../../winproject/resource.h"
+#include <view/gui/resource.h>
 #include <view/helpers/WinHelpers.h>
 #include <shared/Config.hpp>
 #include <view/gui/main_win.h>

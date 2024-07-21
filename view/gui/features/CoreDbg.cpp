@@ -1,6 +1,6 @@
 #include <view/lua/LuaConsole.h>
 
-#include "../../../winproject/resource.h"
+#include <view/gui/resource.h>
 #include <view/gui/main_win.h>
 #include "CoreDbg.h"
 
@@ -32,7 +32,7 @@ namespace CoreDbg
 	bool ui_invalidated = true;
 	t_cpu_state cpu_state = {0};
 
-	BOOL CALLBACK coredbg_dlgproc(HWND hwnd, UINT msg, WPARAM w_param,
+	INT_PTR CALLBACK coredbg_dlgproc(HWND hwnd, UINT msg, WPARAM w_param,
 	                              LPARAM l_param)
 	{
 		switch (msg)

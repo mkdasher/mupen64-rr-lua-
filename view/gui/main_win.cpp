@@ -46,7 +46,7 @@
 #include <core/r4300/r4300.h>
 #include <core/r4300/recomph.h>
 #include <core/r4300/tracelog.h>
-#include "../../winproject/resource.h"
+#include <view/gui/resource.h>
 #include <view/capture/EncodingManager.h>
 #include "features/CoreDbg.h"
 #include "features/Dispatcher.h"

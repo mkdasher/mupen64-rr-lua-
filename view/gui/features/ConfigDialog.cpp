@@ -20,7 +20,7 @@
 #include <cassert>
 #include <view/lua/LuaConsole.h>
 #include <view/gui/main_win.h>
-#include <winproject/resource.h>
+#include <view/gui/resource.h>
 #include <core/r4300/Plugin.hpp>
 #include <view/gui/features/RomBrowser.hpp>
 #include <core/r4300/timers.h>
@@ -121,7 +121,7 @@ int32_t get_user_hotkey(t_hotkey* hotkey)
 	return 0;
 }
 
-BOOL CALLBACK about_dlg_proc(const HWND hwnd, const UINT message, const WPARAM w_param, LPARAM)
+INT_PTR CALLBACK about_dlg_proc(const HWND hwnd, const UINT message, const WPARAM w_param, LPARAM)
 {
 	switch (message)
 	{
@@ -178,7 +178,7 @@ void build_rom_browser_path_list(const HWND dialog_hwnd)
 	}
 }
 
-BOOL CALLBACK directories_cfg(const HWND hwnd, const UINT message, const WPARAM w_param, LPARAM l_param)
+INT_PTR CALLBACK directories_cfg(const HWND hwnd, const UINT message, const WPARAM w_param, LPARAM l_param)
 {
 	[[maybe_unused]] LPITEMIDLIST pidl{};
 	BROWSEINFO bi{};
@@ -408,7 +408,7 @@ Plugin* get_selected_plugin(const HWND hwnd, const int id)
 	return res == CB_ERR ? nullptr : (Plugin*)res;
 }
 
-BOOL CALLBACK plugins_cfg(const HWND hwnd, const UINT message, const WPARAM w_param, const LPARAM l_param)
+INT_PTR CALLBACK plugins_cfg(const HWND hwnd, const UINT message, const WPARAM w_param, const LPARAM l_param)
 {
 	[[maybe_unused]] char path_buffer[_MAX_PATH];
 	NMHDR FAR* l_nmhdr = nullptr;
@@ -591,7 +591,7 @@ BOOL CALLBACK plugins_cfg(const HWND hwnd, const UINT message, const WPARAM w_pa
 	return TRUE;
 }
 
-BOOL CALLBACK general_cfg(const HWND hwnd, const UINT message, const WPARAM w_param, const LPARAM l_param)
+INT_PTR CALLBACK general_cfg(const HWND hwnd, const UINT message, const WPARAM w_param, const LPARAM l_param)
 {
 	NMHDR FAR* l_nmhdr = nullptr;
 	memcpy(&l_nmhdr, &l_param, sizeof(NMHDR FAR*));
@@ -823,7 +823,7 @@ void build_hotkey_list(HWND hwnd)
 	}
 }
 
-BOOL CALLBACK hotkeys_proc(const HWND hwnd, const UINT message, const WPARAM w_param, LPARAM)
+INT_PTR CALLBACK hotkeys_proc(const HWND hwnd, const UINT message, const WPARAM w_param, LPARAM)
 {
 	switch (message)
 	{
@@ -909,19 +909,19 @@ void configdialog_show()
 
 	psp[0].pszTemplate = MAKEINTRESOURCE(IDD_MAIN);
 	psp[0].pfnDlgProc = plugins_cfg;
-	psp[0].pszTitle = "Plugins";
+	psp[0].pszTitle = TEXT("Plugins");
 
 	psp[1].pszTemplate = MAKEINTRESOURCE(IDD_DIRECTORIES);
 	psp[1].pfnDlgProc = directories_cfg;
-	psp[1].pszTitle = "Directories";
+	psp[1].pszTitle = TEXT("Directories");
 
 	psp[2].pszTemplate = MAKEINTRESOURCE(IDD_MESSAGES);
 	psp[2].pfnDlgProc = general_cfg;
-	psp[2].pszTitle = "General";
+	psp[2].pszTitle = TEXT("General");
 
 	psp[3].pszTemplate = MAKEINTRESOURCE(IDD_NEW_HOTKEY_DIALOG);
 	psp[3].pfnDlgProc = hotkeys_proc;
-	psp[3].pszTitle = "Hotkeys";
+	psp[3].pszTitle = TEXT("Hotkeys");
 
 	PROPSHEETHEADER psh = {0};
 	psh.dwSize = sizeof(PROPSHEETHEADER);

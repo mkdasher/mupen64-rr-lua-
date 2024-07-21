@@ -7,7 +7,7 @@
 #include "Statusbar.hpp"
 #include <view/gui/main_win.h>
 #include <shared/Config.hpp>
-#include <winproject/resource.h>
+#include <view/gui/resource.h>
 #include <shared/helpers/string_helpers.h>
 #include <view/helpers/WinHelpers.h>
 #include <view/helpers/MathHelpers.h>
