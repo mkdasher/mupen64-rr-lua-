@@ -67,7 +67,7 @@ void dma_pi_read()
 			use_flashram = -1;
 		} else
 			dma_write_flashram();
-	} else if (Config.use_summercart)
+	} else if (g_config.use_summercart)
 	{
 		longueur = (pi_register.pi_rd_len_reg & 0xFFFFFF) + 1;
 		if (pi_register.pi_cart_addr_reg >= 0x1ffe0000 &&
@@ -140,7 +140,7 @@ void dma_pi_write()
 
 	longueur = (pi_register.pi_wr_len_reg & 0xFFFFFF) + 1;
 
-	if (Config.use_summercart && pi_register.pi_cart_addr_reg >= 0x1ffe0000 &&
+	if (g_config.use_summercart && pi_register.pi_cart_addr_reg >= 0x1ffe0000 &&
 		pi_register.pi_cart_addr_reg < 0x1fff0000)
 	{
 		for (i = 0; i < longueur; i++)

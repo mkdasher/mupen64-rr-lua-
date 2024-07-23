@@ -59,11 +59,11 @@ RSP_INFO rsp_info;
 
 std::string get_plugins_directory()
 {
-	if (Config.is_default_plugins_directory_used)
+	if (g_config.is_default_plugins_directory_used)
 	{
 		return FrontendService::get_app_path().string() + "plugin\\";
 	}
-	return Config.plugins_directory;
+	return g_config.plugins_directory;
 }
 
 /* dummy functions to prevent mupen from crashing if a plugin is missing */
@@ -262,7 +262,7 @@ void load_gfx(HMODULE handle)
 	DllCrtFree = get_dll_crt_free(handle);
 
 	gfx_info.hWnd = FrontendService::get_main_window_handle();
-	gfx_info.hStatusBar = Config.is_statusbar_enabled ? FrontendService::get_statusbar_handle() : nullptr;
+	gfx_info.hStatusBar = g_config.is_statusbar_enabled ? FrontendService::get_statusbar_handle() : nullptr;
 	gfx_info.MemoryBswaped = TRUE;
 	gfx_info.HEADER = rom;
 	gfx_info.RDRAM = (BYTE*)rdram;

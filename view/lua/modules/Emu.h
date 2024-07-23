@@ -6,7 +6,7 @@ extern "C" {
 #include <Windows.h>
 
 #include "LuaConsole.h"
-#include <view/gui/main_win.h>
+#include <view/gui/Main.h>
 #include <core/memory/memory.h>
 #include <core/memory/pif.h>
 #include <core/r4300/timers.h>
@@ -225,8 +225,8 @@ namespace LuaCore::Emu
 	{
 		LuaEnvironment* lua = GetLuaClass(L);
 		lua_pushboolean(
-			L, GetForegroundWindow() == mainHWND || GetActiveWindow() ==
-			mainHWND);
+			L, GetForegroundWindow() == g_main_hwnd || GetActiveWindow() ==
+			g_main_hwnd);
 		return 1;
 	}
 
@@ -262,14 +262,14 @@ namespace LuaCore::Emu
 
 	static int GetSpeed(lua_State* L)
 	{
-		lua_pushinteger(L, Config.fps_modifier);
+		lua_pushinteger(L, g_config.fps_modifier);
 		return 1;
 	}
 
 	static int SetSpeed(lua_State* L)
 	{
-		Config.fps_modifier = luaL_checkinteger(L, 1);
-		timer_init(Config.fps_modifier, &ROM_HEADER);
+		g_config.fps_modifier = luaL_checkinteger(L, 1);
+		timer_init(g_config.fps_modifier, &ROM_HEADER);
 		return 0;
 	}
 
@@ -289,10 +289,10 @@ namespace LuaCore::Emu
 	{
 		if (!strcmp(luaL_checkstring(L, 1), "normal"))
 		{
-			Config.fps_modifier = 100;
+			g_config.fps_modifier = 100;
 		} else
 		{
-			Config.fps_modifier = 10000;
+			g_config.fps_modifier = 10000;
 		}
 		return 0;
 	}

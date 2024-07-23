@@ -32,15 +32,15 @@ extern BOOL CALLBACK CfgDlgProc(HWND hwnd, UINT Message, WPARAM wParam,
 
 extern DWORD g_ui_thread_id;
 
-extern int last_wheel_delta;
+extern int g_last_wheel_delta;
 
-extern HWND mainHWND;
-extern HINSTANCE app_instance;
+extern HWND g_main_hwnd;
+extern HINSTANCE g_app_instance;
 
-extern HWND hwnd_plug;
+extern HWND g_hwnd_plug;
 extern DWORD start_rom_id;
 
-extern std::string app_path;
+extern std::string g_app_path;
 
 /**
  * \brief Whether the statusbar needs to be updated with new input information

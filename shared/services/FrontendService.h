@@ -64,7 +64,7 @@ namespace FrontendService
 	 * \remarks Because the shared layer is unaware of keycodes, the view must do this.
 	 * FIXME: While this works for now, storing platform-dependent keycodes in the config will make config files incompatible across platforms.
 	 */
-	void set_default_hotkey_keys(CONFIG* config);
+	void set_default_hotkey_keys(t_config* config);
 
 	/**
 	 * \brief Gets the native handle of the app instance

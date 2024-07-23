@@ -4,7 +4,7 @@
 #include <mutex>
 #include <queue>
 #include <Windows.h>
-#include "../main_win.h"
+#include "../Main.h"
 #include <shared/services/FrontendService.h>
 
 namespace Dispatcher
@@ -22,7 +22,7 @@ namespace Dispatcher
 
 		std::lock_guard lock(dispatcher_mutex);
 		funcs.push(func);
-		SendMessage(mainHWND, WM_EXECUTE_DISPATCHER, 0, 0);
+		SendMessage(g_main_hwnd, WM_EXECUTE_DISPATCHER, 0, 0);
 	}
 
 	void execute()

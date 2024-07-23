@@ -36,7 +36,7 @@
 #include <shared/services/LuaService.h>
 #include "memory.h"
 #include "summercart.h"
-#include <shared/messenger.h>
+#include <shared/Messenger.h>
 #include "../r4300/interrupt.h"
 #include "../r4300/r4300.h"
 #include "../r4300/rom.h"
@@ -77,11 +77,11 @@ char screen_section[] = "SCR";
 
 std::filesystem::path get_saves_directory()
 {
-	if (Config.is_default_saves_directory_used)
+	if (g_config.is_default_saves_directory_used)
 	{
 		return FrontendService::get_app_path().string() + "save\\";
 	}
-	return Config.saves_directory;
+	return g_config.saves_directory;
 }
 
 std::filesystem::path get_sram_path()
@@ -217,7 +217,7 @@ std::vector<uint8_t> generate_savestate()
 		vecwrite(b, movie_freeze.input_buffer.data(), movie_freeze.input_buffer.size() * sizeof(BUTTONS));
 	}
 
-	if (is_mge_available() && Config.st_screenshot)
+	if (is_mge_available() && g_config.st_screenshot)
 	{
 		void* video;
 		long width;
@@ -258,7 +258,7 @@ void savestates_save_immediate()
 		return;
 	}
 
-	if (st_medium == e_st_medium::slot && Config.increment_slot)
+	if (st_medium == e_st_medium::slot && g_config.increment_slot)
 	{
 		if (st_slot >= 9)
 		{
@@ -275,7 +275,7 @@ void savestates_save_immediate()
 		std::filesystem::path new_st_path = st_path;
 		std::filesystem::path new_sd_path = "";
 		get_effective_paths(new_st_path, new_sd_path);
-		if (Config.use_summercart) save_summercart(new_sd_path.string().c_str());
+		if (g_config.use_summercart) save_summercart(new_sd_path.string().c_str());
 
 		// Generate compressed buffer
 		std::vector<uint8_t> compressed_buffer = st;
@@ -401,7 +401,7 @@ void savestates_load_immediate()
 	std::filesystem::path new_sd_path = "";
 	get_effective_paths(new_st_path, new_sd_path);
 
-	if (Config.use_summercart) load_summercart(new_sd_path.string().c_str());
+	if (g_config.use_summercart) load_summercart(new_sd_path.string().c_str());
 
 	std::vector<uint8_t> st_buf;
 

@@ -3,10 +3,10 @@
 #include <thread>
 #include <Windows.h>
 
-#include <shared/messenger.h>
+#include <shared/Messenger.h>
 #include "Statusbar.hpp"
 #include <core/r4300/vcr.h>
-#include "../main_win.h"
+#include "../Main.h"
 #include "../../winproject/resource.h"
 #include <shared/Config.hpp>
 
@@ -25,7 +25,7 @@ namespace Seeker
 		case WM_INITDIALOG:
 			refresh_timer = SetTimer(hwnd, NULL, 1000 / 10, nullptr);
 			current_hwnd = hwnd;
-			SetDlgItemText(hwnd, IDC_SEEKER_FRAME, Config.seeker_value.c_str());
+			SetDlgItemText(hwnd, IDC_SEEKER_FRAME, g_config.seeker_value.c_str());
 			SetFocus(GetDlgItem(hwnd, IDC_SEEKER_FRAME));
 			SendMessage(hwnd, WM_SEEK_COMPLETED, 0, 0);
 			break;
@@ -58,7 +58,7 @@ namespace Seeker
 				{
 					char str[260]{};
 					GetDlgItemText(hwnd, IDC_SEEKER_FRAME, str, std::size(str));
-					Config.seeker_value = str;
+					g_config.seeker_value = str;
 				}
 				break;
 			case IDC_SEEKER_START:
@@ -70,12 +70,12 @@ namespace Seeker
 					}
 
 					// Relative seek is activated by typing + or - in front of number
-					bool relative = Config.seeker_value[0] == '-' || Config.seeker_value[0] == '+';
+					bool relative = g_config.seeker_value[0] == '-' || g_config.seeker_value[0] == '+';
 
 					int32_t frame;
 					try
 					{
-						frame = std::stoi(Config.seeker_value);
+						frame = std::stoi(g_config.seeker_value);
 					} catch (...)
 					{
 						SetDlgItemText(hwnd, IDC_SEEKER_STATUS, "Invalid input");
@@ -113,8 +113,8 @@ namespace Seeker
 		// We need to run the dialog on another thread, since we don't want to block the main one
 		std::thread([]
 		{
-			DialogBox(app_instance,
-			          MAKEINTRESOURCE(IDD_SEEKER), mainHWND,
+			DialogBox(g_app_instance,
+			          MAKEINTRESOURCE(IDD_SEEKER), g_main_hwnd,
 			          (DLGPROC)SeekerProc);
 			current_hwnd = nullptr;
 		}).detach();

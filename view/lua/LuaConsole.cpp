@@ -11,7 +11,7 @@
 #include <list>
 #include <filesystem>
 #include "../../winproject/resource.h"
-#include <view/gui/main_win.h>
+#include <view/gui/Main.h>
 #include <shared/Config.hpp>
 #include <core/memory/memory.h>
 #include <core/r4300/r4300.h>
@@ -32,23 +32,23 @@
 #include <queue>
 #include <assert.h>
 
-#include <shared/helpers/string_helpers.h>
+#include <shared/helpers/StringHelpers.h>
 #include <view/gui/features/Statusbar.hpp>
 
 #include <Windows.h>
 
 #include <shared/services/LuaService.h>
-#include "modules/avi.h"
-#include "modules/d2d.h"
-#include "modules/emu.h"
-#include "modules/global.h"
-#include "modules/input.h"
-#include "modules/iohelper.h"
-#include "modules/joypad.h"
-#include "modules/memory.h"
-#include "modules/movie.h"
-#include "modules/savestate.h"
-#include "modules/wgui.h"
+#include "modules/AVI.h"
+#include "modules/D2D.h"
+#include "modules/Emu.h"
+#include "modules/Global.h"
+#include "modules/Input.h"
+#include "modules/IOHelper.h"
+#include "modules/Joypad.h"
+#include "modules/Memory.h"
+#include "modules/Movie.h"
+#include "modules/Savestate.h"
+#include "modules/WGUI.h"
 #include <core/r4300/timers.h>
 
 #include "presenters/DCompPresenter.h"
@@ -124,7 +124,7 @@ INT_PTR CALLBACK DialogProc(HWND wnd, UINT msg, WPARAM wParam,
 	case WM_INITDIALOG:
 		{
 			SetWindowText(GetDlgItem(wnd, IDC_TEXTBOX_LUASCRIPTPATH),
-			              Config.lua_script_path.c_str());
+			              g_config.lua_script_path.c_str());
 			return TRUE;
 		}
 	case WM_CLOSE:
@@ -152,7 +152,7 @@ INT_PTR CALLBACK DialogProc(HWND wnd, UINT msg, WPARAM wParam,
 			HWND path_hwnd = GetDlgItem(wnd, IDC_TEXTBOX_LUASCRIPTPATH);
 			RECT path_rect = get_window_rect_client_space(wnd, path_hwnd);
 			SetWindowPos(path_hwnd, nullptr, 0, 0, window_rect.right - console_rect.left * 2, path_rect.bottom - path_rect.top, SWP_NOMOVE);
-			if (wParam == SIZE_MINIMIZED) SetFocus(mainHWND);
+			if (wParam == SIZE_MINIMIZED) SetFocus(g_main_hwnd);
 			break;
 		}
 	}
@@ -257,8 +257,8 @@ BOOL WmCommand(HWND wnd, WORD id, WORD code, HWND control)
 
 HWND lua_create()
 {
-	HWND hwnd = CreateDialogParam(app_instance,
-	                              MAKEINTRESOURCE(IDD_LUAWINDOW), mainHWND,
+	HWND hwnd = CreateDialogParam(g_app_instance,
+	                              MAKEINTRESOURCE(IDD_LUAWINDOW), g_main_hwnd,
 	                              DialogProc,
 	                              NULL);
 	ShowWindow(hwnd, SW_SHOW);
@@ -689,7 +689,7 @@ void lua_init()
 	WNDCLASS wndclass = {0};
 	wndclass.style = CS_GLOBALCLASS | CS_HREDRAW | CS_VREDRAW;
 	wndclass.lpfnWndProc = (WNDPROC)d2d_overlay_wndproc;
-	wndclass.hInstance = app_instance;
+	wndclass.hInstance = g_app_instance;
 	wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wndclass.lpszClassName = d2d_overlay_class;
 	RegisterClass(&wndclass);
@@ -705,11 +705,11 @@ void LuaEnvironment::create_loadscreen()
 	{
 		return;
 	}
-	auto gdi_dc = GetDC(mainHWND);
+	auto gdi_dc = GetDC(g_main_hwnd);
 	loadscreen_dc = CreateCompatibleDC(gdi_dc);
 	loadscreen_bmp = CreateCompatibleBitmap(gdi_dc, dc_size.width, dc_size.height);
 	SelectObject(loadscreen_dc, loadscreen_bmp);
-	ReleaseDC(mainHWND, gdi_dc);
+	ReleaseDC(g_main_hwnd, gdi_dc);
 }
 
 void LuaEnvironment::destroy_loadscreen()
@@ -741,7 +741,7 @@ void LuaEnvironment::create_renderer()
 	printf("Creating multi-target renderer for Lua...\n");
 
 	RECT window_rect;
-	GetClientRect(mainHWND, &window_rect);
+	GetClientRect(g_main_hwnd, &window_rect);
 	if (Statusbar::hwnd())
 	{
 		// We don't want to paint over statusbar
@@ -754,8 +754,8 @@ void LuaEnvironment::create_renderer()
 	dc_size = {(UINT32)max(1, window_rect.right), (UINT32)max(1, window_rect.bottom)};
 	printf("Lua dc size: %d %d\n", dc_size.width, dc_size.height);
 
-	d2d_overlay_hwnd = CreateWindowEx(WS_EX_LAYERED, d2d_overlay_class, "", WS_CHILD | WS_VISIBLE, 0, 0, dc_size.width, dc_size.height, mainHWND, nullptr,
-	                                  app_instance, nullptr);
+	d2d_overlay_hwnd = CreateWindowEx(WS_EX_LAYERED, d2d_overlay_class, "", WS_CHILD | WS_VISIBLE, 0, 0, dc_size.width, dc_size.height, g_main_hwnd, nullptr,
+	                                  g_app_instance, nullptr);
 	SetWindowLongPtr(d2d_overlay_hwnd, GWLP_USERDATA, (LONG_PTR)this);
 
 	DWriteCreateFactory(
@@ -767,7 +767,7 @@ void LuaEnvironment::create_renderer()
 	// Key 0 is reserved for clearing the image pool, too late to change it now...
 	image_pool_index = 1;
 
-	if (Config.presenter_type != static_cast<int32_t>(PresenterType::GDI))
+	if (g_config.presenter_type != static_cast<int32_t>(PresenterType::GDI))
 	{
 		presenter = new DCompPresenter();
 	} else
@@ -788,14 +788,14 @@ void LuaEnvironment::create_renderer()
 		value->Release();
 	});
 
-	auto gdi_dc = GetDC(mainHWND);
+	auto gdi_dc = GetDC(g_main_hwnd);
 	gdi_back_dc = CreateCompatibleDC(gdi_dc);
 	gdi_bmp = CreateCompatibleBitmap(gdi_dc, dc_size.width, dc_size.height);
 	SelectObject(gdi_back_dc, gdi_bmp);
-	ReleaseDC(mainHWND, gdi_dc);
+	ReleaseDC(g_main_hwnd, gdi_dc);
 
-	gdi_overlay_hwnd = CreateWindowEx(WS_EX_LAYERED, gdi_overlay_class, "", WS_CHILD | WS_VISIBLE, 0, 0, dc_size.width, dc_size.height, mainHWND, nullptr,
-	                                  app_instance, nullptr);
+	gdi_overlay_hwnd = CreateWindowEx(WS_EX_LAYERED, gdi_overlay_class, "", WS_CHILD | WS_VISIBLE, 0, 0, dc_size.width, dc_size.height, g_main_hwnd, nullptr,
+	                                  g_app_instance, nullptr);
 	SetWindowLongPtr(gdi_overlay_hwnd, GWLP_USERDATA, (LONG_PTR)this);
 	SetLayeredWindowAttributes(gdi_overlay_hwnd, lua_gdi_color_mask, 0, LWA_COLORKEY);
 

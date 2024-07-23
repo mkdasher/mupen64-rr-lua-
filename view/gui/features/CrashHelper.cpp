@@ -1,5 +1,5 @@
 #include "CrashHelper.h"
-#include "../main_win.h"
+#include "../Main.h"
 #include <Psapi.h>
 #include <core/r4300/r4300.h>
 #include <core/r4300/vcr.h>
@@ -78,10 +78,10 @@ std::string CrashHelper::generate_log(const _EXCEPTION_POINTERS* exception_point
 	str += std::format("{:02}/{:02}/{} {:02}:{:02}:{:02}\n", time.wDay, time.wMonth, time.wYear, time.wHour, time.wMinute, time.wSecond);
 	str += get_metadata_for_exception_address(exception_pointers_ptr->ExceptionRecord->ExceptionAddress) + "\n";
 	str += get_exception_code_friendly_name(exception_pointers_ptr) + "\n";
-	str += "Video: " + Config.selected_video_plugin + "\n";
-	str += "Audio: " + Config.selected_audio_plugin + "\n";
-	str += "Input: " + Config.selected_input_plugin + "\n";
-	str += "RSP: " + Config.selected_rsp_plugin + "\n";
+	str += "Video: " + g_config.selected_video_plugin + "\n";
+	str += "Audio: " + g_config.selected_audio_plugin + "\n";
+	str += "Input: " + g_config.selected_input_plugin + "\n";
+	str += "RSP: " + g_config.selected_rsp_plugin + "\n";
 	str += "VCR Task: " + std::to_string(static_cast<int>(VCR::get_task())) + "\n";
 	str += "Emu Launched: " + std::to_string(emu_launched) + "\n";
 	str += "------------------------------------\n\n";

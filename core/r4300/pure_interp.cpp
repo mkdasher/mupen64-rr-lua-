@@ -1813,7 +1813,7 @@ static void FLOOR_W_D()
 static void CVT_S_D()
 {
 	CHECK_INPUT(*reg_cop1_double[core_cffs]);
-	if (Config.is_round_towards_zero_enabled)
+	if (g_config.is_round_towards_zero_enabled)
 	{
 		set_trunc();
 	} else

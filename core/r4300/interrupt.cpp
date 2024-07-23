@@ -418,7 +418,7 @@ void gen_interrupt()
 			LuaService::call_interval();
 
 			// NOTE: It's ok to not update screen when lagging, doesn't cause any obvious issues
-			auto skip = (Config.skip_rendering_lag && lag_count > 1) || is_frame_skipped();
+			auto skip = (g_config.skip_rendering_lag && lag_count > 1) || is_frame_skipped();
 			auto update = FrontendService::get_prefers_no_render_skip() ? true : (screen_invalidated ? !skip : false);
 
 			// NOTE: When frame advancing, screen_invalidated has a higher change of being false despite the fact it should be true
@@ -433,7 +433,7 @@ void gen_interrupt()
 			FrontendService::at_vi();
 			timer_new_vi();
 			if (vi_register.vi_v_sync == 0) vi_register.vi_delay = 500000;
-			else vi_register.vi_delay = ((vi_register.vi_v_sync + 1) * (1500 * Config.cpu_clock_speed_multiplier));
+			else vi_register.vi_delay = ((vi_register.vi_v_sync + 1) * (1500 * g_config.cpu_clock_speed_multiplier));
 			// this is the place
 			next_vi += vi_register.vi_delay;
 			if (vi_register.vi_status & 0x40) vi_field = 1 - vi_field;

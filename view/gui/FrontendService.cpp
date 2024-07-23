@@ -2,7 +2,7 @@
 #include <Windows.h>
 #include <commctrl.h>
 #include <shared/services/FrontendService.h>
-#include <view/gui/main_win.h>
+#include <view/gui/Main.h>
 #include <core/r4300/tracelog.h>
 #include <core/r4300/vcr.h>
 #include <view/capture/EncodingManager.h>
@@ -14,34 +14,34 @@
 
 bool FrontendService::show_ask_dialog(const char* str, const char* title, bool warning, void* hwnd)
 {
-	if (Config.silent_mode)
+	if (g_config.silent_mode)
 	{
 		return true;
 	}
-	return MessageBox(static_cast<HWND>(hwnd ? hwnd : mainHWND), str, title, MB_YESNO | (warning ? MB_ICONWARNING : MB_ICONQUESTION)) == IDYES;
+	return MessageBox(static_cast<HWND>(hwnd ? hwnd : g_main_hwnd), str, title, MB_YESNO | (warning ? MB_ICONWARNING : MB_ICONQUESTION)) == IDYES;
 }
 
 void FrontendService::show_warning(const char* str, const char* title, void* hwnd)
 {
-	if (!Config.silent_mode)
+	if (!g_config.silent_mode)
 	{
-		MessageBox(static_cast<HWND>(hwnd ? hwnd : mainHWND), str, title, MB_ICONWARNING);
+		MessageBox(static_cast<HWND>(hwnd ? hwnd : g_main_hwnd), str, title, MB_ICONWARNING);
 	}
 }
 
 void FrontendService::show_error(const char* str, const char* title, void* hwnd)
 {
-	if (!Config.silent_mode)
+	if (!g_config.silent_mode)
 	{
-		MessageBox(static_cast<HWND>(hwnd ? hwnd : mainHWND), str, title, MB_ICONERROR);
+		MessageBox(static_cast<HWND>(hwnd ? hwnd : g_main_hwnd), str, title, MB_ICONERROR);
 	}
 }
 
 void FrontendService::show_information(const char* str, const char* title, void* hwnd)
 {
-	if (!Config.silent_mode)
+	if (!g_config.silent_mode)
 	{
-		MessageBox(static_cast<HWND>(hwnd ? hwnd : mainHWND), str, title, MB_OK | MB_ICONINFORMATION);
+		MessageBox(static_cast<HWND>(hwnd ? hwnd : g_main_hwnd), str, title, MB_OK | MB_ICONINFORMATION);
 	}
 }
 
@@ -52,10 +52,10 @@ void FrontendService::show_statusbar(const char* str)
 
 std::filesystem::path FrontendService::get_app_path()
 {
-	return app_path;
+	return g_app_path;
 }
 
-void FrontendService::set_default_hotkey_keys(CONFIG* config)
+void FrontendService::set_default_hotkey_keys(t_config* config)
 {
 	config->fast_forward_hotkey.key = VK_TAB;
 
@@ -221,12 +221,12 @@ void FrontendService::set_default_hotkey_keys(CONFIG* config)
 
 void* FrontendService::get_app_instance_handle()
 {
-	return app_instance;
+	return g_app_instance;
 }
 
 void* FrontendService::get_main_window_handle()
 {
-	return mainHWND;
+	return g_main_hwnd;
 }
 
 void* FrontendService::get_statusbar_handle()
@@ -236,7 +236,7 @@ void* FrontendService::get_statusbar_handle()
 
 void* FrontendService::get_plugin_config_parent_handle()
 {
-	return hwnd_plug;
+	return g_hwnd_plug;
 }
 
 bool FrontendService::get_prefers_no_render_skip()

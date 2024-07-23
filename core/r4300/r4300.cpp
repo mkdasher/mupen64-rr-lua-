@@ -38,9 +38,9 @@
 #include "recomp.h"
 #include <malloc.h>
 #include <shared/services/LuaService.h>
-#include <shared/messenger.h>
+#include <shared/Messenger.h>
 #include "../memory/savestates.h"
-#include <shared/helpers/string_helpers.h>
+#include <shared/helpers/StringHelpers.h>
 #include <core/r4300/timers.h>
 #include <shared/Config.hpp>
 #include <shared/services/FrontendService.h>
@@ -1971,7 +1971,7 @@ void audio_thread()
 			break;
 		}
 
-		if (fast_forward && Config.fastforward_silent)
+		if (fast_forward && g_config.fastforward_silent)
 		{
 			continue;
 		}
@@ -2010,7 +2010,7 @@ void emu_thread()
 	romOpen_input();
 	romOpen_audio();
 
-	dynacore = Config.core_type;
+	dynacore = g_config.core_type;
 
 	audio_thread_handle = std::thread(audio_thread);
 
@@ -2096,10 +2096,10 @@ Core::Result vr_start_rom(std::filesystem::path path)
 	printf("Loading plugins\n");
 
 	if (video_plugin.get() && audio_plugin.get() && input_plugin.get() && rsp_plugin.get()
-		&& video_plugin->path() == Config.selected_video_plugin
-		&& audio_plugin->path() == Config.selected_audio_plugin
-		&& input_plugin->path() == Config.selected_input_plugin
-		&& rsp_plugin->path() == Config.selected_rsp_plugin)
+		&& video_plugin->path() == g_config.selected_video_plugin
+		&& audio_plugin->path() == g_config.selected_audio_plugin
+		&& input_plugin->path() == g_config.selected_input_plugin
+		&& rsp_plugin->path() == g_config.selected_rsp_plugin)
 	{
 		printf("[Core] Plugins unchanged, reusing...\n");
 	} else
@@ -2109,10 +2109,10 @@ Core::Result vr_start_rom(std::filesystem::path path)
 		input_plugin.reset();
 		rsp_plugin.reset();
 
-		auto video_pl = Plugin::create(Config.selected_video_plugin);
-		auto audio_pl = Plugin::create(Config.selected_audio_plugin);
-		auto input_pl = Plugin::create(Config.selected_input_plugin);
-		auto rsp_pl = Plugin::create(Config.selected_rsp_plugin);
+		auto video_pl = Plugin::create(g_config.selected_video_plugin);
+		auto audio_pl = Plugin::create(g_config.selected_audio_plugin);
+		auto input_pl = Plugin::create(g_config.selected_input_plugin);
+		auto rsp_pl = Plugin::create(g_config.selected_rsp_plugin);
 
 		if (!video_pl.has_value() || !audio_pl.has_value() || !input_pl.has_value() || !rsp_pl.has_value())
 		{
@@ -2149,7 +2149,7 @@ Core::Result vr_start_rom(std::filesystem::path path)
 		return Core::Result::FileOpenFailed;
 	}
 
-	timer_init(Config.fps_modifier, &ROM_HEADER);
+	timer_init(g_config.fps_modifier, &ROM_HEADER);
 
 	printf("[Core] vr_start_rom entry took %dms\n", static_cast<int>((std::chrono::high_resolution_clock::now() - start_time).count() / 1'000'000));
 

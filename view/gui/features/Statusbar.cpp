@@ -4,14 +4,14 @@
 #include <commctrl.h>
 #include <numeric>
 
-#include <shared/messenger.h>
+#include <shared/Messenger.h>
 #include <core/r4300/r4300.h>
 #include <core/r4300/vcr.h>
 #include "RomBrowser.hpp"
 #include "../../winproject/resource.h"
 #include <view/helpers/WinHelpers.h>
 #include <shared/Config.hpp>
-#include <view/gui/main_win.h>
+#include <view/gui/Main.h>
 
 
 namespace Statusbar
@@ -54,7 +54,7 @@ namespace Statusbar
 		if (value)
 		{
 			RECT rect{};
-			GetClientRect(mainHWND, &rect);
+			GetClientRect(g_main_hwnd, &rect);
 
 			// Compute the desired size of the statusbar and use that for the scaling factor
 			auto desired_size = std::accumulate(parts.begin(), parts.end() - 1, 0);
@@ -86,8 +86,8 @@ namespace Statusbar
 		                                WS_CHILD | WS_VISIBLE | CCS_BOTTOM,
 		                                0, 0,
 		                                0, 0,
-		                                mainHWND, (HMENU)IDC_MAIN_STATUS,
-		                                app_instance, nullptr);
+		                                g_main_hwnd, (HMENU)IDC_MAIN_STATUS,
+		                                g_app_instance, nullptr);
 	}
 
 

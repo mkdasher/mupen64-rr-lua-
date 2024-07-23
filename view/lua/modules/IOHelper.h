@@ -18,10 +18,10 @@ namespace LuaCore::IOHelper
 
 		if (type == 0)
 		{
-			path = show_persistent_open_dialog("o_lua_api", mainHWND, filter);
+			path = show_persistent_open_dialog("o_lua_api", g_main_hwnd, filter);
 		} else
 		{
-			path = show_persistent_save_dialog("s_lua_api", mainHWND, filter);
+			path = show_persistent_save_dialog("s_lua_api", g_main_hwnd, filter);
 		}
 
 		lua_pushstring(L, wstring_to_string(path).c_str());

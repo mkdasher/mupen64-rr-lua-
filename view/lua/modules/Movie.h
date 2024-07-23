@@ -3,7 +3,7 @@ extern "C" {
 #include <lauxlib.h>
 #include <lualib.h>
 }
-#include <shared/messenger.h>
+#include <shared/Messenger.h>
 
 namespace LuaCore::Movie
 {
@@ -11,8 +11,8 @@ namespace LuaCore::Movie
 	static int PlayMovie(lua_State* L)
 	{
 		const char* fname = lua_tostring(L, 1);
-		Config.vcr_readonly = true;
-		Messenger::broadcast(Messenger::Message::ReadonlyChanged, (bool)Config.vcr_readonly);
+		g_config.vcr_readonly = true;
+		Messenger::broadcast(Messenger::Message::ReadonlyChanged, (bool)g_config.vcr_readonly);
 		std::thread([fname] { VCR::start_playback(fname); }).detach();
 		return 0;
 	}
@@ -38,14 +38,14 @@ namespace LuaCore::Movie
 
 	static int GetVCRReadOnly(lua_State* L)
 	{
-		lua_pushboolean(L, Config.vcr_readonly);
+		lua_pushboolean(L, g_config.vcr_readonly);
 		return 1;
 	}
 
 	static int SetVCRReadOnly(lua_State* L)
 	{
-		Config.vcr_readonly = lua_toboolean(L, 1);
-		Messenger::broadcast(Messenger::Message::ReadonlyChanged, (bool)Config.vcr_readonly);
+		g_config.vcr_readonly = lua_toboolean(L, 1);
+		Messenger::broadcast(Messenger::Message::ReadonlyChanged, (bool)g_config.vcr_readonly);
 		return 0;
 	}
 

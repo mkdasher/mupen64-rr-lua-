@@ -1,8 +1,8 @@
 #include "PersistentPathDialog.h"
 #include <shlobj.h>
 #include <cstdio>
-#include <shared/helpers/io_helpers.h>
-#include <shared/helpers/string_helpers.h>
+#include <shared/helpers/IOHelpers.h>
+#include <shared/helpers/StringHelpers.h>
 #include <shared/Config.hpp>
 #include <view/helpers/WinHelpers.h>
 #include <view/helpers/IOHelpers.h>
@@ -36,8 +36,8 @@ std::wstring show_persistent_open_dialog(const std::string& id, HWND hwnd,
 	IShellItem* shlPtr;
 
 	{
-		std::wstring restored_path = Config.persistent_folder_paths.contains(id)
-			                             ? Config.persistent_folder_paths[id]
+		std::wstring restored_path = g_config.persistent_folder_paths.contains(id)
+			                             ? g_config.persistent_folder_paths[id]
 			                             : get_desktop_path();
 		printf("Open dialog %s restored %ls\n", id.c_str(), restored_path.c_str());
 		if (SHCreateItemFromParsingName(restored_path.c_str(), nullptr,
@@ -51,7 +51,7 @@ std::wstring show_persistent_open_dialog(const std::string& id, HWND hwnd,
 	FAILSAFE(pFileDialog->GetResult(&pShellItem));
 	FAILSAFE(pShellItem->GetDisplayName(SIGDN_FILESYSPATH, &pFilePath));
 
-	Config.persistent_folder_paths[id] = pFilePath;
+	g_config.persistent_folder_paths[id] = pFilePath;
 
 	succeeded = true;
 
@@ -60,7 +60,7 @@ cleanUp:
 	if (pShellItem) pShellItem->Release();
 	if (pFileDialog) pFileDialog->Release();
 
-	return succeeded ? Config.persistent_folder_paths[id] : std::wstring();
+	return succeeded ? g_config.persistent_folder_paths[id] : std::wstring();
 }
 
 std::wstring show_persistent_save_dialog(const std::string& id, HWND hwnd,
@@ -89,8 +89,8 @@ std::wstring show_persistent_save_dialog(const std::string& id, HWND hwnd,
 	IShellItem* shlPtr;
 
 	{
-		std::wstring restored_path = Config.persistent_folder_paths.contains(id)
-			                             ? Config.persistent_folder_paths[id]
+		std::wstring restored_path = g_config.persistent_folder_paths.contains(id)
+			                             ? g_config.persistent_folder_paths[id]
 			                             : get_desktop_path();
 		printf("Save dialog %s restored %ls\n", id.c_str(), restored_path.c_str());
 		if (SHCreateItemFromParsingName(restored_path.c_str(), nullptr,
@@ -112,7 +112,7 @@ std::wstring show_persistent_save_dialog(const std::string& id, HWND hwnd,
 	FAILSAFE(pFileDialog->GetResult(&pShellItem));
 	FAILSAFE(pShellItem->GetDisplayName(SIGDN_FILESYSPATH, &pFilePath));
 
-	Config.persistent_folder_paths[id] = pFilePath;
+	g_config.persistent_folder_paths[id] = pFilePath;
 
 	succeeded = true;
 
@@ -121,7 +121,7 @@ cleanUp:
 	if (pShellItem) pShellItem->Release();
 	if (pFileDialog) pFileDialog->Release();
 
-	return succeeded ? Config.persistent_folder_paths[id] : std::wstring();
+	return succeeded ? g_config.persistent_folder_paths[id] : std::wstring();
 }
 
 std::wstring show_persistent_folder_dialog(const std::string& id, HWND hwnd)
@@ -133,8 +133,8 @@ std::wstring show_persistent_folder_dialog(const std::string& id, HWND hwnd)
 		CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER,
 			IID_PPV_ARGS(&pfd))))
 	{
-		std::wstring restored_path = Config.persistent_folder_paths.contains(id)
-			                             ? Config.persistent_folder_paths[id]
+		std::wstring restored_path = g_config.persistent_folder_paths.contains(id)
+			                             ? g_config.persistent_folder_paths[id]
 			                             : get_desktop_path();
 
 		PIDLIST_ABSOLUTE pidl;
@@ -187,7 +187,7 @@ std::wstring show_persistent_folder_dialog(const std::string& id, HWND hwnd)
 	if (final_path.size() > 1)
 	{
 		// probably valid path, store it
-		Config.persistent_folder_paths[id] = final_path;
+		g_config.persistent_folder_paths[id] = final_path;
 	}
 
 	return final_path;

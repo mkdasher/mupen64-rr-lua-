@@ -37,7 +37,7 @@
 
 static void gencheck_eax_valid(int stackBase)
 {
-	if (!Config.is_float_exception_propagation_enabled)
+	if (!g_config.is_float_exception_propagation_enabled)
 		return;
 
 	mov_reg32_imm32(EBX, (unsigned long)&largest_denormal_double);
@@ -48,7 +48,7 @@ static void gencheck_eax_valid(int stackBase)
 
 static void gencheck_result_valid()
 {
-	if (!Config.is_float_exception_propagation_enabled)
+	if (!g_config.is_float_exception_propagation_enabled)
 		return;
 
 	mov_reg32_imm32(EBX, (unsigned long)&largest_denormal_double);
@@ -58,7 +58,7 @@ static void gencheck_result_valid()
 
 static void gencheck_result_valid_s()
 {
-	if (!Config.is_float_exception_propagation_enabled)
+	if (!g_config.is_float_exception_propagation_enabled)
 		return;
 
 	mov_reg32_imm32(EBX, (unsigned long)&largest_denormal_float);
@@ -349,7 +349,7 @@ void gencvt_s_d()
 	gencallinterp((unsigned long)CVT_S_D, 0);
 #else
 	gencheck_cop1_unusable();
-	if (Config.is_round_towards_zero_enabled)
+	if (g_config.is_round_towards_zero_enabled)
 	{
 		fldcw_m16((unsigned short*)&trunc_mode);
 	}
@@ -359,7 +359,7 @@ void gencvt_s_d()
 	gencheck_result_valid_s();
 	mov_eax_memoffs32((unsigned long*)(&reg_cop1_simple[dst->f.cf.fd]));
 	fstp_preg32_dword(EAX);
-	if (Config.is_round_towards_zero_enabled)
+	if (g_config.is_round_towards_zero_enabled)
 	{
 		fldcw_m16((unsigned short*)&rounding_mode);
 	}

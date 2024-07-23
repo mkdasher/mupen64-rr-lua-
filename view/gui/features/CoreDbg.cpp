@@ -1,7 +1,7 @@
 #include <view/lua/LuaConsole.h>
 
 #include "../../../winproject/resource.h"
-#include <view/gui/main_win.h>
+#include <view/gui/Main.h>
 #include "CoreDbg.h"
 
 #include <stdio.h>
@@ -102,7 +102,7 @@ namespace CoreDbg
 	{
 		std::thread([]
 		{
-			DialogBox(app_instance,
+			DialogBox(g_app_instance,
 			          MAKEINTRESOURCE(IDD_COREDBG),
 			          0,
 			          coredbg_dlgproc);

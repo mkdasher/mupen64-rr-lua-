@@ -172,7 +172,7 @@ void genjr()
 	unsigned long temp, temp2;
 
 	if (((dst->addr & 0xFFF) == 0xFFC &&
-		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !Config.is_compiled_jump_enabled)
+		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !g_config.is_compiled_jump_enabled)
 	{
 		gencallinterp((unsigned long)JR, 1);
 		return;
@@ -241,7 +241,7 @@ void genjalr()
 	unsigned long temp, temp2;
 
 	if (((dst->addr & 0xFFF) == 0xFFC &&
-		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !Config.is_compiled_jump_enabled)
+		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !g_config.is_compiled_jump_enabled)
 	{
 		gencallinterp((unsigned long)JALR, 1);
 		return;

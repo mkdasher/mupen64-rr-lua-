@@ -19,21 +19,21 @@
 #include <vector>
 #include <cassert>
 #include <view/lua/LuaConsole.h>
-#include <view/gui/main_win.h>
+#include <view/gui/Main.h>
 #include <winproject/resource.h>
 #include <core/r4300/Plugin.hpp>
 #include <view/gui/features/RomBrowser.hpp>
 #include <core/r4300/timers.h>
 #include <shared/Config.hpp>
 #include <view/gui/wrapper/PersistentPathDialog.h>
-#include <shared/helpers/string_helpers.h>
+#include <shared/helpers/StringHelpers.h>
 #include <view/helpers/WinHelpers.h>
 #include <view/helpers/StringHelpers.h>
 #include <core/r4300/r4300.h>
 #include "configdialog.h"
 #include <view/capture/EncodingManager.h>
 
-#include <shared/messenger.h>
+#include <shared/Messenger.h>
 
 std::vector<std::unique_ptr<Plugin>> available_plugins;
 std::vector<HWND> tooltips;
@@ -127,7 +127,7 @@ BOOL CALLBACK about_dlg_proc(const HWND hwnd, const UINT message, const WPARAM w
 	{
 	case WM_INITDIALOG:
 		SendDlgItemMessage(hwnd, IDB_LOGO, STM_SETIMAGE, IMAGE_BITMAP,
-		                   (LPARAM)LoadImage(app_instance, MAKEINTRESOURCE(IDB_LOGO),
+		                   (LPARAM)LoadImage(g_app_instance, MAKEINTRESOURCE(IDB_LOGO),
 		                                     IMAGE_BITMAP, 0, 0, 0));
 		return TRUE;
 
@@ -160,8 +160,8 @@ BOOL CALLBACK about_dlg_proc(const HWND hwnd, const UINT message, const WPARAM w
 
 void configdialog_about()
 {
-	DialogBox(app_instance,
-	          MAKEINTRESOURCE(IDD_ABOUT), mainHWND,
+	DialogBox(g_app_instance,
+	          MAKEINTRESOURCE(IDD_ABOUT), g_main_hwnd,
 	          about_dlg_proc);
 }
 
@@ -171,7 +171,7 @@ void build_rom_browser_path_list(const HWND dialog_hwnd)
 
 	SendMessage(hwnd, LB_RESETCONTENT, 0, 0);
 
-	for (const std::string& str : Config.rombrowser_rom_paths)
+	for (const std::string& str : g_config.rombrowser_rom_paths)
 	{
 		SendMessage(hwnd, LB_ADDSTRING, 0,
 		            (LPARAM)str.c_str());
@@ -190,37 +190,37 @@ BOOL CALLBACK directories_cfg(const HWND hwnd, const UINT message, const WPARAM 
 		build_rom_browser_path_list(hwnd);
 
 		SendMessage(GetDlgItem(hwnd, IDC_RECURSION), BM_SETCHECK,
-		            Config.is_rombrowser_recursion_enabled ? BST_CHECKED : BST_UNCHECKED, 0);
+		            g_config.is_rombrowser_recursion_enabled ? BST_CHECKED : BST_UNCHECKED, 0);
 
-		if (Config.is_default_plugins_directory_used)
+		if (g_config.is_default_plugins_directory_used)
 		{
 			SendMessage(GetDlgItem(hwnd, IDC_DEFAULT_PLUGINS_CHECK), BM_SETCHECK, BST_CHECKED, 0);
 			EnableWindow(GetDlgItem(hwnd, IDC_PLUGINS_DIR), FALSE);
 			EnableWindow(GetDlgItem(hwnd, IDC_CHOOSE_PLUGINS_DIR), FALSE);
 		}
-		if (Config.is_default_saves_directory_used)
+		if (g_config.is_default_saves_directory_used)
 		{
 			SendMessage(GetDlgItem(hwnd, IDC_DEFAULT_SAVES_CHECK), BM_SETCHECK, BST_CHECKED, 0);
 			EnableWindow(GetDlgItem(hwnd, IDC_SAVES_DIR), FALSE);
 			EnableWindow(GetDlgItem(hwnd, IDC_CHOOSE_SAVES_DIR), FALSE);
 		}
-		if (Config.is_default_screenshots_directory_used)
+		if (g_config.is_default_screenshots_directory_used)
 		{
 			SendMessage(GetDlgItem(hwnd, IDC_DEFAULT_SCREENSHOTS_CHECK), BM_SETCHECK, BST_CHECKED, 0);
 			EnableWindow(GetDlgItem(hwnd, IDC_SCREENSHOTS_DIR), FALSE);
 			EnableWindow(GetDlgItem(hwnd, IDC_CHOOSE_SCREENSHOTS_DIR), FALSE);
 		}
-		if (Config.is_default_backups_directory_used)
+		if (g_config.is_default_backups_directory_used)
 		{
 			SendMessage(GetDlgItem(hwnd, IDC_DEFAULT_BACKUPS_CHECK), BM_SETCHECK, BST_CHECKED, 0);
 			EnableWindow(GetDlgItem(hwnd, IDC_BACKUPS_DIR), FALSE);
 			EnableWindow(GetDlgItem(hwnd, IDC_CHOOSE_BACKUPS_DIR), FALSE);
 		}
 
-		SetDlgItemText(hwnd, IDC_PLUGINS_DIR, Config.plugins_directory.c_str());
-		SetDlgItemText(hwnd, IDC_SAVES_DIR, Config.saves_directory.c_str());
-		SetDlgItemText(hwnd, IDC_SCREENSHOTS_DIR, Config.screenshots_directory.c_str());
-		SetDlgItemText(hwnd, IDC_BACKUPS_DIR, Config.backups_directory.c_str());
+		SetDlgItemText(hwnd, IDC_PLUGINS_DIR, g_config.plugins_directory.c_str());
+		SetDlgItemText(hwnd, IDC_SAVES_DIR, g_config.saves_directory.c_str());
+		SetDlgItemText(hwnd, IDC_SCREENSHOTS_DIR, g_config.screenshots_directory.c_str());
+		SetDlgItemText(hwnd, IDC_BACKUPS_DIR, g_config.backups_directory.c_str());
 
 		if (emu_launched)
 		{
@@ -237,36 +237,36 @@ BOOL CALLBACK directories_cfg(const HWND hwnd, const UINT message, const WPARAM 
 				               ? TRUE
 				               : FALSE;
 			GetDlgItemText(hwnd, IDC_PLUGINS_DIR, str, 200);
-			Config.plugins_directory = std::string(str);
-			Config.is_default_plugins_directory_used = selected;
+			g_config.plugins_directory = std::string(str);
+			g_config.is_default_plugins_directory_used = selected;
 
 			selected = SendDlgItemMessage(hwnd, IDC_DEFAULT_SAVES_CHECK, BM_GETCHECK, 0, 0) == BST_CHECKED
 				           ? TRUE
 				           : FALSE;
 			GetDlgItemText(hwnd, IDC_SAVES_DIR, str, MAX_PATH);
-			Config.saves_directory = std::string(str);
-			Config.is_default_saves_directory_used = selected;
+			g_config.saves_directory = std::string(str);
+			g_config.is_default_saves_directory_used = selected;
 
 			selected = SendDlgItemMessage(hwnd, IDC_DEFAULT_SCREENSHOTS_CHECK, BM_GETCHECK, 0, 0) == BST_CHECKED
 				           ? TRUE
 				           : FALSE;
 			GetDlgItemText(hwnd, IDC_SCREENSHOTS_DIR, str, MAX_PATH);
-			Config.screenshots_directory = std::string(str);
-			Config.is_default_screenshots_directory_used = selected;
+			g_config.screenshots_directory = std::string(str);
+			g_config.is_default_screenshots_directory_used = selected;
 
 			selected = SendDlgItemMessage(hwnd, IDC_DEFAULT_BACKUPS_CHECK, BM_GETCHECK, 0, 0) == BST_CHECKED
 						   ? TRUE
 						   : FALSE;
 			GetDlgItemText(hwnd, IDC_BACKUPS_DIR, str, MAX_PATH);
-			Config.backups_directory = std::string(str);
-			Config.is_default_backups_directory_used = selected;
+			g_config.backups_directory = std::string(str);
+			g_config.is_default_backups_directory_used = selected;
 		}
 		break;
 	case WM_COMMAND:
 		switch (LOWORD(w_param))
 		{
 		case IDC_RECURSION:
-			Config.is_rombrowser_recursion_enabled = SendDlgItemMessage(hwnd, IDC_RECURSION, BM_GETCHECK, 0, 0) ==
+			g_config.is_rombrowser_recursion_enabled = SendDlgItemMessage(hwnd, IDC_RECURSION, BM_GETCHECK, 0, 0) ==
 				BST_CHECKED;
 			break;
 		case IDC_ADD_BROWSER_DIR:
@@ -276,7 +276,7 @@ BOOL CALLBACK directories_cfg(const HWND hwnd, const UINT message, const WPARAM 
 				{
 					break;
 				}
-				Config.rombrowser_rom_paths.push_back(wstring_to_string(path));
+				g_config.rombrowser_rom_paths.push_back(wstring_to_string(path));
 				build_rom_browser_path_list(hwnd);
 				break;
 			}
@@ -284,31 +284,31 @@ BOOL CALLBACK directories_cfg(const HWND hwnd, const UINT message, const WPARAM 
 			{
 				if (const int32_t selected_index = SendMessage(GetDlgItem(hwnd, IDC_ROMBROWSER_DIR_LIST), LB_GETCURSEL, 0, 0); selected_index != -1)
 				{
-					Config.rombrowser_rom_paths.erase(Config.rombrowser_rom_paths.begin() + selected_index);
+					g_config.rombrowser_rom_paths.erase(g_config.rombrowser_rom_paths.begin() + selected_index);
 				}
 				build_rom_browser_path_list(hwnd);
 				break;
 			}
 
 		case IDC_REMOVE_BROWSER_ALL:
-			Config.rombrowser_rom_paths.clear();
+			g_config.rombrowser_rom_paths.clear();
 			build_rom_browser_path_list(hwnd);
 			break;
 
 		case IDC_DEFAULT_PLUGINS_CHECK:
 			{
-				Config.is_default_plugins_directory_used = SendMessage(GetDlgItem(hwnd, IDC_DEFAULT_PLUGINS_CHECK),
+				g_config.is_default_plugins_directory_used = SendMessage(GetDlgItem(hwnd, IDC_DEFAULT_PLUGINS_CHECK),
 				                                                       BM_GETCHECK, 0, 0);
-				EnableWindow(GetDlgItem(hwnd, IDC_PLUGINS_DIR), !Config.is_default_plugins_directory_used);
-				EnableWindow(GetDlgItem(hwnd, IDC_CHOOSE_PLUGINS_DIR), !Config.is_default_plugins_directory_used);
+				EnableWindow(GetDlgItem(hwnd, IDC_PLUGINS_DIR), !g_config.is_default_plugins_directory_used);
+				EnableWindow(GetDlgItem(hwnd, IDC_CHOOSE_PLUGINS_DIR), !g_config.is_default_plugins_directory_used);
 			}
 			break;
 		case IDC_DEFAULT_BACKUPS_CHECK:
 			{
-				Config.is_default_backups_directory_used = SendMessage(GetDlgItem(hwnd, IDC_DEFAULT_BACKUPS_CHECK),
+				g_config.is_default_backups_directory_used = SendMessage(GetDlgItem(hwnd, IDC_DEFAULT_BACKUPS_CHECK),
 																	   BM_GETCHECK, 0, 0);
-				EnableWindow(GetDlgItem(hwnd, IDC_BACKUPS_DIR), !Config.is_default_backups_directory_used);
-				EnableWindow(GetDlgItem(hwnd, IDC_CHOOSE_BACKUPS_DIR), !Config.is_default_backups_directory_used);
+				EnableWindow(GetDlgItem(hwnd, IDC_BACKUPS_DIR), !g_config.is_default_backups_directory_used);
+				EnableWindow(GetDlgItem(hwnd, IDC_CHOOSE_BACKUPS_DIR), !g_config.is_default_backups_directory_used);
 			}
 			break;
 		case IDC_PLUGIN_DIRECTORY_HELP:
@@ -324,16 +324,16 @@ BOOL CALLBACK directories_cfg(const HWND hwnd, const UINT message, const WPARAM 
 				{
 					break;
 				}
-				Config.plugins_directory = wstring_to_string(path) + "\\";
-				SetDlgItemText(hwnd, IDC_PLUGINS_DIR, Config.plugins_directory.c_str());
+				g_config.plugins_directory = wstring_to_string(path) + "\\";
+				SetDlgItemText(hwnd, IDC_PLUGINS_DIR, g_config.plugins_directory.c_str());
 			}
 			break;
 		case IDC_DEFAULT_SAVES_CHECK:
 			{
-				Config.is_default_saves_directory_used = SendMessage(GetDlgItem(hwnd, IDC_DEFAULT_SAVES_CHECK),
+				g_config.is_default_saves_directory_used = SendMessage(GetDlgItem(hwnd, IDC_DEFAULT_SAVES_CHECK),
 				                                                     BM_GETCHECK, 0, 0);
-				EnableWindow(GetDlgItem(hwnd, IDC_SAVES_DIR), !Config.is_default_saves_directory_used);
-				EnableWindow(GetDlgItem(hwnd, IDC_CHOOSE_SAVES_DIR), !Config.is_default_saves_directory_used);
+				EnableWindow(GetDlgItem(hwnd, IDC_SAVES_DIR), !g_config.is_default_saves_directory_used);
+				EnableWindow(GetDlgItem(hwnd, IDC_CHOOSE_SAVES_DIR), !g_config.is_default_saves_directory_used);
 			}
 			break;
 		case IDC_CHOOSE_SAVES_DIR:
@@ -343,17 +343,17 @@ BOOL CALLBACK directories_cfg(const HWND hwnd, const UINT message, const WPARAM 
 				{
 					break;
 				}
-				Config.saves_directory = wstring_to_string(path) + "\\";
-				SetDlgItemText(hwnd, IDC_SAVES_DIR, Config.saves_directory.c_str());
+				g_config.saves_directory = wstring_to_string(path) + "\\";
+				SetDlgItemText(hwnd, IDC_SAVES_DIR, g_config.saves_directory.c_str());
 			}
 			break;
 		case IDC_DEFAULT_SCREENSHOTS_CHECK:
 			{
-				Config.is_default_screenshots_directory_used = SendMessage(
+				g_config.is_default_screenshots_directory_used = SendMessage(
 					GetDlgItem(hwnd, IDC_DEFAULT_SCREENSHOTS_CHECK), BM_GETCHECK, 0, 0);
-				EnableWindow(GetDlgItem(hwnd, IDC_SCREENSHOTS_DIR), !Config.is_default_screenshots_directory_used);
+				EnableWindow(GetDlgItem(hwnd, IDC_SCREENSHOTS_DIR), !g_config.is_default_screenshots_directory_used);
 				EnableWindow(GetDlgItem(hwnd, IDC_CHOOSE_SCREENSHOTS_DIR),
-				             !Config.is_default_screenshots_directory_used);
+				             !g_config.is_default_screenshots_directory_used);
 			}
 			break;
 		case IDC_CHOOSE_SCREENSHOTS_DIR:
@@ -363,8 +363,8 @@ BOOL CALLBACK directories_cfg(const HWND hwnd, const UINT message, const WPARAM 
 				{
 					break;
 				}
-				Config.screenshots_directory = wstring_to_string(path) + "\\";
-				SetDlgItemText(hwnd, IDC_SCREENSHOTS_DIR, Config.screenshots_directory.c_str());
+				g_config.screenshots_directory = wstring_to_string(path) + "\\";
+				SetDlgItemText(hwnd, IDC_SCREENSHOTS_DIR, g_config.screenshots_directory.c_str());
 			}
 			break;
 		case IDC_CHOOSE_BACKUPS_DIR:
@@ -374,8 +374,8 @@ BOOL CALLBACK directories_cfg(const HWND hwnd, const UINT message, const WPARAM 
 				{
 					break;
 				}
-				Config.backups_directory = wstring_to_string(path) + "\\";
-				SetDlgItemText(hwnd, IDC_BACKUPS_DIR, Config.backups_directory.c_str());
+				g_config.backups_directory = wstring_to_string(path) + "\\";
+				SetDlgItemText(hwnd, IDC_BACKUPS_DIR, g_config.backups_directory.c_str());
 			}
 			break;
 		default:
@@ -449,10 +449,10 @@ BOOL CALLBACK plugins_cfg(const HWND hwnd, const UINT message, const WPARAM w_pa
 				SendDlgItemMessage(hwnd, id, CB_SETITEMDATA, i, (LPARAM)plugin.get());
 			}
 
-			update_plugin_selection(hwnd, IDC_COMBO_GFX, Config.selected_video_plugin);
-			update_plugin_selection(hwnd, IDC_COMBO_SOUND, Config.selected_audio_plugin);
-			update_plugin_selection(hwnd, IDC_COMBO_INPUT, Config.selected_input_plugin);
-			update_plugin_selection(hwnd, IDC_COMBO_RSP, Config.selected_rsp_plugin);
+			update_plugin_selection(hwnd, IDC_COMBO_GFX, g_config.selected_video_plugin);
+			update_plugin_selection(hwnd, IDC_COMBO_SOUND, g_config.selected_audio_plugin);
+			update_plugin_selection(hwnd, IDC_COMBO_INPUT, g_config.selected_input_plugin);
+			update_plugin_selection(hwnd, IDC_COMBO_RSP, g_config.selected_rsp_plugin);
 
 			EnableWindow(GetDlgItem(hwnd, IDC_COMBO_GFX), !emu_launched);
 			EnableWindow(GetDlgItem(hwnd, IDC_COMBO_INPUT), !emu_launched);
@@ -460,16 +460,16 @@ BOOL CALLBACK plugins_cfg(const HWND hwnd, const UINT message, const WPARAM w_pa
 			EnableWindow(GetDlgItem(hwnd, IDC_COMBO_RSP), !emu_launched);
 
 			SendDlgItemMessage(hwnd, IDB_DISPLAY, STM_SETIMAGE, IMAGE_BITMAP,
-			                   (LPARAM)LoadImage(app_instance, MAKEINTRESOURCE(IDB_DISPLAY),
+			                   (LPARAM)LoadImage(g_app_instance, MAKEINTRESOURCE(IDB_DISPLAY),
 			                                     IMAGE_BITMAP, 0, 0, 0));
 			SendDlgItemMessage(hwnd, IDB_CONTROL, STM_SETIMAGE, IMAGE_BITMAP,
-			                   (LPARAM)LoadImage(app_instance, MAKEINTRESOURCE(IDB_CONTROL),
+			                   (LPARAM)LoadImage(g_app_instance, MAKEINTRESOURCE(IDB_CONTROL),
 			                                     IMAGE_BITMAP, 0, 0, 0));
 			SendDlgItemMessage(hwnd, IDB_SOUND, STM_SETIMAGE, IMAGE_BITMAP,
-			                   (LPARAM)LoadImage(app_instance, MAKEINTRESOURCE(IDB_SOUND),
+			                   (LPARAM)LoadImage(g_app_instance, MAKEINTRESOURCE(IDB_SOUND),
 			                                     IMAGE_BITMAP, 0, 0, 0));
 			SendDlgItemMessage(hwnd, IDB_RSP, STM_SETIMAGE, IMAGE_BITMAP,
-			                   (LPARAM)LoadImage(app_instance, MAKEINTRESOURCE(IDB_RSP),
+			                   (LPARAM)LoadImage(g_app_instance, MAKEINTRESOURCE(IDB_RSP),
 			                                     IMAGE_BITMAP, 0, 0, 0));
 			return TRUE;
 		}
@@ -513,51 +513,51 @@ BOOL CALLBACK plugins_cfg(const HWND hwnd, const UINT message, const WPARAM w_pa
 				break;
 			}
 		case IDM_VIDEO_SETTINGS:
-			hwnd_plug = hwnd;
+			g_hwnd_plug = hwnd;
 			get_selected_plugin(hwnd, IDC_COMBO_GFX)->config();
 			break;
 		case IDGFXTEST:
-			hwnd_plug = hwnd;
+			g_hwnd_plug = hwnd;
 			get_selected_plugin(hwnd, IDC_COMBO_GFX)->test();
 			break;
 		case IDGFXABOUT:
-			hwnd_plug = hwnd;
+			g_hwnd_plug = hwnd;
 			get_selected_plugin(hwnd, IDC_COMBO_GFX)->about();
 			break;
 		case IDM_INPUT_SETTINGS:
-			hwnd_plug = hwnd;
+			g_hwnd_plug = hwnd;
 			get_selected_plugin(hwnd, IDC_COMBO_INPUT)->config();
 			break;
 		case IDINPUTTEST:
-			hwnd_plug = hwnd;
+			g_hwnd_plug = hwnd;
 			get_selected_plugin(hwnd, IDC_COMBO_INPUT)->test();
 			break;
 		case IDINPUTABOUT:
-			hwnd_plug = hwnd;
+			g_hwnd_plug = hwnd;
 			get_selected_plugin(hwnd, IDC_COMBO_INPUT)->about();
 			break;
 		case IDM_AUDIO_SETTINGS:
-			hwnd_plug = hwnd;
+			g_hwnd_plug = hwnd;
 			get_selected_plugin(hwnd, IDC_COMBO_SOUND)->config();
 			break;
 		case IDSOUNDTEST:
-			hwnd_plug = hwnd;
+			g_hwnd_plug = hwnd;
 			get_selected_plugin(hwnd, IDC_COMBO_SOUND)->test();
 			break;
 		case IDSOUNDABOUT:
-			hwnd_plug = hwnd;
+			g_hwnd_plug = hwnd;
 			get_selected_plugin(hwnd, IDC_COMBO_SOUND)->about();
 			break;
 		case IDM_RSP_SETTINGS:
-			hwnd_plug = hwnd;
+			g_hwnd_plug = hwnd;
 			get_selected_plugin(hwnd, IDC_COMBO_RSP)->config();
 			break;
 		case IDRSPTEST:
-			hwnd_plug = hwnd;
+			g_hwnd_plug = hwnd;
 			get_selected_plugin(hwnd, IDC_COMBO_RSP)->test();
 			break;
 		case IDRSPABOUT:
-			hwnd_plug = hwnd;
+			g_hwnd_plug = hwnd;
 			get_selected_plugin(hwnd, IDC_COMBO_RSP)->about();
 			break;
 		default:
@@ -569,19 +569,19 @@ BOOL CALLBACK plugins_cfg(const HWND hwnd, const UINT message, const WPARAM w_pa
 		{
 			if (const auto plugin = get_selected_plugin(hwnd, IDC_COMBO_GFX); plugin != nullptr)
 			{
-				Config.selected_video_plugin = plugin->path().string();
+				g_config.selected_video_plugin = plugin->path().string();
 			}
 			if (const auto plugin = get_selected_plugin(hwnd, IDC_COMBO_SOUND); plugin != nullptr)
 			{
-				Config.selected_audio_plugin = plugin->path().string();
+				g_config.selected_audio_plugin = plugin->path().string();
 			}
 			if (const auto plugin = get_selected_plugin(hwnd, IDC_COMBO_INPUT); plugin != nullptr)
 			{
-				Config.selected_input_plugin = plugin->path().string();
+				g_config.selected_input_plugin = plugin->path().string();
 			}
 			if (const auto plugin = get_selected_plugin(hwnd, IDC_COMBO_RSP); plugin != nullptr)
 			{
-				Config.selected_rsp_plugin = plugin->path().string();
+				g_config.selected_rsp_plugin = plugin->path().string();
 			}
 		}
 		break;
@@ -638,7 +638,7 @@ BOOL CALLBACK general_cfg(const HWND hwnd, const UINT message, const WPARAM w_pa
 				                   (LPARAM)clock_speed_multiplier_name);
 			}
 			SendDlgItemMessage(hwnd, IDC_COMBO_CLOCK_SPD_MULT, CB_SETCURSEL, SendDlgItemMessage(hwnd, IDC_COMBO_CLOCK_SPD_MULT, CB_FINDSTRINGEXACT, -1,
-			                                                                                    (LPARAM)clock_speed_multiplier_names[Config.
+			                                                                                    (LPARAM)clock_speed_multiplier_names[g_config.
 				                                                                                    cpu_clock_speed_multiplier - 1]), 0);
 
 			for (auto& name : capture_mode_names)
@@ -646,27 +646,27 @@ BOOL CALLBACK general_cfg(const HWND hwnd, const UINT message, const WPARAM w_pa
 				SendDlgItemMessage(hwnd, IDC_ENCODE_MODE, CB_ADDSTRING, 0,
 				                   (LPARAM)name);
 			}
-			ComboBox_SetCurSel(GetDlgItem(hwnd, IDC_ENCODE_MODE), Config.capture_mode);
+			ComboBox_SetCurSel(GetDlgItem(hwnd, IDC_ENCODE_MODE), g_config.capture_mode);
 
 			for (auto& name : presenter_type_names)
 			{
 				SendDlgItemMessage(hwnd, IDC_COMBO_LUA_PRESENTER, CB_ADDSTRING, 0,
 								   (LPARAM)name);
 			}
-			ComboBox_SetCurSel(GetDlgItem(hwnd, IDC_COMBO_LUA_PRESENTER), Config.presenter_type);
+			ComboBox_SetCurSel(GetDlgItem(hwnd, IDC_COMBO_LUA_PRESENTER), g_config.presenter_type);
 
 			for (auto& name : capture_sync_names)
 			{
 				SendDlgItemMessage(hwnd, IDC_ENCODE_SYNC, CB_ADDSTRING, 0,
 				                   (LPARAM)name);
 			}
-			ComboBox_SetCurSel(GetDlgItem(hwnd, IDC_ENCODE_SYNC), Config.synchronization_mode);
+			ComboBox_SetCurSel(GetDlgItem(hwnd, IDC_ENCODE_SYNC), g_config.synchronization_mode);
 
-			SetDlgItemInt(hwnd, IDC_SKIPFREQ, Config.frame_skip_frequency, 0);
+			SetDlgItemInt(hwnd, IDC_SKIPFREQ, g_config.frame_skip_frequency, 0);
 
-			CheckDlgButton(hwnd, IDC_INTERP, Config.core_type == 0 ? BST_CHECKED : BST_UNCHECKED);
-			CheckDlgButton(hwnd, IDC_RECOMP, Config.core_type == 1 ? BST_CHECKED : BST_UNCHECKED);
-			CheckDlgButton(hwnd, IDC_PURE_INTERP, Config.core_type == 2 ? BST_CHECKED : BST_UNCHECKED);
+			CheckDlgButton(hwnd, IDC_INTERP, g_config.core_type == 0 ? BST_CHECKED : BST_UNCHECKED);
+			CheckDlgButton(hwnd, IDC_RECOMP, g_config.core_type == 1 ? BST_CHECKED : BST_UNCHECKED);
+			CheckDlgButton(hwnd, IDC_PURE_INTERP, g_config.core_type == 2 ? BST_CHECKED : BST_UNCHECKED);
 
 			EnableWindow(GetDlgItem(hwnd, IDC_INTERP), !emu_launched);
 			EnableWindow(GetDlgItem(hwnd, IDC_RECOMP), !emu_launched);
@@ -675,19 +675,19 @@ BOOL CALLBACK general_cfg(const HWND hwnd, const UINT message, const WPARAM w_pa
 			EnableWindow(GetDlgItem(hwnd, IDC_ENCODE_SYNC), !EncodingManager::is_capturing());
 			EnableWindow(GetDlgItem(hwnd, IDC_COMBO_LUA_PRESENTER), hwnd_lua_map.empty());
 
-			set_checkbox_state(hwnd, IDC_PAUSENOTACTIVE, Config.is_unfocused_pause_enabled);
-			set_checkbox_state(hwnd, IDC_AUTOINCREMENTSAVESLOT, Config.increment_slot);
-			set_checkbox_state(hwnd, IDC_STATUSBARZEROINDEX, Config.vcr_0_index);
-			set_checkbox_state(hwnd, IDC_USESUMMERCART, Config.use_summercart);
-			set_checkbox_state(hwnd, IDC_SAVE_VIDEO_TO_ST, Config.st_screenshot);
-			set_checkbox_state(hwnd, IDC_ROUNDTOZERO, Config.is_round_towards_zero_enabled);
-			set_checkbox_state(hwnd, IDC_MOVIE_BACKUPS, Config.vcr_backups);
-			set_checkbox_state(hwnd, IDC_EMULATEFLOATCRASHES, Config.is_float_exception_propagation_enabled);
-			set_checkbox_state(hwnd, IDC_ENABLE_AUDIO_DELAY, Config.is_audio_delay_enabled);
-			set_checkbox_state(hwnd, IDC_ENABLE_COMPILED_JUMP, Config.is_compiled_jump_enabled);
-			set_checkbox_state(hwnd, IDC_RECORD_RESETS, Config.is_reset_recording_enabled);
-			SetDlgItemInt(hwnd, IDC_CAPTUREDELAY, Config.capture_delay, 0);
-			SetDlgItemInt(hwnd, IDC_EDIT_MAX_LAG, Config.max_lag, 0);
+			set_checkbox_state(hwnd, IDC_PAUSENOTACTIVE, g_config.is_unfocused_pause_enabled);
+			set_checkbox_state(hwnd, IDC_AUTOINCREMENTSAVESLOT, g_config.increment_slot);
+			set_checkbox_state(hwnd, IDC_STATUSBARZEROINDEX, g_config.vcr_0_index);
+			set_checkbox_state(hwnd, IDC_USESUMMERCART, g_config.use_summercart);
+			set_checkbox_state(hwnd, IDC_SAVE_VIDEO_TO_ST, g_config.st_screenshot);
+			set_checkbox_state(hwnd, IDC_ROUNDTOZERO, g_config.is_round_towards_zero_enabled);
+			set_checkbox_state(hwnd, IDC_MOVIE_BACKUPS, g_config.vcr_backups);
+			set_checkbox_state(hwnd, IDC_EMULATEFLOATCRASHES, g_config.is_float_exception_propagation_enabled);
+			set_checkbox_state(hwnd, IDC_ENABLE_AUDIO_DELAY, g_config.is_audio_delay_enabled);
+			set_checkbox_state(hwnd, IDC_ENABLE_COMPILED_JUMP, g_config.is_compiled_jump_enabled);
+			set_checkbox_state(hwnd, IDC_RECORD_RESETS, g_config.is_reset_recording_enabled);
+			SetDlgItemInt(hwnd, IDC_CAPTUREDELAY, g_config.capture_delay, 0);
+			SetDlgItemInt(hwnd, IDC_EDIT_MAX_LAG, g_config.max_lag, 0);
 
 			return TRUE;
 		}
@@ -703,40 +703,40 @@ BOOL CALLBACK general_cfg(const HWND hwnd, const UINT message, const WPARAM w_pa
 			{
 				char buf[260] = {0};
 				read_combo_box_value(hwnd, IDC_COMBO_CLOCK_SPD_MULT, buf);
-				Config.cpu_clock_speed_multiplier = atoi(&buf[0]);
+				g_config.cpu_clock_speed_multiplier = atoi(&buf[0]);
 				break;
 			}
 		case IDC_ENCODE_MODE:
 			{
-				Config.capture_mode = ComboBox_GetCurSel(GetDlgItem(hwnd, IDC_ENCODE_MODE));
+				g_config.capture_mode = ComboBox_GetCurSel(GetDlgItem(hwnd, IDC_ENCODE_MODE));
 				break;
 			}
 		case IDC_ENCODE_SYNC:
 			{
-				Config.synchronization_mode = ComboBox_GetCurSel(GetDlgItem(hwnd, IDC_ENCODE_SYNC));
+				g_config.synchronization_mode = ComboBox_GetCurSel(GetDlgItem(hwnd, IDC_ENCODE_SYNC));
 				break;
 			}
 	case IDC_COMBO_LUA_PRESENTER:
 			{
-				Config.presenter_type = ComboBox_GetCurSel(GetDlgItem(hwnd, IDC_COMBO_LUA_PRESENTER));
+				g_config.presenter_type = ComboBox_GetCurSel(GetDlgItem(hwnd, IDC_COMBO_LUA_PRESENTER));
 				break;
 			}
 		case IDC_INTERP:
 			if (!emu_launched)
 			{
-				Config.core_type = 0;
+				g_config.core_type = 0;
 			}
 			break;
 		case IDC_RECOMP:
 			if (!emu_launched)
 			{
-				Config.core_type = 1;
+				g_config.core_type = 1;
 			}
 			break;
 		case IDC_PURE_INTERP:
 			if (!emu_launched)
 			{
-				Config.core_type = 2;
+				g_config.core_type = 2;
 			}
 			break;
 		default:
@@ -747,20 +747,20 @@ BOOL CALLBACK general_cfg(const HWND hwnd, const UINT message, const WPARAM w_pa
 	case WM_NOTIFY:
 		if (l_nmhdr->code == PSN_APPLY)
 		{
-			Config.frame_skip_frequency = (int)GetDlgItemInt(hwnd, IDC_SKIPFREQ, nullptr, 0);
-			Config.increment_slot = get_checkbox_state(hwnd, IDC_AUTOINCREMENTSAVESLOT);
-			Config.vcr_0_index = get_checkbox_state(hwnd, IDC_STATUSBARZEROINDEX);
-			Config.is_unfocused_pause_enabled = get_checkbox_state(hwnd, IDC_PAUSENOTACTIVE);
-			Config.use_summercart = get_checkbox_state(hwnd, IDC_USESUMMERCART);
-			Config.st_screenshot = get_checkbox_state(hwnd, IDC_SAVE_VIDEO_TO_ST);
-			Config.is_round_towards_zero_enabled = get_checkbox_state(hwnd, IDC_ROUNDTOZERO);
-			Config.vcr_backups = get_checkbox_state(hwnd, IDC_MOVIE_BACKUPS);
-			Config.is_float_exception_propagation_enabled = get_checkbox_state(hwnd, IDC_EMULATEFLOATCRASHES);
-			Config.is_audio_delay_enabled = get_checkbox_state(hwnd, IDC_ENABLE_AUDIO_DELAY);
-			Config.is_compiled_jump_enabled = get_checkbox_state(hwnd, IDC_ENABLE_COMPILED_JUMP);
-			Config.is_reset_recording_enabled = get_checkbox_state(hwnd, IDC_RECORD_RESETS);
-			Config.capture_delay = GetDlgItemInt(hwnd, IDC_CAPTUREDELAY, nullptr, 0);
-			Config.max_lag = GetDlgItemInt(hwnd, IDC_EDIT_MAX_LAG, nullptr, 0);
+			g_config.frame_skip_frequency = (int)GetDlgItemInt(hwnd, IDC_SKIPFREQ, nullptr, 0);
+			g_config.increment_slot = get_checkbox_state(hwnd, IDC_AUTOINCREMENTSAVESLOT);
+			g_config.vcr_0_index = get_checkbox_state(hwnd, IDC_STATUSBARZEROINDEX);
+			g_config.is_unfocused_pause_enabled = get_checkbox_state(hwnd, IDC_PAUSENOTACTIVE);
+			g_config.use_summercart = get_checkbox_state(hwnd, IDC_USESUMMERCART);
+			g_config.st_screenshot = get_checkbox_state(hwnd, IDC_SAVE_VIDEO_TO_ST);
+			g_config.is_round_towards_zero_enabled = get_checkbox_state(hwnd, IDC_ROUNDTOZERO);
+			g_config.vcr_backups = get_checkbox_state(hwnd, IDC_MOVIE_BACKUPS);
+			g_config.is_float_exception_propagation_enabled = get_checkbox_state(hwnd, IDC_EMULATEFLOATCRASHES);
+			g_config.is_audio_delay_enabled = get_checkbox_state(hwnd, IDC_ENABLE_AUDIO_DELAY);
+			g_config.is_compiled_jump_enabled = get_checkbox_state(hwnd, IDC_ENABLE_COMPILED_JUMP);
+			g_config.is_reset_recording_enabled = get_checkbox_state(hwnd, IDC_RECORD_RESETS);
+			g_config.capture_delay = GetDlgItemInt(hwnd, IDC_CAPTUREDELAY, nullptr, 0);
+			g_config.max_lag = GetDlgItemInt(hwnd, IDC_EDIT_MAX_LAG, nullptr, 0);
 		}
 		break;
 	case WM_DESTROY:
@@ -921,7 +921,7 @@ void configdialog_show()
 	{
 		i.dwSize = sizeof(PROPSHEETPAGE);
 		i.dwFlags = PSP_USETITLE;
-		i.hInstance = app_instance;
+		i.hInstance = g_app_instance;
 	}
 
 	psp[0].pszTemplate = MAKEINTRESOURCE(IDD_MAIN);
@@ -943,17 +943,17 @@ void configdialog_show()
 	PROPSHEETHEADER psh = {0};
 	psh.dwSize = sizeof(PROPSHEETHEADER);
 	psh.dwFlags = PSH_PROPSHEETPAGE | PSH_NOAPPLYNOW | PSH_NOCONTEXTHELP;
-	psh.hwndParent = mainHWND;
-	psh.hInstance = app_instance;
+	psh.hwndParent = g_main_hwnd;
+	psh.hInstance = g_app_instance;
 	psh.pszCaption = "Settings";
 	psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
 	psh.ppsp = (LPCPROPSHEETPAGE)&psp;
 
-	const CONFIG old_config = Config;
+	const t_config old_config = g_config;
 
 	if (!PropertySheet(&psh))
 	{
-		Config = old_config;
+		g_config = old_config;
 	}
 
 	save_config();

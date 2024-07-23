@@ -4,7 +4,7 @@ extern "C" {
 #include <lualib.h>
 }
 #include <Windows.h>
-#include <view/gui/main_win.h>
+#include <view/gui/Main.h>
 
 namespace LuaCore::Input
 {
@@ -78,12 +78,12 @@ namespace LuaCore::Input
 
 		POINT mouse;
 		GetCursorPos(&mouse);
-		ScreenToClient(mainHWND, &mouse);
+		ScreenToClient(g_main_hwnd, &mouse);
 		lua_pushinteger(L, mouse.x);
 		lua_setfield(L, -2, "xmouse");
 		lua_pushinteger(L, mouse.y);
 		lua_setfield(L, -2, "ymouse");
-		lua_pushinteger(L, last_wheel_delta > 0 ? 1 : (last_wheel_delta < 0 ? -1 : 0));
+		lua_pushinteger(L, g_last_wheel_delta > 0 ? 1 : (g_last_wheel_delta < 0 ? -1 : 0));
 		lua_setfield(L, -2, "ywmouse");
 		return 1;
 	}
@@ -187,8 +187,8 @@ namespace LuaCore::Input
 
 	static int InputPrompt(lua_State* L)
 	{
-		DialogBoxParam(app_instance,
-		               MAKEINTRESOURCE(IDD_LUAINPUTPROMPT), mainHWND,
+		DialogBoxParam(g_app_instance,
+		               MAKEINTRESOURCE(IDD_LUAINPUTPROMPT), g_main_hwnd,
 		               InputPromptProc, (LPARAM)L);
 		return 1;
 	}

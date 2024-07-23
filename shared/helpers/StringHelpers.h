@@ -4,6 +4,11 @@
 #include <vector>
 #include <algorithm>
 
+/**
+ * Converts a string to a wstring. Returns an empty string on fail.
+ * \param str The string to convert
+ * \return The string's wstring representation
+ */
 static std::wstring string_to_wstring(const std::string& str)
 {
 	const auto wstr = static_cast<wchar_t*>(calloc(str.length(), sizeof(wchar_t) + 1));
@@ -23,6 +28,11 @@ static std::wstring string_to_wstring(const std::string& str)
 	return wstdstr;
 }
 
+/**
+ * Converts a wstring to a string.
+ * \param wstr The wstring to convert
+ * \return The wstring's string representation
+ */
 static std::string wstring_to_string(const std::wstring& wstr)
 {
 	std::string str(wstr.length(), 0);
@@ -33,7 +43,13 @@ static std::string wstring_to_string(const std::wstring& wstr)
 	return str;
 }
 
-// https://stackoverflow.com/a/46931770/14472122
+/**
+ * Splits a string by a delimiter
+ * \param s The string to split
+ * \param delimiter The delimiter
+ * \return A vector of string segments split by the delimiter
+ * \remark See https://stackoverflow.com/a/46931770/14472122
+ */
 static std::vector<std::string> split_string(const std::string& s, const std::string& delimiter)
 {
 	size_t pos_start = 0, pos_end;
@@ -51,6 +67,15 @@ static std::vector<std::string> split_string(const std::string& s, const std::st
 	return res;
 }
 
+// FIXME: Use template...
+
+/**
+ * Splits a wstring by a delimiter
+ * \param s The wstring to split
+ * \param delimiter The delimiter
+ * \return A vector of wstring segments split by the delimiter
+ * \remark See https://stackoverflow.com/a/46931770/14472122
+ */
 static std::vector<std::wstring> split_wstring(const std::wstring& s, const std::wstring& delimiter)
 {
 	size_t pos_start = 0, pos_end;
@@ -68,6 +93,11 @@ static std::vector<std::wstring> split_wstring(const std::wstring& s, const std:
 	return res;
 }
 
+/**
+ * Writes a nul terminator at the last space in the string 
+ * \param str The string to trim
+ * \param len The string's length including the nul terminator 
+ */
 static void strtrim(char* str, size_t len)
 {
 	for (int i = 0; i < len; ++i)
@@ -84,6 +114,13 @@ static void strtrim(char* str, size_t len)
 	}
 }
 
+/**
+ * Finds the nth occurence of a pattern inside a string
+ * \param str The string to search in
+ * \param searched The pattern to search for
+ * \param nth The occurence index
+ * \return The start index of the occurence into the string, or std::string::npos if none was found
+ */
 static size_t str_nth_occurence(const std::string& str, const std::string& searched, size_t nth)
 {
 	if (searched.empty() || nth <= 0)

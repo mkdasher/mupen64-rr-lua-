@@ -3,10 +3,10 @@
 #include <cassert>
 
 #include <shared/services/FrontendService.h>
-#include <shared/messenger.h>
+#include <shared/Messenger.h>
 #include "Resampler.h"
 #include <core/r4300/Plugin.hpp>
-#include <view/gui/main_win.h>
+#include <view/gui/Main.h>
 #include <core/r4300/rom.h>
 #include <shared/Config.hpp>
 #include <core/memory/memory.h>
@@ -57,7 +57,7 @@ namespace EncodingManager
 		*height = info.height & ~3;
 		*dest = (uint8_t*)malloc(*width * *height * 3 + 1);
 
-		HDC dc = GetDC(mainHWND);
+		HDC dc = GetDC(g_main_hwnd);
 		HDC compat_dc = CreateCompatibleDC(dc);
 		HBITMAP bitmap = CreateCompatibleBitmap(dc, *width, *height);
 
@@ -78,7 +78,7 @@ namespace EncodingManager
 		SelectObject(compat_dc, nullptr);
 		DeleteObject(bitmap);
 		DeleteDC(compat_dc);
-		ReleaseDC(mainHWND, dc);
+		ReleaseDC(g_main_hwnd, dc);
 	}
 
 	/**
@@ -95,7 +95,7 @@ namespace EncodingManager
 		*dest = (uint8_t*)malloc(*width * *height * 3 + 1);
 
 		POINT pt{};
-		ClientToScreen(mainHWND, &pt);
+		ClientToScreen(g_main_hwnd, &pt);
 
 		HDC dc = GetDC(nullptr);
 		HDC compat_dc = CreateCompatibleDC(dc);
@@ -153,7 +153,7 @@ namespace EncodingManager
 
 			GdiFlush();
 
-			HDC dc = GetDC(mainHWND);
+			HDC dc = GetDC(g_main_hwnd);
 			HDC compat_dc = CreateCompatibleDC(dc);
 			HBITMAP bitmap = CreateCompatibleBitmap(dc, *width, *height);
 			SelectObject(compat_dc, bitmap);
@@ -184,7 +184,7 @@ namespace EncodingManager
 			SelectObject(compat_dc, nullptr);
 			DeleteObject(bitmap);
 			DeleteDC(compat_dc);
-			ReleaseDC(mainHWND, dc);
+			ReleaseDC(g_main_hwnd, dc);
 		});
 	}
 
@@ -262,15 +262,15 @@ namespace EncodingManager
 
 	auto effective_readscreen()
 	{
-		if (Config.capture_mode == 0)
+		if (g_config.capture_mode == 0)
 		{
 			return MGECompositor::available() ? MGECompositor::read_screen : readScreen;
 		}
-		if (Config.capture_mode == 1)
+		if (g_config.capture_mode == 1)
 		{
 			return readscreen_window;
 		}
-		if (Config.capture_mode == 2)
+		if (g_config.capture_mode == 2)
 		{
 			return readscreen_desktop;
 		}
@@ -283,7 +283,7 @@ namespace EncodingManager
 
 	auto effective_readscreen_free()
 	{
-		if (Config.capture_mode == 0)
+		if (g_config.capture_mode == 0)
 		{
 			return MGECompositor::available() ? dummy_free : DllCrtFree;
 		}
@@ -392,9 +392,9 @@ namespace EncodingManager
 			return;
 		}
 
-		if (Config.capture_delay)
+		if (g_config.capture_delay)
 		{
-			Sleep(Config.capture_delay);
+			Sleep(g_config.capture_delay);
 		}
 
 		void* image = nullptr;
@@ -413,7 +413,7 @@ namespace EncodingManager
 			return;
 		}
 
-		if (Config.synchronization_mode != (int)Sync::Audio && Config.
+		if (g_config.synchronization_mode != (int)Sync::Audio && g_config.
 			synchronization_mode != (int)Sync::None)
 		{
 			return;
@@ -428,7 +428,7 @@ namespace EncodingManager
 		int audio_frames = (int)(m_audio_frame - m_video_frame + 0.1);
 		// i've seen a few games only do ~0.98 frames of audio for a frame, let's account for that here
 
-		if (Config.synchronization_mode == (int)Sync::Audio)
+		if (g_config.synchronization_mode == (int)Sync::Audio)
 		{
 			if (audio_frames < 0)
 			{
@@ -509,7 +509,7 @@ namespace EncodingManager
 		const int write_size = 2 * m_audio_freq;
 		// we want (writeSize * 44100 / m_audioFreq) to be an integer
 
-		if (Config.synchronization_mode == (int)Sync::Video || Config.
+		if (g_config.synchronization_mode == (int)Sync::Video || g_config.
 			synchronization_mode == (int)Sync::None)
 		{
 			// VIDEO SYNC
@@ -525,7 +525,7 @@ namespace EncodingManager
 
 			long double desync = m_video_frame - m_audio_frame;
 
-			if (Config.synchronization_mode == (int)Sync::None) // HACK
+			if (g_config.synchronization_mode == (int)Sync::None) // HACK
 				desync = 0;
 
 			if (desync > 1.0)

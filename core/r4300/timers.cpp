@@ -16,7 +16,7 @@
 
 #include "timers.h"
 #include <shared/Config.hpp>
-#include <shared/messenger.h>
+#include <shared/Messenger.h>
 #include <core/memory/pif.h>
 #include <core/r4300/vcr.h>
 
@@ -70,7 +70,7 @@ void timer_new_frame()
 
 void timer_new_vi()
 {
-	if (Config.max_lag != 0 && lag_count >= Config.max_lag)
+	if (g_config.max_lag != 0 && lag_count >= g_config.max_lag)
 	{
 		Messenger::broadcast(Messenger::Message::LagLimitExceeded, nullptr);
 	}

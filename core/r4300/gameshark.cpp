@@ -5,7 +5,7 @@
 #include <core/memory/memory.h>
 
 #include "r4300.h"
-#include "shared/helpers/string_helpers.h"
+#include "shared/helpers/StringHelpers.h"
 
 namespace Gameshark
 {

@@ -93,7 +93,7 @@ enum class PresenterType : int32_t
 	GDI
 };
 
-typedef struct t_hotkey
+typedef struct Hotkey
 {
 	std::string identifier;
 	int32_t key;
@@ -106,7 +106,7 @@ typedef struct t_hotkey
 
 
 #pragma pack(push, 1)
-typedef struct _CONFIG
+typedef struct Config
 {
 #pragma region Hotkeys
 	t_hotkey fast_forward_hotkey;
@@ -531,10 +531,10 @@ typedef struct _CONFIG
 	/// The current seeker input value
 	/// </summary>
 	std::string seeker_value;
-} CONFIG;
+} t_config;
 #pragma pack(pop)
 
-extern "C" CONFIG Config;
+extern t_config g_config;
 extern std::vector<t_hotkey*> g_config_hotkeys;
 
 /**

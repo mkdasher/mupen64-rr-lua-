@@ -5,10 +5,10 @@
 #include <core/r4300/vcr.h>
 #include <core/memory/savestates.h>
 #include "Statusbar.hpp"
-#include <view/gui/main_win.h>
+#include <view/gui/Main.h>
 #include <shared/Config.hpp>
 #include <winproject/resource.h>
-#include <shared/helpers/string_helpers.h>
+#include <shared/helpers/StringHelpers.h>
 #include <view/helpers/WinHelpers.h>
 #include <view/helpers/MathHelpers.h>
 #include <view/gui/wrapper/PersistentPathDialog.h>
@@ -111,7 +111,7 @@ namespace MovieDialog
 				                           grid_rect.right - grid_rect.left,
 				                           grid_rect.bottom - grid_rect.top,
 				                           hwnd, nullptr,
-				                           app_instance,
+				                           g_app_instance,
 				                           NULL);
 
 				ListView_SetExtendedListViewStyle(grid_hwnd,
@@ -147,7 +147,7 @@ namespace MovieDialog
 				            0);
 
 				SetDlgItemText(hwnd, IDC_INI_AUTHOR,
-				               Config.last_movie_author.c_str());
+				               g_config.last_movie_author.c_str());
 				SetDlgItemText(hwnd, IDC_INI_DESCRIPTION, "");
 
 				SetDlgItemText(hwnd, IDC_INI_MOVIEFILE,
@@ -197,7 +197,7 @@ namespace MovieDialog
 					record_params.pause_at_last = IsDlgButtonChecked(
 						hwnd, IDC_PAUSE_AT_END);
 
-					Config.last_movie_type = record_params.start_flag;
+					g_config.last_movie_type = record_params.start_flag;
 
 					if (record_params.start_flag ==
 						MOVIE_START_FROM_EXISTING_SNAPSHOT)
@@ -437,12 +437,12 @@ namespace MovieDialog
 		record_params.path = std::format("{} ({}).m64", (char*)ROM_HEADER.nom,
 		                                 country_code_to_country_name(
 			                                 ROM_HEADER.Country_code));
-		record_params.start_flag = Config.last_movie_type;
-		record_params.author = Config.last_movie_author;
+		record_params.start_flag = g_config.last_movie_type;
+		record_params.author = g_config.last_movie_author;
 		record_params.description = "";
 
-		DialogBox(app_instance,
-		          MAKEINTRESOURCE(IDD_MOVIE_PLAYBACK_DIALOG), mainHWND,
+		DialogBox(g_app_instance,
+		          MAKEINTRESOURCE(IDD_MOVIE_PLAYBACK_DIALOG), g_main_hwnd,
 		          (DLGPROC)MovieInspectorProc);
 
 		return record_params;

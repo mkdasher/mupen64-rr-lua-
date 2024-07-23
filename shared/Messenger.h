@@ -1,4 +1,5 @@
 #pragma once
+
 #include <any>
 #include <functional>
 
@@ -139,6 +140,7 @@ namespace Messenger
 	 * \brief Broadcasts a message to all listeners
 	 * \param message The message type
 	 * \param data The message data
+	 * \remark This method is thread-safe, but mustn't be called concurrently with subscribe()
 	 */
 	void broadcast(Message message, std::any data);
 
@@ -147,6 +149,7 @@ namespace Messenger
 	 * \param message The message type to listen for
 	 * \param callback The callback to be invoked upon receiving the specified message type
 	 * \return A function which, when called, unsubscribes from the message
+	 * \remark This method is not thread-safe.
 	 */
 	std::function<void()> subscribe(Message message, std::function<void(std::any)> callback);
 }

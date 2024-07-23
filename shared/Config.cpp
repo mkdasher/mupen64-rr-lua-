@@ -2,16 +2,16 @@
 #include <cstdio>
 #include <filesystem>
 #include <lib/ini.h>
-#include <shared/helpers/string_helpers.h>
-#include <shared/messenger.h>
+#include <shared/helpers/StringHelpers.h>
+#include <shared/Messenger.h>
 #include <shared/services/FrontendService.h>
 
-CONFIG Config;
+t_config g_config;
 std::vector<t_hotkey*> g_config_hotkeys;
 
-CONFIG get_default_config()
+t_config get_default_config()
 {
-	CONFIG config = {};
+	t_config config = {};
 
 	config.fast_forward_hotkey = {
 		.identifier = "Fast-forward",
@@ -325,7 +325,7 @@ CONFIG get_default_config()
 	return config;
 }
 
-CONFIG default_config = get_default_config();
+t_config default_config = get_default_config();
 
 void handle_config_value(mINI::INIStructure& ini, const std::string& field_name,
                          int32_t is_reading, t_hotkey* hotkey)
@@ -480,10 +480,10 @@ void handle_config_value(mINI::INIStructure& ini, const std::string& field_name,
 	}
 }
 
-const auto first_offset = offsetof(CONFIG, fast_forward_hotkey);
-const auto last_offset = offsetof(CONFIG, select_slot_10_hotkey);
+const auto first_offset = offsetof(t_config, fast_forward_hotkey);
+const auto last_offset = offsetof(t_config, select_slot_10_hotkey);
 
-std::vector<t_hotkey*> collect_hotkeys(const CONFIG* config)
+std::vector<t_hotkey*> collect_hotkeys(const t_config* config)
 {
 	// NOTE:
 	// last_offset should contain the offset of the last hotkey
@@ -502,13 +502,13 @@ std::vector<t_hotkey*> collect_hotkeys(const CONFIG* config)
 
 mINI::INIStructure handle_config_ini(bool is_reading, mINI::INIStructure ini)
 {
-#define HANDLE_P_VALUE(x) handle_config_value(ini, #x, is_reading, &Config.x);
-#define HANDLE_VALUE(x) handle_config_value(ini, #x, is_reading, Config.x);
+#define HANDLE_P_VALUE(x) handle_config_value(ini, #x, is_reading, &g_config.x);
+#define HANDLE_VALUE(x) handle_config_value(ini, #x, is_reading, g_config.x);
 
 	if (is_reading)
 	{
 		// We need to fill the config with latest default values first, because some "new" fields might not exist in the ini
-		Config = get_default_config();
+		g_config = get_default_config();
 	}
 
 	for (auto hotkey : g_config_hotkeys)
@@ -611,7 +611,7 @@ void load_config()
 	if (!std::filesystem::exists(get_config_path()))
 	{
 		printf("[CONFIG] Default config file does not exist. Generating...\n");
-		Config = get_default_config();
+		g_config = get_default_config();
 		save_config();
 	}
 
@@ -622,18 +622,18 @@ void load_config()
 	ini = handle_config_ini(true, ini);
 
 	// handle edge case: closing while minimized produces bogus values for position
-	if (Config.window_x < -10'000 || Config.window_y < -10'000)
+	if (g_config.window_x < -10'000 || g_config.window_y < -10'000)
 	{
-		Config.window_x = default_config.window_x;
-		Config.window_y = default_config.window_y;
-		Config.window_width = default_config.window_width;
-		Config.window_height = default_config.window_height;
+		g_config.window_x = default_config.window_x;
+		g_config.window_y = default_config.window_y;
+		g_config.window_width = default_config.window_width;
+		g_config.window_height = default_config.window_height;
 	}
 
-	if (Config.rombrowser_column_widths.size() < 4)
+	if (g_config.rombrowser_column_widths.size() < 4)
 	{
 		// something's malformed, fuck off and use default values
-		Config.rombrowser_column_widths = default_config.rombrowser_column_widths;
+		g_config.rombrowser_column_widths = default_config.rombrowser_column_widths;
 	}
 
 	Messenger::broadcast(Messenger::Message::ConfigLoaded, nullptr);
@@ -641,5 +641,5 @@ void load_config()
 
 void init_config()
 {
-	g_config_hotkeys = collect_hotkeys(&Config);
+	g_config_hotkeys = collect_hotkeys(&g_config);
 }

@@ -50,7 +50,7 @@ void genbc1f()
 	gencallinterp((unsigned long)BC1F, 1);
 #else
 	if (((dst->addr & 0xFFF) == 0xFFC &&
-		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !Config.is_compiled_jump_enabled)
+		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !g_config.is_compiled_jump_enabled)
 	{
 		gencallinterp((unsigned long)BC1F, 1);
 		return;
@@ -69,7 +69,7 @@ void genbc1f_out()
 	gencallinterp((unsigned long)BC1F_OUT, 1);
 #else
 	if (((dst->addr & 0xFFF) == 0xFFC &&
-		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !Config.is_compiled_jump_enabled)
+		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !g_config.is_compiled_jump_enabled)
 	{
 		gencallinterp((unsigned long)BC1F_OUT, 1);
 		return;
@@ -88,7 +88,7 @@ void genbc1f_idle()
 	gencallinterp((unsigned long)BC1F_IDLE, 1);
 #else
 	if (((dst->addr & 0xFFF) == 0xFFC &&
-		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !Config.is_compiled_jump_enabled)
+		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !g_config.is_compiled_jump_enabled)
 	{
 		gencallinterp((unsigned long)BC1F_IDLE, 1);
 		return;
@@ -116,7 +116,7 @@ void genbc1t()
 	gencallinterp((unsigned long)BC1T, 1);
 #else
 	if (((dst->addr & 0xFFF) == 0xFFC &&
-		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !Config.is_compiled_jump_enabled)
+		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !g_config.is_compiled_jump_enabled)
 	{
 		gencallinterp((unsigned long)BC1T, 1);
 		return;
@@ -135,7 +135,7 @@ void genbc1t_out()
 	gencallinterp((unsigned long)BC1T_OUT, 1);
 #else
 	if (((dst->addr & 0xFFF) == 0xFFC &&
-		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !Config.is_compiled_jump_enabled)
+		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !g_config.is_compiled_jump_enabled)
 	{
 		gencallinterp((unsigned long)BC1T_OUT, 1);
 		return;
@@ -154,7 +154,7 @@ void genbc1t_idle()
 	gencallinterp((unsigned long)BC1T_IDLE, 1);
 #else
 	if (((dst->addr & 0xFFF) == 0xFFC &&
-		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !Config.is_compiled_jump_enabled)
+		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !g_config.is_compiled_jump_enabled)
 	{
 		gencallinterp((unsigned long)BC1T_IDLE, 1);
 		return;
@@ -173,7 +173,7 @@ void genbc1fl()
 	gencallinterp((unsigned long)BC1FL, 1);
 #else
 	if (((dst->addr & 0xFFF) == 0xFFC &&
-		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !Config.is_compiled_jump_enabled)
+		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !g_config.is_compiled_jump_enabled)
 	{
 		gencallinterp((unsigned long)BC1FL, 1);
 		return;
@@ -192,7 +192,7 @@ void genbc1fl_out()
 	gencallinterp((unsigned long)BC1FL_OUT, 1);
 #else
 	if (((dst->addr & 0xFFF) == 0xFFC &&
-		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !Config.is_compiled_jump_enabled)
+		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !g_config.is_compiled_jump_enabled)
 	{
 		gencallinterp((unsigned long)BC1FL_OUT, 1);
 		return;
@@ -211,7 +211,7 @@ void genbc1fl_idle()
 	gencallinterp((unsigned long)BC1FL_IDLE, 1);
 #else
 	if (((dst->addr & 0xFFF) == 0xFFC &&
-		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !Config.is_compiled_jump_enabled)
+		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !g_config.is_compiled_jump_enabled)
 	{
 		gencallinterp((unsigned long)BC1FL_IDLE, 1);
 		return;
@@ -230,7 +230,7 @@ void genbc1tl()
 	gencallinterp((unsigned long)BC1TL, 1);
 #else
 	if (((dst->addr & 0xFFF) == 0xFFC &&
-		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !Config.is_compiled_jump_enabled)
+		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !g_config.is_compiled_jump_enabled)
 	{
 		gencallinterp((unsigned long)BC1TL, 1);
 		return;
@@ -249,7 +249,7 @@ void genbc1tl_out()
 	gencallinterp((unsigned long)BC1TL_OUT, 1);
 #else
 	if (((dst->addr & 0xFFF) == 0xFFC &&
-		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !Config.is_compiled_jump_enabled)
+		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !g_config.is_compiled_jump_enabled)
 	{
 		gencallinterp((unsigned long)BC1TL_OUT, 1);
 		return;
@@ -268,7 +268,7 @@ void genbc1tl_idle()
 	gencallinterp((unsigned long)BC1TL_IDLE, 1);
 #else
 	if (((dst->addr & 0xFFF) == 0xFFC &&
-		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !Config.is_compiled_jump_enabled)
+		(dst->addr < 0x80000000 || dst->addr >= 0xC0000000)) || !g_config.is_compiled_jump_enabled)
 	{
 		gencallinterp((unsigned long)BC1TL_IDLE, 1);
 		return;

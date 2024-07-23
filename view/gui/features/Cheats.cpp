@@ -2,7 +2,7 @@
 
 #include <Windows.h>
 #include <Windowsx.h>
-#include <view/gui/main_win.h>
+#include <view/gui/Main.h>
 #include <winproject/resource.h>
 #include <shared/services/FrontendService.h>
 
@@ -138,8 +138,8 @@ namespace Cheats
 
 	void show()
 	{
-		DialogBox(app_instance,
-		          MAKEINTRESOURCE(IDD_CHEATS), mainHWND,
+		DialogBox(g_app_instance,
+		          MAKEINTRESOURCE(IDD_CHEATS), g_main_hwnd,
 		          (DLGPROC)WndProc);
 	}
 }

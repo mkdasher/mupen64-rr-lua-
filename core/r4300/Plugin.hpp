@@ -34,7 +34,7 @@
 #include <string>
 #include <vector>
 #include <functional>
-#include <shared/helpers/io_helpers.h>
+#include <shared/helpers/IOHelpers.h>
 #include <shared/types/CoreTypes.h>
 
 enum plugin_type

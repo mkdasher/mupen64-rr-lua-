@@ -47,7 +47,7 @@
 #include "summercart.h"
 #include <core/r4300/Plugin.hpp>
 #include "../r4300/vcr.h"
-#include <shared/messenger.h>
+#include <shared/Messenger.h>
 
 static int frame;
 
@@ -1016,7 +1016,7 @@ int init_memory()
 	}
 
 	//init SUMMERCART
-	if (Config.use_summercart)
+	if (g_config.use_summercart)
 	{
 		readmem[0x9fff] = read_sc_reg;
 		readmem[0xbfff] = read_sc_reg;
@@ -1228,7 +1228,7 @@ void update_SP()
 			// NOTE: we increment this here, and not in vcr_updatescreen, since invocation of vcr_updatescreen depends on vi interrupts, which dont get generated if we skip rsp
 			// if that happens, then we never increment screen_updates and thus are stuck in incorrect state
 			g_total_frames++;
-			Config.total_frames++;
+			g_config.total_frames++;
 			if (!is_frame_skipped())
 				doRspCycles(100);
 
@@ -1303,7 +1303,7 @@ void update_SP()
 			rsp_register.rsp_pc &= 0xFFF;
 			start_section(AUDIO_SECTION);
 
-			if (!fast_forward || !Config.fastforward_silent)
+			if (!fast_forward || !g_config.fastforward_silent)
 			{
 				doRspCycles(100);
 			}
@@ -1319,7 +1319,7 @@ void update_SP()
 		{
 			//printf("other task\n");
 			rsp_register.rsp_pc &= 0xFFF;
-			if (!fast_forward || !Config.fastforward_silent)
+			if (!fast_forward || !g_config.fastforward_silent)
 			{
 				doRspCycles(100);
 			}
@@ -2692,7 +2692,7 @@ void write_ai()
 			}
 			break;
 		}
-		if (!Config.is_audio_delay_enabled) delay = 0;
+		if (!g_config.is_audio_delay_enabled) delay = 0;
 		if (ai_register.ai_status & 0x40000000) // busy
 		{
 			ai_register.next_delay = delay;
@@ -2880,7 +2880,7 @@ void write_aih()
 				vi_register.vi_delay * 60) / 48681812;
 			break;
 		}
-		if (!Config.is_audio_delay_enabled) delay = 0;
+		if (!g_config.is_audio_delay_enabled) delay = 0;
 		if (ai_register.ai_status & 0x40000000) // busy
 		{
 			ai_register.next_delay = delay;
@@ -2970,7 +2970,7 @@ void write_aid()
 				vi_register.vi_delay * 60) / 48681812;
 			break;
 		}
-		if (!Config.is_audio_delay_enabled) delay = 0;
+		if (!g_config.is_audio_delay_enabled) delay = 0;
 		if (ai_register.ai_status & 0x40000000) // busy
 		{
 			ai_register.next_delay = delay;

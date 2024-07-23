@@ -1,7 +1,7 @@
 #include "AVIEncoder.h"
 
 #include <view/helpers/IOHelpers.h>
-#include <view/gui/main_win.h>
+#include <view/gui/Main.h>
 
 bool AVIEncoder::start(Params params)
 {
@@ -37,7 +37,7 @@ bool AVIEncoder::start(Params params)
 
 	if (params.ask_for_encoding_settings)
 	{
-		if (!AVISaveOptions(mainHWND, 0, 1, &video_stream, &avi_options))
+		if (!AVISaveOptions(g_main_hwnd, 0, 1, &video_stream, &avi_options))
 		{
 			printf("[AVIEncoder] Failed to save options\n");
 			return false;

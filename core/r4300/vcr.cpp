@@ -18,8 +18,8 @@
 #include <shared/services/LuaService.h>
 
 #include <shared/services/FrontendService.h>
-#include <shared/messenger.h>
-#include <shared/helpers/string_helpers.h>
+#include <shared/Messenger.h>
+#include <shared/helpers/StringHelpers.h>
 
 // M64\0x1a
 enum
@@ -56,11 +56,11 @@ std::recursive_mutex vcr_mutex;
 
 std::filesystem::path get_backups_directory()
 {
-	if (Config.is_default_backups_directory_used)
+	if (g_config.is_default_backups_directory_used)
 	{
 		return "backups\\";
 	}
-	return Config.backups_directory;
+	return g_config.backups_directory;
 }
 
 bool write_movie_impl(const t_movie_header* hdr, const std::vector<BUTTONS>& inputs, const std::filesystem::path& path)
@@ -89,7 +89,7 @@ bool write_movie()
 
 bool write_backup()
 {
-	if (!Config.vcr_backups)
+	if (!g_config.vcr_backups)
 	{
 		return true;
 	}
@@ -389,7 +389,7 @@ VCR::Result VCR::unfreeze(t_movie_freeze freeze)
 		return Result::NotFromThisMovie;
 
 	// This means playback desync in read-only mode, but in read-write mode it's fine, as the input buffer will be copied and grown from st.
-	if (freeze.current_sample > freeze.length_samples && Config.vcr_readonly)
+	if (freeze.current_sample > freeze.length_samples && g_config.vcr_readonly)
 		return Result::InvalidFrame;
 
 	if (space_needed > freeze.size)
@@ -399,7 +399,7 @@ VCR::Result VCR::unfreeze(t_movie_freeze freeze)
 	m_current_vi = (int)freeze.current_vi;
 
 	const e_task last_task = g_task;
-	if (!Config.vcr_readonly)
+	if (!g_config.vcr_readonly)
 	{
 		// here, we are going to take the input data from the savestate
 		// and make it the input data for the current movie, then continue
@@ -416,7 +416,7 @@ VCR::Result VCR::unfreeze(t_movie_freeze freeze)
 		g_header.length_samples = freeze.current_sample;
 
 		g_header.rerecord_count++;
-		Config.total_rerecords++;
+		g_config.total_rerecords++;
 		Messenger::broadcast(Messenger::Message::RerecordsChanged, (uint64_t)g_header.rerecord_count);
 
 		// Before overwriting the input buffer, save a backup
@@ -587,7 +587,7 @@ void vcr_on_controller_poll(int index, BUTTONS* input)
 	{
 		VCR::stop_all();
 
-		if (Config.is_movie_loop_enabled)
+		if (g_config.is_movie_loop_enabled)
 		{
 			VCR::start_playback(g_movie_path);
 			return;
@@ -679,8 +679,8 @@ VCR::Result VCR::start_record(std::filesystem::path path, uint16_t flags, std::s
 	}
 
 	// FIXME: Do we want to reset this every time?
-	Config.vcr_readonly = 0;
-	Messenger::broadcast(Messenger::Message::ReadonlyChanged, (bool)Config.vcr_readonly);
+	g_config.vcr_readonly = 0;
+	Messenger::broadcast(Messenger::Message::ReadonlyChanged, (bool)g_config.vcr_readonly);
 
 	memset(&g_header, 0, sizeof(t_movie_header));
 	g_movie_inputs = {};
@@ -1156,7 +1156,7 @@ const char* VCR::get_status_text()
 	static char text[1024]{};
 	memset(text, 0, sizeof(text));
 
-	auto index_adjustment = (Config.vcr_0_index ? 1 : 0);
+	auto index_adjustment = (g_config.vcr_0_index ? 1 : 0);
 
 	if (VCR::get_task() == e_task::recording)
 	{
@@ -1194,8 +1194,8 @@ void vcr_on_vi()
 	if (!vcr_is_playing())
 		return;
 
-	bool pausing_at_last = (Config.pause_at_last_frame && m_current_sample == g_header.length_samples);
-	bool pausing_at_n = (Config.pause_at_frame != -1 && m_current_sample >= Config.pause_at_frame);
+	bool pausing_at_last = (g_config.pause_at_last_frame && m_current_sample == g_header.length_samples);
+	bool pausing_at_n = (g_config.pause_at_frame != -1 && m_current_sample >= g_config.pause_at_frame);
 
 	if (pausing_at_last || pausing_at_n)
 	{
@@ -1204,12 +1204,12 @@ void vcr_on_vi()
 
 	if (pausing_at_last)
 	{
-		Config.pause_at_last_frame = 0;
+		g_config.pause_at_last_frame = 0;
 	}
 
 	if (pausing_at_n)
 	{
-		Config.pause_at_frame = -1;
+		g_config.pause_at_frame = -1;
 	}
 }
 
@@ -1239,16 +1239,16 @@ bool is_frame_skipped()
 	}
 
 	// skip every frame
-	if (Config.frame_skip_frequency == 0)
+	if (g_config.frame_skip_frequency == 0)
 	{
 		return true;
 	}
 
 	// skip no frames
-	if (Config.frame_skip_frequency == 1)
+	if (g_config.frame_skip_frequency == 1)
 	{
 		return false;
 	}
 
-	return g_total_frames % Config.frame_skip_frequency != 0;
+	return g_total_frames % g_config.frame_skip_frequency != 0;
 }

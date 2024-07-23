@@ -1,9 +1,9 @@
 #include "MGECompositor.h"
 #include <Windows.h>
 
-#include <shared/messenger.h>
+#include <shared/Messenger.h>
 #include <core/r4300/Plugin.hpp>
-#include <view/gui/main_win.h>
+#include <view/gui/Main.h>
 #include <shared/services/FrontendService.h>
 #include <cassert>
 namespace MGECompositor
@@ -76,7 +76,7 @@ namespace MGECompositor
 
 	void create(HWND hwnd)
 	{
-		control_hwnd = CreateWindow(class_name, "", WS_CHILD | WS_VISIBLE, 0, 0, 1, 1, hwnd, nullptr, app_instance, nullptr);
+		control_hwnd = CreateWindow(class_name, "", WS_CHILD | WS_VISIBLE, 0, 0, 1, 1, hwnd, nullptr, g_app_instance, nullptr);
 	}
 
 	void init()
@@ -84,7 +84,7 @@ namespace MGECompositor
 		WNDCLASS wndclass = {0};
 		wndclass.style = CS_GLOBALCLASS | CS_HREDRAW | CS_VREDRAW;
 		wndclass.lpfnWndProc = (WNDPROC)wndproc;
-		wndclass.hInstance = app_instance;
+		wndclass.hInstance = g_app_instance;
 		wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
 		wndclass.lpszClassName = class_name;
 		RegisterClass(&wndclass);

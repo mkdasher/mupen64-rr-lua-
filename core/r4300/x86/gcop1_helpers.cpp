@@ -121,7 +121,7 @@ void gencheck_float_output_valid()
  */
 void gencheck_float_conversion_valid()
 {
-	if (!Config.is_float_exception_propagation_enabled)
+	if (!g_config.is_float_exception_propagation_enabled)
 		return;
 
 	fstsw_ax();

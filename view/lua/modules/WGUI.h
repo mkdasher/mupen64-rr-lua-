@@ -8,7 +8,7 @@ extern "C" {
 #include <Windows.h>
 
 #include "LuaConsole.h"
-#include <view/gui/main_win.h>
+#include <view/gui/Main.h>
 #include <view/helpers/WinHelpers.h>
 
 namespace LuaCore::Wgui
@@ -54,7 +54,7 @@ namespace LuaCore::Wgui
 		LuaEnvironment* lua = GetLuaClass(L);
 
 		RECT rect;
-		GetClientRect(mainHWND, &rect);
+		GetClientRect(g_main_hwnd, &rect);
 
 		lua_newtable(L);
 		lua_pushinteger(L, rect.right - rect.left);
@@ -71,13 +71,13 @@ namespace LuaCore::Wgui
 		LuaEnvironment* lua = GetLuaClass(L);
 
 		RECT clientRect, wndRect;
-		GetWindowRect(mainHWND, &wndRect);
-		GetClientRect(mainHWND, &clientRect);
+		GetWindowRect(g_main_hwnd, &wndRect);
+		GetClientRect(g_main_hwnd, &clientRect);
 		wndRect.bottom -= wndRect.top;
 		wndRect.right -= wndRect.left;
 		int w = luaL_checkinteger(L, 1),
 		    h = luaL_checkinteger(L, 2);
-		SetWindowPos(mainHWND, 0, 0, 0,
+		SetWindowPos(g_main_hwnd, 0, 0, 0,
 		             w + (wndRect.right - clientRect.right),
 		             h + (wndRect.bottom - clientRect.bottom),
 		             SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE);
@@ -552,10 +552,10 @@ namespace LuaCore::Wgui
 		LuaEnvironment* lua = GetLuaClass(L);
 
 		// Copy screen into the loadscreen dc
-		auto dc = GetDC(mainHWND);
+		auto dc = GetDC(g_main_hwnd);
 		BitBlt(lua->loadscreen_dc, 0, 0, lua->dc_size.width, lua->dc_size.height, dc, 0,
 			   0, SRCCOPY);
-		ReleaseDC(mainHWND, dc);
+		ReleaseDC(g_main_hwnd, dc);
 
 		Gdiplus::Bitmap* out = new Gdiplus::Bitmap(lua->loadscreen_bmp, nullptr);
 
