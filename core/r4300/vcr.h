@@ -250,32 +250,46 @@ namespace VCR
 	{
 		// The operation completed successfully
 		Ok,
+		
 		// The provided data has an invalid format
 		InvalidFormat,
+		
 		// The provided file is inaccessible or does not exist
 		BadFile,
+		
 		// The user cancelled the operation
 		Cancelled,
+		
 		// The controller configuration is invalid
 		InvalidControllers,
+		
 		// The movie's savestate is missing or invalid
 		InvalidSavestate,
+		
 		// The resulting frame is outside the bounds of the movie
 		InvalidFrame,
+		
 		// There is no rom which matches this movie
 		NoMatchingRom,
+		
 		// The callee is already performing another task
 		Busy,
+		
 		// The VCR engine is idle, but must be active to complete this operation
 		Idle,
+		
 		// The provided freeze buffer is not from the currently active movie
 		NotFromThisMovie,
+		
 		// The movie's version is invalid
 		InvalidVersion,
+		
 		// The movie's extended version is invalid
 		InvalidExtendedVersion,
+		
 		// The operation requires a playback or recording task
 		NeedsPlaybackOrRecording,
+		
 		// The provided start type is invalid.
 		InvalidStartType,
 	};

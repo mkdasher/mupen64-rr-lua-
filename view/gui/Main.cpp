@@ -384,6 +384,14 @@ std::string get_screenshots_directory()
 	return g_config.screenshots_directory;
 }
 
+void show_vcr_playback_error_for_result(VCR::Result result)
+{
+	if (result != VCR::Result::Ok)
+	{
+		FrontendService::show_error(std::format("Failed to start playback (error code: {}).", static_cast<int32_t>(result)).c_str(), "VCR");
+	}
+}
+
 void update_titlebar()
 {
 	std::string text = MUPEN_VERSION;
@@ -569,6 +577,44 @@ void on_core_result(std::any data)
 	default:
 		break;
 	}
+}
+
+const std::map<VCR::Result, std::string> VCR_RESULT_MAP = {
+	{VCR::Result::InvalidFormat, "The movie is in an invalid format."},
+	{VCR::Result::BadFile, "The movie file can't be accessed."},
+	{VCR::Result::InvalidControllers, "The controller configuration is invalid."},
+	{VCR::Result::InvalidSavestate, "The movie's savestate is missing or invalid."},
+	{VCR::Result::InvalidFrame, "The resulting frame is outside the bounds of the movie."},
+	{VCR::Result::NoMatchingRom, "There is no rom which matches this movie."},
+	{VCR::Result::Busy, "The callee is already performing another task."},
+	{VCR::Result::Idle, "The VCR engine is idle, but must be active to complete this operation."},
+	{VCR::Result::NotFromThisMovie, "The provided freeze buffer is not from the currently active movie."},
+	{VCR::Result::InvalidVersion, "The movie's version is invalid."},
+	{VCR::Result::InvalidExtendedVersion, "The movie's extended version is invalid."},
+	{VCR::Result::NeedsPlaybackOrRecording, "The operation requires a playback or recording task."},
+	{VCR::Result::InvalidStartType, "The provided start type is invalid."},
+};
+
+void on_vcr_start_playback_result(std::any data)
+{
+	auto value = std::any_cast<VCR::Result>(data);
+
+	if (value == VCR::Result::Ok || value == VCR::Result::Cancelled)
+	{
+		return;
+	}
+	
+	std::string str = "Failed to start playback.\n";
+
+	if (VCR_RESULT_MAP.contains(value))
+	{
+		str += VCR_RESULT_MAP.at(value);
+	} else
+	{
+		str += std::format("An unknown error has occured (code {}).", static_cast<int32_t>(value));
+	}
+
+	FrontendService::show_error(str.c_str(), "VCR");
 }
 
 void on_movie_loop_changed(std::any data)
@@ -1378,7 +1424,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					g_config.pause_at_frame = result.pause_at;
 					g_config.pause_at_last_frame = result.pause_at_last;
 
-					std::thread([result] { VCR::start_playback(result.path); }).detach();
+					std::thread([result]
+					{
+						VCR::start_playback(result.path);
+					}).detach();
 				}
 				break;
 			case IDM_STOP_MOVIE:
@@ -1634,6 +1683,7 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	Messenger::subscribe(Messenger::Message::SpeedModifierChanged, on_speed_modifier_changed);
 	Messenger::subscribe(Messenger::Message::LagLimitExceeded, on_vis_since_input_poll_exceeded);
 	Messenger::subscribe(Messenger::Message::CoreResult, on_core_result);
+	Messenger::subscribe(Messenger::Message::VCR_StartPlaybackResult, on_vcr_start_playback_result);
 	Messenger::subscribe(Messenger::Message::FullscreenChanged, on_fullscreen_changed);
 	Messenger::subscribe(Messenger::Message::ConfigLoaded, on_config_loaded);
 	Messenger::subscribe(Messenger::Message::EmuStartingChanged, [](std::any data)
