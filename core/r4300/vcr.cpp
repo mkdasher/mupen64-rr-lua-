@@ -943,34 +943,38 @@ int check_warn_controllers(char* warning_str)
 	return 1;
 }
 
-VCR::Result VCR::start_playback(std::filesystem::path path)
+void start_playback_impl(std::filesystem::path path)
 {
 	std::unique_lock lock(vcr_mutex, std::try_to_lock);
 	if (!lock.owns_lock())
 	{
 		printf("[VCR] vcr_start_playback busy!\n");
-		return Result::Busy;
+		Messenger::broadcast(Messenger::Message::VCR_StartPlaybackResult, VCR::Result::Busy);
+		return;
 	}
 
 	auto movie_buf = read_file_buffer(path);
 
 	if (movie_buf.empty())
 	{
-		return Result::BadFile;
+		Messenger::broadcast(Messenger::Message::VCR_StartPlaybackResult, VCR::Result::BadFile);
+		return;
 	}
 
 	if (!emu_launched && vr_start_rom(path) != Core::Result::Ok)
 	{
-		return Result::NoMatchingRom;
+		Messenger::broadcast(Messenger::Message::VCR_StartPlaybackResult, VCR::Result::NoMatchingRom);
+		return;
 	}
 
 	// We can't call this after opening m_file, since it will potentially nuke it
 	VCR::stop_all();
 
 	const auto result = read_movie_header(movie_buf, &g_header);
-	if (result != Result::Ok)
+	if (result != VCR::Result::Ok)
 	{
-		return result;
+		Messenger::broadcast(Messenger::Message::VCR_StartPlaybackResult, result);
+		return;
 	}
 
 	g_movie_inputs = {};
@@ -985,7 +989,8 @@ VCR::Result VCR::start_playback(std::filesystem::path path)
 		bool proceed = FrontendService::show_ask_dialog(rawdata_warning_message, "VCR", true);
 		if (!proceed)
 		{
-			return Result::Cancelled;
+			Messenger::broadcast(Messenger::Message::VCR_StartPlaybackResult, VCR::Result::Cancelled);
+			return;
 		}
 
 		break;
@@ -994,7 +999,8 @@ VCR::Result VCR::start_playback(std::filesystem::path path)
 	char dummy[1024] = {0};
 	if (!check_warn_controllers(dummy))
 	{
-		return Result::InvalidControllers;
+		Messenger::broadcast(Messenger::Message::VCR_StartPlaybackResult, VCR::Result::InvalidControllers);
+		return;
 	}
 
 	if (strlen(dummy) > 0)
@@ -1012,7 +1018,8 @@ VCR::Result VCR::start_playback(std::filesystem::path path)
 
 			if (!proceed)
 			{
-				return Result::Cancelled;
+				Messenger::broadcast(Messenger::Message::VCR_StartPlaybackResult, VCR::Result::Cancelled);
+				return;
 			}
 		}
 	} else
@@ -1031,7 +1038,8 @@ VCR::Result VCR::start_playback(std::filesystem::path path)
 
 		if (!proceed)
 		{
-			return Result::Cancelled;
+			Messenger::broadcast(Messenger::Message::VCR_StartPlaybackResult, VCR::Result::Cancelled);
+			return;
 		}
 	} else
 	{
@@ -1041,7 +1049,8 @@ VCR::Result VCR::start_playback(std::filesystem::path path)
 			bool proceed = FrontendService::show_ask_dialog(std::format(rom_country_warning_message, g_header.rom_country, ROM_HEADER.Country_code).c_str(), "VCR", true);
 			if (!proceed)
 			{
-				return Result::Cancelled;
+				Messenger::broadcast(Messenger::Message::VCR_StartPlaybackResult, VCR::Result::Cancelled);
+				return;
 			}
 		} else if (g_header.rom_crc1 != ROM_HEADER.
 			CRC1)
@@ -1056,7 +1065,8 @@ VCR::Result VCR::start_playback(std::filesystem::path path)
 			bool proceed = FrontendService::show_ask_dialog(str, "VCR", true);
 			if (!proceed)
 			{
-				return Result::Cancelled;
+				Messenger::broadcast(Messenger::Message::VCR_StartPlaybackResult, VCR::Result::Cancelled);
+				return;
 			}
 		}
 	}
@@ -1075,7 +1085,8 @@ VCR::Result VCR::start_playback(std::filesystem::path path)
 
 		if (st_path.empty())
 		{
-			return Result::InvalidSavestate;
+			Messenger::broadcast(Messenger::Message::VCR_StartPlaybackResult, VCR::Result::InvalidSavestate);
+			return;
 		}
 
 		savestates_do_file(st_path, e_st_job::load);
@@ -1088,7 +1099,16 @@ VCR::Result VCR::start_playback(std::filesystem::path path)
 	Messenger::broadcast(Messenger::Message::TaskChanged, g_task);
 	Messenger::broadcast(Messenger::Message::RerecordsChanged, get_rerecord_count());
 	LuaService::call_play_movie();
-	return Result::Ok;
+	
+	Messenger::broadcast(Messenger::Message::VCR_StartPlaybackResult, VCR::Result::Ok);
+}
+
+void VCR::start_playback(std::filesystem::path path)
+{
+	std::thread([=]
+	{
+		start_playback_impl(path);
+	}).detach();
 }
 
 size_t get_intended_frame(int32_t frame, bool relative)

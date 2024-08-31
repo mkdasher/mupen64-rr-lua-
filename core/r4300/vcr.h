@@ -302,11 +302,11 @@ namespace VCR
 	Result read_movie_inputs(std::filesystem::path path, std::vector<BUTTONS>& inputs);
 
 	/**
- 	* \brief Starts playing back a movie
+ 	* \brief Starts playing back a movie.
  	* \param path The movie's path
- 	* \return The error code
+ 	* \remarks Asynchronous function. Progress updates are received via the <c>VCR_StartPlaybackResult</c> message
  	*/
-	Result start_playback(std::filesystem::path path);
+	void start_playback(std::filesystem::path path);
 
 	/**
 	 * \brief Starts recording a movie

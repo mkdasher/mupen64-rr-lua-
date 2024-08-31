@@ -121,6 +121,11 @@ namespace Messenger
 		CoreResult,
 
 		/**
+		 * \brief The VCR engine is reporting on the status of a start_playback call
+		 */
+		VCR_StartPlaybackResult,
+
+		/**
 		 * \brief The fullscreen mode has changed
 		 */
 		FullscreenChanged,

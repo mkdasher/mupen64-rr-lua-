@@ -1,5 +1,107 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="e1093a13-d3f1-4542-835f-dbcab67fa5c6" name="Changes" comment="Chore: Bump version to 1.1.9">
+      <change beforePath="$PROJECT_DIR$/../core/r4300/vcr.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../core/r4300/vcr.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../core/r4300/vcr.h" beforeDir="false" afterPath="$PROJECT_DIR$/../core/r4300/vcr.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../shared/Messenger.h" beforeDir="false" afterPath="$PROJECT_DIR$/../shared/Messenger.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../view/gui/Main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../view/gui/Main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.mupen64/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.mupen64/.idea/workspace.xml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$/.." value="master" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Aurumaker72&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/mkdasher/mupen64-rr-lua-&quot;,
+    &quot;accountId&quot;: &quot;85cce8ba-dfb0-4c5c-b47e-6b54269f87bf&quot;
+  }
+}</component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/../../../../../../Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/um/Vfw.h" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/../../../../../../Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/um/fileapi.h" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/../../../../../../Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/um/minwinbase.h" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/../../../../../../Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/um/processthreadsapi.h" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/../../../../../../Program Files/Microsoft Visual Studio/2022/Preview/VC/Tools/MSVC/14.41.34117/include/memory" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/../../../../../../Program Files/Microsoft Visual Studio/2022/Preview/VC/Tools/MSVC/14.41.34117/include/stdint.h" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Alex/source/repos/mupen64-rr-lua-/core/r4300/vcr.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Alex/source/repos/mupen64-rr-lua-/core/r4300/vcr.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Alex/source/repos/mupen64-rr-lua-/core/r4300/vcr.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Alex/source/repos/mupen64-rr-lua-/core/r4300/vcr.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Alex/source/repos/mupen64-rr-lua-/core/r4300/vcr.h" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Alex/source/repos/mupen64-rr-lua-/core/r4300/vcr.h" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Alex/source/repos/mupen64-rr-lua-/core/r4300/vcr.h" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Alex/source/repos/mupen64-rr-lua-/core/r4300/vcr.h" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Alex/source/repos/mupen64-rr-lua-/shared/Config.hpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Alex/source/repos/mupen64-rr-lua-/shared/Config.hpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Alex/source/repos/mupen64-rr-lua-/shared/Config.hpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Alex/source/repos/mupen64-rr-lua-/shared/Config.hpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Alex/source/repos/mupen64-rr-lua-/shared/Messenger.h" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Alex/source/repos/mupen64-rr-lua-/view/capture/EncodingManager.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Alex/source/repos/mupen64-rr-lua-/view/capture/encoders/FFmpegEncoder.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Alex/source/repos/mupen64-rr-lua-/view/capture/encoders/FFmpegEncoder.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Alex/source/repos/mupen64-rr-lua-/view/capture/encoders/FFmpegEncoder.h" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Alex/source/repos/mupen64-rr-lua-/view/gui/Commandline.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Alex/source/repos/mupen64-rr-lua-/view/gui/Main.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Alex/source/repos/mupen64-rr-lua-/view/gui/Main.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/Alex/source/repos/mupen64-rr-lua-/view/gui/Main.cpp" root0="SKIP_HIGHLIGHTING" />
+  </component>
+  <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="false" />
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="2lDAy5W5raHA04tDHIpK13pqC9t" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "C++ Project.mupen64.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "feature/message-based-async-core",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
+  },
+  "keyToStringList": {
+    "rider.external.source.directories": [
+      "C:\\Users\\Alex\\AppData\\Roaming\\JetBrains\\Rider2024.1\\resharper-host\\DecompilerCache",
+      "C:\\Users\\Alex\\AppData\\Roaming\\JetBrains\\Rider2024.1\\resharper-host\\SourcesCache",
+      "C:\\Users\\Alex\\AppData\\Local\\Symbols\\src"
+    ]
+  }
+}]]></component>
   <component name="RunManager">
     <configuration name="mupen64" type="CppProject" factoryName="C++ Project">
       <configuration_1>
@@ -32,5 +134,150 @@
         <option name="Build" />
       </method>
     </configuration>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="e1093a13-d3f1-4542-835f-dbcab67fa5c6" name="Changes" comment="Encoding: Fix video being upside-down" />
+      <created>1724704526290</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1724704526290</updated>
+      <workItem from="1724704528114" duration="1643000" />
+      <workItem from="1724949620908" duration="461000" />
+      <workItem from="1724996353106" duration="634000" />
+      <workItem from="1725011765958" duration="6059000" />
+      <workItem from="1725043023268" duration="9202000" />
+      <workItem from="1725060567715" duration="32000" />
+      <workItem from="1725117804984" duration="3461000" />
+    </task>
+    <task id="LOCAL-00001" summary="Config: Add encoder type to config">
+      <option name="closed" value="true" />
+      <created>1724705488207</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1724705488207</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Config: Remove delay compensation in FFmpegEncoder&#10;&#10;&#10;Fixes audio stuttering, introduces some silence at end">
+      <option name="closed" value="true" />
+      <created>1725012729780</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1725012729780</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Encoding: Clean up FFmpegEncoder">
+      <option name="closed" value="true" />
+      <created>1725013576476</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1725013576476</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Helpers: Improve ScopeTimer">
+      <option name="closed" value="true" />
+      <created>1725013741912</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1725013741912</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Encoding: Use ScopeTimer for ReadScreen timing">
+      <option name="closed" value="true" />
+      <created>1725013804846</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1725013804846</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Encoding: Allow specifying additional FFmpeg options in config">
+      <option name="closed" value="true" />
+      <created>1725014222645</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1725014222645</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Encoding: Improve ffmpeg encoding option composition flexibility">
+      <option name="closed" value="true" />
+      <created>1725043325895</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1725043325895</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Encoding: Improve ffmpeg encoding option composition flexibility">
+      <option name="closed" value="true" />
+      <created>1725043334475</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1725043334475</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Encoding: Allow specifying ffmpeg path in config, use FrontendService for warning">
+      <option name="closed" value="true" />
+      <created>1725043566489</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1725043566489</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Encoding: Allow specifying ffmpeg path in config, use FrontendService for error">
+      <option name="closed" value="true" />
+      <created>1725043571880</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1725043571880</updated>
+    </task>
+    <task id="LOCAL-00011" summary="VCR: Fail in start_record when invalid start type is provided">
+      <option name="closed" value="true" />
+      <created>1725118822402</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1725118822403</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Config: Fix default last movie type being invalid&#10;&#10;&#10;Fixes bugs with recordings failing randomly">
+      <option name="closed" value="true" />
+      <created>1725118922709</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1725118922709</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Chore: Bump version to 1.1.9">
+      <option name="closed" value="true" />
+      <created>1725118986072</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1725118986072</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="UnityCheckinConfiguration" checkUnsavedScenes="false" />
+  <component name="UnityProjectConfiguration" hasMinimizedUI="false" />
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Encoding: Fix video being upside-down" />
+    <MESSAGE value="Config: Add encoder type to config" />
+    <MESSAGE value="Config: Remove delay compensation in FFmpegEncoder&#10;&#10;&#10;Fixes audio stuttering, introduces some silence at end" />
+    <MESSAGE value="Encoding: Clean up FFmpegEncoder" />
+    <MESSAGE value="Helpers: Improve ScopeTimer" />
+    <MESSAGE value="Encoding: Use ScopeTimer for ReadScreen timing" />
+    <MESSAGE value="Encoding: Allow specifying additional FFmpeg options in config" />
+    <MESSAGE value="Encoding: Improve ffmpeg encoding option composition flexibility" />
+    <MESSAGE value="Encoding: Allow specifying ffmpeg path in config, use FrontendService for warning" />
+    <MESSAGE value="Encoding: Allow specifying ffmpeg path in config, use FrontendService for error" />
+    <MESSAGE value="Encoding: Use async pipe writes" />
+    <MESSAGE value="VCR: Fail in start_record when invalid start type is provided" />
+    <MESSAGE value="Config: Fix default last movie type being invalid&#10;&#10;&#10;Fixes bugs with recordings failing randomly" />
+    <MESSAGE value="Chore: Bump version to 1.1.9" />
+    <option name="LAST_COMMIT_MESSAGE" value="Chore: Bump version to 1.1.9" />
   </component>
 </project>
