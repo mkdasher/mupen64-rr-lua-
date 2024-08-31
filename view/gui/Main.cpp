@@ -802,7 +802,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			{
 				g_config.vcr_readonly = true;
 				Messenger::broadcast(Messenger::Message::ReadonlyChanged, (bool)g_config.vcr_readonly);
-				std::thread([fname] { VCR::start_playback(fname); }).detach();
+				VCR::start_playback(fname);
 			} else if (extension == ".st" || extension == ".savestate")
 			{
 				if (!emu_launched) break;
@@ -1424,10 +1424,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					g_config.pause_at_frame = result.pause_at;
 					g_config.pause_at_last_frame = result.pause_at_last;
 
-					std::thread([result]
-					{
-						VCR::start_playback(result.path);
-					}).detach();
+					VCR::start_playback(result.path);
 				}
 				break;
 			case IDM_STOP_MOVIE:
@@ -1547,7 +1544,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 					g_config.vcr_readonly = true;
 					Messenger::broadcast(Messenger::Message::ReadonlyChanged, (bool)g_config.vcr_readonly);
-					std::thread([path] { VCR::start_playback(path); }).detach();
+					VCR::start_playback(path);
 				} else if (LOWORD(wParam) >= ID_LUA_RECENT && LOWORD(wParam) < (
 					ID_LUA_RECENT + g_config.recent_lua_script_paths.size()))
 				{

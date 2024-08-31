@@ -137,7 +137,7 @@ void commandline_start_movie()
 	}
 
 	g_config.vcr_readonly = true;
-	std::thread([] { VCR::start_playback(commandline_movie); }).detach();
+	VCR::start_playback(commandline_movie);
 }
 
 void commandline_start_capture()

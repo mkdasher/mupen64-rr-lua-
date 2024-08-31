@@ -32,10 +32,7 @@ namespace Runner
 			Messenger::broadcast(
 				Messenger::Message::ReadonlyChanged,
 				(bool)g_config.vcr_readonly);
-			std::thread([=]
-			{
-				VCR::start_playback(path);
-			}).detach();
+			VCR::start_playback(path);
 			break;
 		case IDC_LIST_SCRIPTS:
 			lua_create_and_run(path.string().c_str());
