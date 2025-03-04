@@ -708,6 +708,7 @@ void vcr_handle_playback(int32_t index, core_buttons* input)
         if (g_core->cfg->is_movie_loop_enabled)
         {
             core_vcr_start_playback(g_movie_path);
+            g_core->callbacks.loop_movie();
             return;
         }
 

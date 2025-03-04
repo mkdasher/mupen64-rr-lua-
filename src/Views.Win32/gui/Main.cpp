@@ -2163,7 +2163,15 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     g_core.callbacks.interval = LuaService::call_interval;
     g_core.callbacks.ai_len_changed = FrontendService::ai_len_changed;
     g_core.callbacks.play_movie = LuaService::call_play_movie;
-    g_core.callbacks.stop_movie = LuaService::call_stop_movie;
+    g_core.callbacks.stop_movie = [] {
+        LuaService::call_stop_movie();
+        if (EncodingManager::is_capturing())
+            EncodingManager::stop_capture();
+    };
+    g_core.callbacks.loop_movie = [] {
+        if (EncodingManager::is_capturing())
+            EncodingManager::stop_capture();
+    };
     g_core.callbacks.save_state = LuaService::call_save_state;
     g_core.callbacks.load_state = LuaService::call_load_state;
     g_core.callbacks.reset = LuaService::call_reset;

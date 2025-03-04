@@ -30,6 +30,7 @@ typedef struct {
     void (*ai_len_changed)();
     void (*play_movie)(void);
     void (*stop_movie)(void);
+    void (*loop_movie)(void);
     void (*save_state)(void);
     void (*load_state)(void);
     void (*reset)(void);
