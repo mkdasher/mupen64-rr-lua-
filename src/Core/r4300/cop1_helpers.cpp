@@ -18,7 +18,7 @@ constexpr auto FLOAT_EXCEPTION_MSG = L"A floating point exception has occured in
 void fail_float(const std::wstring& msg)
 {
     const auto message = std::format(FLOAT_EXCEPTION_MSG, msg, interpcore ? interp_addr : PC->addr);
-    const auto choice = g_core->show_multiple_choice_dialog({L"Close ROM", L"Continue"}, message.c_str(), L"Core", fsvc_error);
+    const auto choice = g_core->show_multiple_choice_dialog(CORE_DLG_FLOAT_EXCEPTION, {L"Close ROM", L"Continue"}, message.c_str(), L"Core", fsvc_error);
 
     core_Cause = 15 << 2;
     exception_general();

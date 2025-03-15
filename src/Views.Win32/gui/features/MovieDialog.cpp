@@ -210,7 +210,7 @@ namespace MovieDialog
                         if (exists(path))
                         {
                             const auto str = std::format(L"{} already exists. Are you sure want to overwrite this movie?", path.wstring());
-                            if (!DialogService::show_ask_dialog(str.c_str(), L"VCR", true, hwnd))
+                            if (!DialogService::show_ask_dialog(VIEW_DLG_MOVIE_OVERWRITE_WARNING, str.c_str(), L"VCR", true, hwnd))
                             {
                                 break;
                             }

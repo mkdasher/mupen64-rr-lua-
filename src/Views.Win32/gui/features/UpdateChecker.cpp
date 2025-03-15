@@ -242,7 +242,7 @@ namespace UpdateChecker
             return;
         }
 
-        const auto result = DialogService::show_multiple_choice_dialog({L"Update now", L"Skip this version", L"Ignore"}, std::format(L"Mupen64 {} is available for download.", version).c_str(), L"Update Available", fsvc_information);
+        const auto result = DialogService::show_multiple_choice_dialog(VIEW_DLG_UPDATE_DIALOG, {L"Update now", L"Skip this version", L"Ignore"}, std::format(L"Mupen64 {} is available for download.", version).c_str(), L"Update Available", fsvc_information);
 
         if (result == 1)
         {

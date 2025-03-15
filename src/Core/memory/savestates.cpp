@@ -364,7 +364,7 @@ void savestates_load_immediate_impl(const t_savestate_task& task)
 
     if (!task.ignore_warnings && memcmp(md5, rom_md5, 32))
     {
-        auto result = g_core->show_ask_dialog(std::format(
+        auto result = g_core->show_ask_dialog(CORE_DLG_ST_HASH_MISMATCH, std::format(
                                               L"The savestate was created on a rom with hash {}, but is being loaded on another rom.\r\nThe emulator may crash. Are you sure you want to continue?",
                                               string_to_wstring(md5))
                                               .c_str(),
@@ -443,7 +443,7 @@ void savestates_load_immediate_impl(const t_savestate_task& task)
             }
             err_str += L" Loading the savestate might desynchronize the movie.\r\nAre you sure you want to continue?";
 
-            const auto result = g_core->show_ask_dialog(err_str.c_str(), L"Savestate", true);
+            const auto result = g_core->show_ask_dialog(CORE_DLG_ST_UNFREEZE_WARNING, err_str.c_str(), L"Savestate", true);
             if (!result)
             {
                 task.callback(Res_Cancelled, {});
@@ -455,7 +455,7 @@ void savestates_load_immediate_impl(const t_savestate_task& task)
     {
         if (!task.ignore_warnings && (core_vcr_get_task() == task_recording || core_vcr_get_task() == task_playback))
         {
-            const auto result = g_core->show_ask_dialog(
+            const auto result = g_core->show_ask_dialog(CORE_DLG_ST_NOT_FROM_MOVIE,
             L"The savestate is not from a movie. Loading it might desynchronize the movie.\r\nAre you sure you want to continue?", L"Savestate", true);
             if (!result)
             {

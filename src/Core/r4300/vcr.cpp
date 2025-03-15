@@ -923,7 +923,7 @@ core_result core_vcr_start_record(std::filesystem::path path, uint16_t flags, st
     {
         if (Present && RawData)
         {
-            bool proceed = g_core->show_ask_dialog(RAWDATA_WARNING_MESSAGE, L"VCR", true);
+            bool proceed = g_core->show_ask_dialog(CORE_DLG_VCR_RAWDATA_WARNING, RAWDATA_WARNING_MESSAGE, L"VCR", true);
             if (!proceed)
             {
                 return Res_Cancelled;
@@ -1218,7 +1218,7 @@ core_result core_vcr_start_playback(std::filesystem::path path)
         if (!Present || !RawData)
             continue;
 
-        bool proceed = g_core->show_ask_dialog(RAWDATA_WARNING_MESSAGE, L"VCR", true);
+        bool proceed = g_core->show_ask_dialog(CORE_DLG_VCR_RAWDATA_WARNING, RAWDATA_WARNING_MESSAGE, L"VCR", true);
         if (!proceed)
         {
             return Res_Cancelled;
@@ -1238,7 +1238,7 @@ core_result core_vcr_start_playback(std::filesystem::path path)
 
         if (g_core->cfg->wii_vc_emulation != header.extended_flags.wii_vc)
         {
-            bool proceed = g_core->show_ask_dialog(header.extended_flags.wii_vc ? WII_VC_MISMATCH_A_WARNING_MESSAGE : WII_VC_MISMATCH_B_WARNING_MESSAGE, L"VCR", true);
+            bool proceed = g_core->show_ask_dialog(CORE_DLG_VCR_WIIVC_WARNING, header.extended_flags.wii_vc ? WII_VC_MISMATCH_A_WARNING_MESSAGE : WII_VC_MISMATCH_B_WARNING_MESSAGE, L"VCR", true);
 
             if (!proceed)
             {
@@ -1257,7 +1257,7 @@ core_result core_vcr_start_playback(std::filesystem::path path)
 
     if (_stricmp(header.rom_name, (const char*)ROM_HEADER.nom) != 0)
     {
-        bool proceed = g_core->show_ask_dialog(std::format(ROM_NAME_WARNING_MESSAGE, string_to_wstring(header.rom_name), string_to_wstring((char*)ROM_HEADER.nom)).c_str(), L"VCR", true);
+        bool proceed = g_core->show_ask_dialog(CORE_DLG_VCR_ROM_NAME_WARNING, std::format(ROM_NAME_WARNING_MESSAGE, string_to_wstring(header.rom_name), string_to_wstring((char*)ROM_HEADER.nom)).c_str(), L"VCR", true);
 
         if (!proceed)
         {
@@ -1268,7 +1268,7 @@ core_result core_vcr_start_playback(std::filesystem::path path)
     {
         if (header.rom_country != ROM_HEADER.Country_code)
         {
-            bool proceed = g_core->show_ask_dialog(std::format(ROM_COUNTRY_WARNING_MESSAGE, core_vr_country_code_to_country_name(header.rom_country), core_vr_country_code_to_country_name(ROM_HEADER.Country_code)).c_str(), L"VCR", true);
+            bool proceed = g_core->show_ask_dialog(CORE_DLG_VCR_ROM_CCODE_WARNING, std::format(ROM_COUNTRY_WARNING_MESSAGE, core_vr_country_code_to_country_name(header.rom_country), core_vr_country_code_to_country_name(ROM_HEADER.Country_code)).c_str(), L"VCR", true);
             if (!proceed)
             {
                 return Res_Cancelled;
@@ -1279,7 +1279,7 @@ core_result core_vcr_start_playback(std::filesystem::path path)
             wchar_t str[512] = {0};
             swprintf_s(str, ROM_CRC_WARNING_MESSAGE, header.rom_crc1, ROM_HEADER.CRC1);
 
-            bool proceed = g_core->show_ask_dialog(str, L"VCR", true);
+            bool proceed = g_core->show_ask_dialog(CORE_DLG_VCR_ROM_CRC_WARNING, str, L"VCR", true);
             if (!proceed)
             {
                 return Res_Cancelled;
@@ -1298,7 +1298,7 @@ core_result core_vcr_start_playback(std::filesystem::path path)
         }
         else
         {
-            const auto proceed = g_core->show_ask_dialog(CHEAT_ERROR_ASK_MESSAGE, L"VCR", true);
+            const auto proceed = g_core->show_ask_dialog(CORE_DLG_VCR_CHEAT_LOAD_ERROR, CHEAT_ERROR_ASK_MESSAGE, L"VCR", true);
 
             if (!proceed)
             {

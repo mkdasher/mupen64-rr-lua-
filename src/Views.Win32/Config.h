@@ -538,6 +538,11 @@ typedef struct ViewCfg {
     /// The multi-frame advance index.
     /// </summary>
     int32_t multi_frame_advance_count = 2;
+
+    /// <summary>
+    /// A map of dialog IDs to their default choices for silent mode.
+    /// </summary>
+    std::map<std::wstring, std::wstring> silent_mode_dialog_choices;
 } cfg_view;
 #pragma pack(pop)
 

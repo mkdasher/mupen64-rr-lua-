@@ -102,7 +102,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>src/Core/include;src/Views.Win32;src/;lib/;lib/lua/include;lib/libdeflate;lib/xxhash;lib/json;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32;_DEBUG;_WINDOWS;__WIN32__;X86;_CRT_SECURE_NO_WARNINGS;VERSION_SUFFIX=L"$(VERSION_SUFFIX)";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;_DEBUG;_WINDOWS;__WIN32__;X86;_CRT_SECURE_NO_WARNINGS;VERSION_SUFFIX=L"$(VERSION_SUFFIX)";MINI_CASE_SENSITIVE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <WarningLevel>Level4</WarningLevel>
@@ -141,7 +141,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>src/Core/include;src/Views.Win32;src/;lib/;lib/lua-x64/include;lib/libdeflate-x64;lib/xxhash;lib/json;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32;_DEBUG;_WINDOWS;__WIN32__;X86;_CRT_SECURE_NO_WARNINGS;VERSION_SUFFIX=L"$(VERSION_SUFFIX)";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;_DEBUG;_WINDOWS;__WIN32__;X86;_CRT_SECURE_NO_WARNINGS;VERSION_SUFFIX=L"$(VERSION_SUFFIX)";MINI_CASE_SENSITIVE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <WarningLevel>Level4</WarningLevel>
@@ -177,7 +177,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>src/Core/include;src/Views.Win32;src/;lib/;lib/lua/include;lib/libdeflate;lib/xxhash;lib/json;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32;NDEBUG;_WINDOWS;__WIN32__;X86;_CRT_SECURE_NO_WARNINGS;VERSION_SUFFIX=L"$(VERSION_SUFFIX)";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;NDEBUG;_WINDOWS;__WIN32__;X86;_CRT_SECURE_NO_WARNINGS;VERSION_SUFFIX=L"$(VERSION_SUFFIX)";MINI_CASE_SENSITIVE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -216,7 +216,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>src/Core/include;src/Views.Win32;src/;lib/;lib/lua-x64/include;lib/libdeflate-x64;lib/xxhash;lib/json;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32;NDEBUG;_WINDOWS;__WIN32__;X86;_CRT_SECURE_NO_WARNINGS;VERSION_SUFFIX=L"$(VERSION_SUFFIX)";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;NDEBUG;_WINDOWS;__WIN32__;X86;_CRT_SECURE_NO_WARNINGS;VERSION_SUFFIX=L"$(VERSION_SUFFIX)";MINI_CASE_SENSITIVE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>

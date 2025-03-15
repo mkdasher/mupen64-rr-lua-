@@ -15,6 +15,29 @@
 cfg_view g_config;
 std::vector<cfg_hotkey*> g_config_hotkeys;
 
+const std::unordered_map<std::string, size_t> DIALOG_SILENT_MODE_CHOICES = {
+{CORE_DLG_FLOAT_EXCEPTION, 0},
+{CORE_DLG_ST_HASH_MISMATCH, 0},
+{CORE_DLG_ST_UNFREEZE_WARNING, 0},
+{CORE_DLG_ST_NOT_FROM_MOVIE, 0},
+{CORE_DLG_VCR_RAWDATA_WARNING, 0},
+{CORE_DLG_VCR_WIIVC_WARNING, 0},
+{CORE_DLG_VCR_ROM_NAME_WARNING, 0},
+{CORE_DLG_VCR_ROM_CCODE_WARNING, 0},
+{CORE_DLG_VCR_ROM_CRC_WARNING, 0},
+{CORE_DLG_VCR_CHEAT_LOAD_ERROR, 0},
+
+{VIEW_DLG_MOVIE_OVERWRITE_WARNING, 0},
+{VIEW_DLG_RESET_SETTINGS, 0},
+{VIEW_DLG_RESET_PLUGIN_SETTINGS, 0},
+{VIEW_DLG_LAG_EXCEEDED, 0},
+{VIEW_DLG_CLOSE_ROM_WARNING, 0},
+{VIEW_DLG_HOTKEY_CONFLICT, 0},
+{VIEW_DLG_UPDATE_DIALOG, 2},
+{VIEW_DLG_PLUGIN_LOAD_ERROR, 0},
+{VIEW_DLG_RAMSTART, 0},
+};
+
 void set_default_hotkey_keys(cfg_view* config)
 {
     config->fast_forward_hotkey.key = VK_TAB;
@@ -556,6 +579,11 @@ cfg_view get_default_config()
     .down_cmd = ACTION_SELECT_SLOT10,
     };
 
+    for (const auto& pair : DIALOG_SILENT_MODE_CHOICES)
+    {
+        config.silent_mode_dialog_choices[string_to_wstring(pair.first)] = std::to_wstring(pair.second);
+    }
+    
     set_default_hotkey_keys(&config);
 
     return config;
@@ -853,6 +881,7 @@ mINI::INIStructure handle_config_ini(bool is_reading, mINI::INIStructure ini)
     HANDLE_P_VALUE(core.max_lag)
     HANDLE_VALUE(seeker_value)
     HANDLE_P_VALUE(multi_frame_advance_count)
+    HANDLE_VALUE(silent_mode_dialog_choices)
 
     return ini;
 }
@@ -887,6 +916,15 @@ void config_apply_limits()
     }
 
     g_config.settings_tab = std::min(std::max(g_config.settings_tab, 0), 2);
+
+    for (const auto& pair : DIALOG_SILENT_MODE_CHOICES)
+    {
+        const auto key = string_to_wstring(pair.first);
+        if (!g_config.silent_mode_dialog_choices.contains(key))
+        {
+            g_config.silent_mode_dialog_choices[key] = std::to_wstring(pair.second);
+        }
+    }
 }
 
 void save_config()

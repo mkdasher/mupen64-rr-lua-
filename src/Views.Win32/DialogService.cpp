@@ -12,8 +12,24 @@
 #include <gui/features/Statusbar.h>
 #include <lua/LuaConsole.h>
 
-size_t DialogService::show_multiple_choice_dialog(const std::vector<std::wstring>& choices, const wchar_t* str, const wchar_t* title, core_dialog_type type, void* hwnd)
+std::unordered_map<std::string, size_t> dialog_choice_map;
+
+size_t DialogService::show_multiple_choice_dialog(const std::string& id, const std::vector<std::wstring>& choices, const wchar_t* str, const wchar_t* title, core_dialog_type type, void* hwnd)
 {
+    if (g_config.silent_mode)
+    {
+        const auto default_index = g_config.silent_mode_dialog_choices[string_to_wstring(id)];
+        g_view_logger->trace(L"[FrontendService] show_multiple_choice_dialog: '{}', silent mode answer: {}", str, default_index);
+        return std::stoi(default_index);
+    }
+
+    if (dialog_choice_map.contains(id))
+    {
+        const auto answer = dialog_choice_map[id];
+        g_view_logger->trace(L"[FrontendService] show_multiple_choice_dialog: '{}', dont show again answer: {}", str, answer);
+        return answer;
+    }
+
     std::vector<TASKDIALOG_BUTTON> buttons;
 
     buttons.reserve(choices.size());
@@ -36,7 +52,7 @@ size_t DialogService::show_multiple_choice_dialog(const std::vector<std::wstring
         break;
     }
 
-    TASKDIALOGCONFIG task_dialog_config = {
+    const TASKDIALOGCONFIG task_dialog_config = {
     .cbSize = sizeof(TASKDIALOGCONFIG),
     .hwndParent = static_cast<HWND>(hwnd ? hwnd : g_main_hwnd),
     .pszWindowTitle = title,
@@ -44,24 +60,26 @@ size_t DialogService::show_multiple_choice_dialog(const std::vector<std::wstring
     .pszContent = str,
     .cButtons = (UINT)buttons.size(),
     .pButtons = buttons.data(),
+    .pszVerificationText = L"Don't show again",
     };
 
     int pressed_button = -1;
-    TaskDialogIndirect(&task_dialog_config, &pressed_button, NULL, NULL);
+    BOOL dont_show_again = false;
+    TaskDialogIndirect(&task_dialog_config, &pressed_button, nullptr, &dont_show_again);
 
-    g_view_logger->trace(L"[FrontendService] show_multiple_choice_dialog: '{}', answer: {}", str, pressed_button > 0 ? choices[pressed_button] : L"?");
+    if (dont_show_again)
+    {
+        dialog_choice_map[id] = pressed_button;
+    }
+
+    g_view_logger->trace(L"[FrontendService] show_multiple_choice_dialog: '{}', manual answer: {}, dont show again: {}", str, pressed_button > 0 ? choices[pressed_button] : L"?", dont_show_again);
 
     return pressed_button;
 }
 
-bool DialogService::show_ask_dialog(const wchar_t* str, const wchar_t* title, bool warning, void* hwnd)
+bool DialogService::show_ask_dialog(const std::string& id, const wchar_t* str, const wchar_t* title, bool warning, void* hwnd)
 {
-    g_view_logger->trace(L"[FrontendService] show_ask_dialog: '{}'", str);
-    if (g_config.silent_mode)
-    {
-        return true;
-    }
-    return MessageBox(static_cast<HWND>(hwnd ? hwnd : g_main_hwnd), str, title, MB_YESNO | (warning ? MB_ICONWARNING : MB_ICONQUESTION)) == IDYES;
+    return show_multiple_choice_dialog(id, {L"Yes", L"No"}, str, title, warning ? fsvc_warning : fsvc_information, hwnd) == 0;
 }
 
 void DialogService::show_dialog(const wchar_t* str, const wchar_t* title, core_dialog_type type, void* hwnd)
